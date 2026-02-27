@@ -1,0 +1,11 @@
+{
+    "QAS": {
+        "url_create_prefactura": "https://l400004-iflmap.hcisbp.br1.hana.ondemand.com/http/REST/cinter/xhis/emisionprefactura",
+        "auth_type": "Basic",
+        "user": "S0025407064",
+        "pass": "TemBTP23#*",
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}
