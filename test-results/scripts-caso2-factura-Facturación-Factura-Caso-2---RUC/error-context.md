@@ -1,0 +1,1321 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic:
+    - status
+    - status
+  - generic [ref=e7]:
+    - banner "Shell Bar" [ref=e9]:
+      - generic [ref=e10]:
+        - button "Back" [ref=e11] [cursor=pointer]:
+          - generic [ref=e12]: 
+        - button "Company Logo" [ref=e13] [cursor=pointer]:
+          - img "Company Logo" [ref=e14]
+        - generic [ref=e15] [cursor=pointer]:
+          - heading "Facturación" [level=1]
+          - button "Facturación" [ref=e16]:
+            - generic [ref=e17]: Facturación
+            - generic [ref=e19]: 
+      - generic [ref=e22]:
+        - button "Open Search" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: 
+        - button "Profile of Pierre Galvez" [ref=e25] [cursor=pointer]:
+          - generic: PG
+    - generic [ref=e29]:
+      - text:   
+      - main "Content" [ref=e35]:
+        - text:                              
+        - iframe [active] [ref=e36]:
+          - generic [ref=f1e1]:
+            - generic:
+              - status
+              - status
+              - dialog "Imprimir comprobante" [ref=f1e3]:
+                - banner:
+                  - group "Header actions" [ref=f1e4]:
+                    - heading "Imprimir comprobante" [level=1] [ref=f1e7]
+                - form [ref=f1e11]:
+                  - heading [level=2]
+                  - generic [ref=f1e13]:
+                    - navigation [ref=f1e14]:
+                      - tablist [ref=f1e15]:
+                        - tab "Boleta" [ref=f1e16] [cursor=pointer]:
+                          - generic [ref=f1e19]: Boleta
+                        - tab "Factura" [selected] [ref=f1e21] [cursor=pointer]:
+                          - generic [ref=f1e24]: Factura
+                        - tab "Nota de crédito" [disabled] [ref=f1e26]:
+                          - generic [ref=f1e29]: Nota de crédito
+                        - tab "Anulación" [disabled] [ref=f1e31]:
+                          - generic [ref=f1e34]: Anulación
+                    - tabpanel "Factura" [ref=f1e37]:
+                      - form [ref=f1e39]:
+                        - generic [ref=f1e43]:
+                          - listbox [ref=f1e47]:
+                            - option "Automático" [selected] [ref=f1e48] [cursor=pointer]:
+                              - generic [ref=f1e50]: Automático
+                            - option "Manual" [ref=f1e51] [cursor=pointer]:
+                              - generic [ref=f1e53]: Manual
+                          - generic [ref=f1e56]:
+                            - generic [ref=f1e57]: Documento
+                            - generic [ref=f1e58]: ":"
+                          - generic [ref=f1e60] [cursor=pointer]:
+                            - combobox "Documento" [ref=f1e61]: RUC
+                            - textbox [ref=f1e62]: "6"
+                            - generic [ref=f1e63]: RUC
+                            - generic [ref=f1e64]: 
+                          - generic [ref=f1e67]:
+                            - searchbox "Documento" [active] [ref=f1e68]: "20517426726"
+                            - generic [ref=f1e69] [cursor=pointer]: 
+                            - generic [ref=f1e70] [cursor=pointer]: 
+                          - generic [ref=f1e73]:
+                            - generic [ref=f1e74]: Razón social
+                            - generic [ref=f1e75]: ": *"
+                          - textbox "Razón social" [disabled] [ref=f1e79]: SEIDOR CONSULTING PERU SAC
+                          - generic [ref=f1e82]:
+                            - generic [ref=f1e83]: Dirección
+                            - generic [ref=f1e84]: ": *"
+                          - textbox "Dirección" [disabled] [ref=f1e88]: JR. VITTORE SCARPAZZA CARPACC MZA. - LOTE. - URB. SAN BORJA 1º
+                          - generic [ref=f1e91]:
+                            - generic [ref=f1e92]: Teléfono
+                            - generic [ref=f1e93]: ": *"
+                          - textbox "Teléfono" [ref=f1e97]: 625 9999
+                          - generic [ref=f1e100]:
+                            - generic [ref=f1e101]: e-mail
+                            - generic [ref=f1e102]: ": *"
+                          - textbox "e-mail" [ref=f1e106]:
+                            - /placeholder: ejemplo@correo.com
+                            - text: notiene@gmail.com
+                - contentinfo [ref=f1e107]:
+                  - toolbar "Footer actions" [ref=f1e108]:
+                    - button "Imprimir" [ref=f1e110] [cursor=pointer]:
+                      - generic [ref=f1e112]: Imprimir
+                    - button "Cerrar" [ref=f1e113] [cursor=pointer]:
+                      - generic [ref=f1e115]: Cerrar
+            - generic [ref=f1e119]:
+              - generic [ref=f1e123]:
+                - generic [ref=f1e125]:
+                  - navigation [ref=f1e126]:
+                    - tablist [ref=f1e127]:
+                      - tab "PRE" [selected] [ref=f1e128] [cursor=pointer]:
+                        - generic [ref=f1e131]: PRE
+                      - tab "DOCUMENTOS" [ref=f1e133] [cursor=pointer]:
+                        - generic [ref=f1e136]: DOCUMENTOS
+                  - tabpanel "PRE" [ref=f1e139]:
+                    - generic [ref=f1e140]:
+                      - toolbar [ref=f1e141]:
+                        - generic [ref=f1e142] [cursor=pointer]:
+                          - combobox [ref=f1e143]: Nombre
+                          - textbox [ref=f1e144]: Nombre
+                          - generic [ref=f1e145]: Nombre
+                          - generic [ref=f1e146]: 
+                        - generic [ref=f1e148]:
+                          - searchbox "Buscar por NIF, pre-factura, pre-abono, nombre, apellido y encuentro" [ref=f1e149]
+                          - generic [ref=f1e150] [cursor=pointer]: 
+                      - list [ref=f1e151]:
+                        - 'listitem "PRE-FACTURA 2393493694 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e152] [cursor=pointer]':
+                          - generic [ref=f1e153]:
+                            - generic [ref=f1e154]: PRE-FACTURA 2393493694
+                            - generic [ref=f1e158]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e159]:
+                              - generic [ref=f1e160]:
+                                - generic [ref=f1e162]: "Importe:"
+                                - generic [ref=f1e164]:
+                                  - generic [ref=f1e166]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e167]:
+                                - generic [ref=f1e169]: "Encuentro:"
+                                - generic [ref=f1e171]:
+                                  - generic [ref=f1e173]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e176]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 2393493693 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e177] [cursor=pointer]':
+                          - generic [ref=f1e178]:
+                            - generic [ref=f1e179]: PRE-FACTURA 2393493693
+                            - generic [ref=f1e183]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e184]:
+                              - generic [ref=f1e185]:
+                                - generic [ref=f1e187]: "Importe:"
+                                - generic [ref=f1e189]:
+                                  - generic [ref=f1e191]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e192]:
+                                - generic [ref=f1e194]: "Encuentro:"
+                                - generic [ref=f1e196]:
+                                  - generic [ref=f1e198]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e201]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 2393493692 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e202] [cursor=pointer]':
+                          - generic [ref=f1e203]:
+                            - generic [ref=f1e204]: PRE-FACTURA 2393493692
+                            - generic [ref=f1e208]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e209]:
+                              - generic [ref=f1e210]:
+                                - generic [ref=f1e212]: "Importe:"
+                                - generic [ref=f1e214]:
+                                  - generic [ref=f1e216]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e217]:
+                                - generic [ref=f1e219]: "Encuentro:"
+                                - generic [ref=f1e221]:
+                                  - generic [ref=f1e223]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e226]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493689 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e227] [cursor=pointer]':
+                          - generic [ref=f1e228]:
+                            - generic [ref=f1e229]: PRE-FACTURA 1393493689
+                            - generic [ref=f1e233]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e234]:
+                              - generic [ref=f1e235]:
+                                - generic [ref=f1e237]: "Importe:"
+                                - generic [ref=f1e239]:
+                                  - generic [ref=f1e241]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e242]:
+                                - generic [ref=f1e244]: "Encuentro:"
+                                - generic [ref=f1e246]:
+                                  - generic [ref=f1e248]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e251]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493683 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e252] [cursor=pointer]':
+                          - generic [ref=f1e253]:
+                            - generic [ref=f1e254]: PRE-FACTURA 1393493683
+                            - generic [ref=f1e258]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e259]:
+                              - generic [ref=f1e260]:
+                                - generic [ref=f1e262]: "Importe:"
+                                - generic [ref=f1e264]:
+                                  - generic [ref=f1e266]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e267]:
+                                - generic [ref=f1e269]: "Encuentro:"
+                                - generic [ref=f1e271]:
+                                  - generic [ref=f1e273]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e276]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493682 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e277] [cursor=pointer]':
+                          - generic [ref=f1e278]:
+                            - generic [ref=f1e279]: PRE-FACTURA 1393493682
+                            - generic [ref=f1e283]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e284]:
+                              - generic [ref=f1e285]:
+                                - generic [ref=f1e287]: "Importe:"
+                                - generic [ref=f1e289]:
+                                  - generic [ref=f1e291]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e292]:
+                                - generic [ref=f1e294]: "Encuentro:"
+                                - generic [ref=f1e296]:
+                                  - generic [ref=f1e298]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e301]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493681 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e302] [cursor=pointer]':
+                          - generic [ref=f1e303]:
+                            - generic [ref=f1e304]: PRE-FACTURA 1393493681
+                            - generic [ref=f1e308]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e309]:
+                              - generic [ref=f1e310]:
+                                - generic [ref=f1e312]: "Importe:"
+                                - generic [ref=f1e314]:
+                                  - generic [ref=f1e316]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e317]:
+                                - generic [ref=f1e319]: "Encuentro:"
+                                - generic [ref=f1e321]:
+                                  - generic [ref=f1e323]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e326]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493680 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e327] [cursor=pointer]':
+                          - generic [ref=f1e328]:
+                            - generic [ref=f1e329]: PRE-FACTURA 1393493680
+                            - generic [ref=f1e333]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e334]:
+                              - generic [ref=f1e335]:
+                                - generic [ref=f1e337]: "Importe:"
+                                - generic [ref=f1e339]:
+                                  - generic [ref=f1e341]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e342]:
+                                - generic [ref=f1e344]: "Encuentro:"
+                                - generic [ref=f1e346]:
+                                  - generic [ref=f1e348]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e351]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493679 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e352] [cursor=pointer]':
+                          - generic [ref=f1e353]:
+                            - generic [ref=f1e354]: PRE-FACTURA 1393493679
+                            - generic [ref=f1e358]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e359]:
+                              - generic [ref=f1e360]:
+                                - generic [ref=f1e362]: "Importe:"
+                                - generic [ref=f1e364]:
+                                  - generic [ref=f1e366]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e367]:
+                                - generic [ref=f1e369]: "Encuentro:"
+                                - generic [ref=f1e371]:
+                                  - generic [ref=f1e373]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e376]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493678 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e377] [cursor=pointer]':
+                          - generic [ref=f1e378]:
+                            - generic [ref=f1e379]: PRE-FACTURA 1393493678
+                            - generic [ref=f1e383]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e384]:
+                              - generic [ref=f1e385]:
+                                - generic [ref=f1e387]: "Importe:"
+                                - generic [ref=f1e389]:
+                                  - generic [ref=f1e391]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e392]:
+                                - generic [ref=f1e394]: "Encuentro:"
+                                - generic [ref=f1e396]:
+                                  - generic [ref=f1e398]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e401]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493677 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e402] [cursor=pointer]':
+                          - generic [ref=f1e403]:
+                            - generic [ref=f1e404]: PRE-FACTURA 1393493677
+                            - generic [ref=f1e408]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e409]:
+                              - generic [ref=f1e410]:
+                                - generic [ref=f1e412]: "Importe:"
+                                - generic [ref=f1e414]:
+                                  - generic [ref=f1e416]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e417]:
+                                - generic [ref=f1e419]: "Encuentro:"
+                                - generic [ref=f1e421]:
+                                  - generic [ref=f1e423]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e426]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493676 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e427] [cursor=pointer]':
+                          - generic [ref=f1e428]:
+                            - generic [ref=f1e429]: PRE-FACTURA 1393493676
+                            - generic [ref=f1e433]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e434]:
+                              - generic [ref=f1e435]:
+                                - generic [ref=f1e437]: "Importe:"
+                                - generic [ref=f1e439]:
+                                  - generic [ref=f1e441]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e442]:
+                                - generic [ref=f1e444]: "Encuentro:"
+                                - generic [ref=f1e446]:
+                                  - generic [ref=f1e448]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e451]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493675 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e452] [cursor=pointer]':
+                          - generic [ref=f1e453]:
+                            - generic [ref=f1e454]: PRE-FACTURA 1393493675
+                            - generic [ref=f1e458]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e459]:
+                              - generic [ref=f1e460]:
+                                - generic [ref=f1e462]: "Importe:"
+                                - generic [ref=f1e464]:
+                                  - generic [ref=f1e466]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e467]:
+                                - generic [ref=f1e469]: "Encuentro:"
+                                - generic [ref=f1e471]:
+                                  - generic [ref=f1e473]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e476]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493674 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e477] [cursor=pointer]':
+                          - generic [ref=f1e478]:
+                            - generic [ref=f1e479]: PRE-FACTURA 1393493674
+                            - generic [ref=f1e483]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e484]:
+                              - generic [ref=f1e485]:
+                                - generic [ref=f1e487]: "Importe:"
+                                - generic [ref=f1e489]:
+                                  - generic [ref=f1e491]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e492]:
+                                - generic [ref=f1e494]: "Encuentro:"
+                                - generic [ref=f1e496]:
+                                  - generic [ref=f1e498]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e501]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493673 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e502] [cursor=pointer]':
+                          - generic [ref=f1e503]:
+                            - generic [ref=f1e504]: PRE-FACTURA 1393493673
+                            - generic [ref=f1e508]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e509]:
+                              - generic [ref=f1e510]:
+                                - generic [ref=f1e512]: "Importe:"
+                                - generic [ref=f1e514]:
+                                  - generic [ref=f1e516]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e517]:
+                                - generic [ref=f1e519]: "Encuentro:"
+                                - generic [ref=f1e521]:
+                                  - generic [ref=f1e523]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e526]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493672 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e527] [cursor=pointer]':
+                          - generic [ref=f1e528]:
+                            - generic [ref=f1e529]: PRE-FACTURA 1393493672
+                            - generic [ref=f1e533]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e534]:
+                              - generic [ref=f1e535]:
+                                - generic [ref=f1e537]: "Importe:"
+                                - generic [ref=f1e539]:
+                                  - generic [ref=f1e541]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e542]:
+                                - generic [ref=f1e544]: "Encuentro:"
+                                - generic [ref=f1e546]:
+                                  - generic [ref=f1e548]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e551]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493671 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e552] [cursor=pointer]':
+                          - generic [ref=f1e553]:
+                            - generic [ref=f1e554]: PRE-FACTURA 1393493671
+                            - generic [ref=f1e558]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e559]:
+                              - generic [ref=f1e560]:
+                                - generic [ref=f1e562]: "Importe:"
+                                - generic [ref=f1e564]:
+                                  - generic [ref=f1e566]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e567]:
+                                - generic [ref=f1e569]: "Encuentro:"
+                                - generic [ref=f1e571]:
+                                  - generic [ref=f1e573]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e576]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493670 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e577] [cursor=pointer]':
+                          - generic [ref=f1e578]:
+                            - generic [ref=f1e579]: PRE-FACTURA 1393493670
+                            - generic [ref=f1e583]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e584]:
+                              - generic [ref=f1e585]:
+                                - generic [ref=f1e587]: "Importe:"
+                                - generic [ref=f1e589]:
+                                  - generic [ref=f1e591]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e592]:
+                                - generic [ref=f1e594]: "Encuentro:"
+                                - generic [ref=f1e596]:
+                                  - generic [ref=f1e598]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e601]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493669 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e602] [cursor=pointer]':
+                          - generic [ref=f1e603]:
+                            - generic [ref=f1e604]: PRE-FACTURA 1393493669
+                            - generic [ref=f1e608]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e609]:
+                              - generic [ref=f1e610]:
+                                - generic [ref=f1e612]: "Importe:"
+                                - generic [ref=f1e614]:
+                                  - generic [ref=f1e616]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e617]:
+                                - generic [ref=f1e619]: "Encuentro:"
+                                - generic [ref=f1e621]:
+                                  - generic [ref=f1e623]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e626]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493668 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e627] [cursor=pointer]':
+                          - generic [ref=f1e628]:
+                            - generic [ref=f1e629]: PRE-FACTURA 1393493668
+                            - generic [ref=f1e633]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e634]:
+                              - generic [ref=f1e635]:
+                                - generic [ref=f1e637]: "Importe:"
+                                - generic [ref=f1e639]:
+                                  - generic [ref=f1e641]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e642]:
+                                - generic [ref=f1e644]: "Encuentro:"
+                                - generic [ref=f1e646]:
+                                  - generic [ref=f1e648]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e651]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493667 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e652] [cursor=pointer]':
+                          - generic [ref=f1e653]:
+                            - generic [ref=f1e654]: PRE-FACTURA 1393493667
+                            - generic [ref=f1e658]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e659]:
+                              - generic [ref=f1e660]:
+                                - generic [ref=f1e662]: "Importe:"
+                                - generic [ref=f1e664]:
+                                  - generic [ref=f1e666]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e667]:
+                                - generic [ref=f1e669]: "Encuentro:"
+                                - generic [ref=f1e671]:
+                                  - generic [ref=f1e673]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e676]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493666 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e677] [cursor=pointer]':
+                          - generic [ref=f1e678]:
+                            - generic [ref=f1e679]: PRE-FACTURA 1393493666
+                            - generic [ref=f1e683]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e684]:
+                              - generic [ref=f1e685]:
+                                - generic [ref=f1e687]: "Importe:"
+                                - generic [ref=f1e689]:
+                                  - generic [ref=f1e691]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e692]:
+                                - generic [ref=f1e694]: "Encuentro:"
+                                - generic [ref=f1e696]:
+                                  - generic [ref=f1e698]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e701]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493665 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e702] [cursor=pointer]':
+                          - generic [ref=f1e703]:
+                            - generic [ref=f1e704]: PRE-FACTURA 1393493665
+                            - generic [ref=f1e708]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e709]:
+                              - generic [ref=f1e710]:
+                                - generic [ref=f1e712]: "Importe:"
+                                - generic [ref=f1e714]:
+                                  - generic [ref=f1e716]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e717]:
+                                - generic [ref=f1e719]: "Encuentro:"
+                                - generic [ref=f1e721]:
+                                  - generic [ref=f1e723]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e726]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493664 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e727] [cursor=pointer]':
+                          - generic [ref=f1e728]:
+                            - generic [ref=f1e729]: PRE-FACTURA 1393493664
+                            - generic [ref=f1e733]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e734]:
+                              - generic [ref=f1e735]:
+                                - generic [ref=f1e737]: "Importe:"
+                                - generic [ref=f1e739]:
+                                  - generic [ref=f1e741]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e742]:
+                                - generic [ref=f1e744]: "Encuentro:"
+                                - generic [ref=f1e746]:
+                                  - generic [ref=f1e748]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e751]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493663 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e752] [cursor=pointer]':
+                          - generic [ref=f1e753]:
+                            - generic [ref=f1e754]: PRE-FACTURA 1393493663
+                            - generic [ref=f1e758]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e759]:
+                              - generic [ref=f1e760]:
+                                - generic [ref=f1e762]: "Importe:"
+                                - generic [ref=f1e764]:
+                                  - generic [ref=f1e766]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e767]:
+                                - generic [ref=f1e769]: "Encuentro:"
+                                - generic [ref=f1e771]:
+                                  - generic [ref=f1e773]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e776]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493662 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e777] [cursor=pointer]':
+                          - generic [ref=f1e778]:
+                            - generic [ref=f1e779]: PRE-FACTURA 1393493662
+                            - generic [ref=f1e783]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e784]:
+                              - generic [ref=f1e785]:
+                                - generic [ref=f1e787]: "Importe:"
+                                - generic [ref=f1e789]:
+                                  - generic [ref=f1e791]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e792]:
+                                - generic [ref=f1e794]: "Encuentro:"
+                                - generic [ref=f1e796]:
+                                  - generic [ref=f1e798]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e801]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493661 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e802] [cursor=pointer]':
+                          - generic [ref=f1e803]:
+                            - generic [ref=f1e804]: PRE-FACTURA 1393493661
+                            - generic [ref=f1e808]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e809]:
+                              - generic [ref=f1e810]:
+                                - generic [ref=f1e812]: "Importe:"
+                                - generic [ref=f1e814]:
+                                  - generic [ref=f1e816]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e817]:
+                                - generic [ref=f1e819]: "Encuentro:"
+                                - generic [ref=f1e821]:
+                                  - generic [ref=f1e823]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e826]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493660 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e827] [cursor=pointer]':
+                          - generic [ref=f1e828]:
+                            - generic [ref=f1e829]: PRE-FACTURA 1393493660
+                            - generic [ref=f1e833]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e834]:
+                              - generic [ref=f1e835]:
+                                - generic [ref=f1e837]: "Importe:"
+                                - generic [ref=f1e839]:
+                                  - generic [ref=f1e841]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e842]:
+                                - generic [ref=f1e844]: "Encuentro:"
+                                - generic [ref=f1e846]:
+                                  - generic [ref=f1e848]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e851]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493659 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e852] [cursor=pointer]':
+                          - generic [ref=f1e853]:
+                            - generic [ref=f1e854]: PRE-FACTURA 1393493659
+                            - generic [ref=f1e858]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e859]:
+                              - generic [ref=f1e860]:
+                                - generic [ref=f1e862]: "Importe:"
+                                - generic [ref=f1e864]:
+                                  - generic [ref=f1e866]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e867]:
+                                - generic [ref=f1e869]: "Encuentro:"
+                                - generic [ref=f1e871]:
+                                  - generic [ref=f1e873]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e876]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493658 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e877] [cursor=pointer]':
+                          - generic [ref=f1e878]:
+                            - generic [ref=f1e879]: PRE-FACTURA 1393493658
+                            - generic [ref=f1e883]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e884]:
+                              - generic [ref=f1e885]:
+                                - generic [ref=f1e887]: "Importe:"
+                                - generic [ref=f1e889]:
+                                  - generic [ref=f1e891]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e892]:
+                                - generic [ref=f1e894]: "Encuentro:"
+                                - generic [ref=f1e896]:
+                                  - generic [ref=f1e898]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e901]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493657 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e902] [cursor=pointer]':
+                          - generic [ref=f1e903]:
+                            - generic [ref=f1e904]: PRE-FACTURA 1393493657
+                            - generic [ref=f1e908]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e909]:
+                              - generic [ref=f1e910]:
+                                - generic [ref=f1e912]: "Importe:"
+                                - generic [ref=f1e914]:
+                                  - generic [ref=f1e916]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e917]:
+                                - generic [ref=f1e919]: "Encuentro:"
+                                - generic [ref=f1e921]:
+                                  - generic [ref=f1e923]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e926]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493656 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e927] [cursor=pointer]':
+                          - generic [ref=f1e928]:
+                            - generic [ref=f1e929]: PRE-FACTURA 1393493656
+                            - generic [ref=f1e933]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e934]:
+                              - generic [ref=f1e935]:
+                                - generic [ref=f1e937]: "Importe:"
+                                - generic [ref=f1e939]:
+                                  - generic [ref=f1e941]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e942]:
+                                - generic [ref=f1e944]: "Encuentro:"
+                                - generic [ref=f1e946]:
+                                  - generic [ref=f1e948]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e951]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493655 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e952] [cursor=pointer]':
+                          - generic [ref=f1e953]:
+                            - generic [ref=f1e954]: PRE-FACTURA 1393493655
+                            - generic [ref=f1e958]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e959]:
+                              - generic [ref=f1e960]:
+                                - generic [ref=f1e962]: "Importe:"
+                                - generic [ref=f1e964]:
+                                  - generic [ref=f1e966]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e967]:
+                                - generic [ref=f1e969]: "Encuentro:"
+                                - generic [ref=f1e971]:
+                                  - generic [ref=f1e973]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e976]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493654 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e977] [cursor=pointer]':
+                          - generic [ref=f1e978]:
+                            - generic [ref=f1e979]: PRE-FACTURA 1393493654
+                            - generic [ref=f1e983]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e984]:
+                              - generic [ref=f1e985]:
+                                - generic [ref=f1e987]: "Importe:"
+                                - generic [ref=f1e989]:
+                                  - generic [ref=f1e991]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e992]:
+                                - generic [ref=f1e994]: "Encuentro:"
+                                - generic [ref=f1e996]:
+                                  - generic [ref=f1e998]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1001]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493653 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1002] [cursor=pointer]':
+                          - generic [ref=f1e1003]:
+                            - generic [ref=f1e1004]: PRE-FACTURA 1393493653
+                            - generic [ref=f1e1008]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1009]:
+                              - generic [ref=f1e1010]:
+                                - generic [ref=f1e1012]: "Importe:"
+                                - generic [ref=f1e1014]:
+                                  - generic [ref=f1e1016]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1017]:
+                                - generic [ref=f1e1019]: "Encuentro:"
+                                - generic [ref=f1e1021]:
+                                  - generic [ref=f1e1023]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1026]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493652 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1027] [cursor=pointer]':
+                          - generic [ref=f1e1028]:
+                            - generic [ref=f1e1029]: PRE-FACTURA 1393493652
+                            - generic [ref=f1e1033]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1034]:
+                              - generic [ref=f1e1035]:
+                                - generic [ref=f1e1037]: "Importe:"
+                                - generic [ref=f1e1039]:
+                                  - generic [ref=f1e1041]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1042]:
+                                - generic [ref=f1e1044]: "Encuentro:"
+                                - generic [ref=f1e1046]:
+                                  - generic [ref=f1e1048]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1051]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493651 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1052] [cursor=pointer]':
+                          - generic [ref=f1e1053]:
+                            - generic [ref=f1e1054]: PRE-FACTURA 1393493651
+                            - generic [ref=f1e1058]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1059]:
+                              - generic [ref=f1e1060]:
+                                - generic [ref=f1e1062]: "Importe:"
+                                - generic [ref=f1e1064]:
+                                  - generic [ref=f1e1066]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1067]:
+                                - generic [ref=f1e1069]: "Encuentro:"
+                                - generic [ref=f1e1071]:
+                                  - generic [ref=f1e1073]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1076]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493650 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1077] [cursor=pointer]':
+                          - generic [ref=f1e1078]:
+                            - generic [ref=f1e1079]: PRE-FACTURA 1393493650
+                            - generic [ref=f1e1083]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1084]:
+                              - generic [ref=f1e1085]:
+                                - generic [ref=f1e1087]: "Importe:"
+                                - generic [ref=f1e1089]:
+                                  - generic [ref=f1e1091]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1092]:
+                                - generic [ref=f1e1094]: "Encuentro:"
+                                - generic [ref=f1e1096]:
+                                  - generic [ref=f1e1098]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1101]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493649 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1102] [cursor=pointer]':
+                          - generic [ref=f1e1103]:
+                            - generic [ref=f1e1104]: PRE-FACTURA 1393493649
+                            - generic [ref=f1e1108]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1109]:
+                              - generic [ref=f1e1110]:
+                                - generic [ref=f1e1112]: "Importe:"
+                                - generic [ref=f1e1114]:
+                                  - generic [ref=f1e1116]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1117]:
+                                - generic [ref=f1e1119]: "Encuentro:"
+                                - generic [ref=f1e1121]:
+                                  - generic [ref=f1e1123]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1126]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493648 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1127] [cursor=pointer]':
+                          - generic [ref=f1e1128]:
+                            - generic [ref=f1e1129]: PRE-FACTURA 1393493648
+                            - generic [ref=f1e1133]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1134]:
+                              - generic [ref=f1e1135]:
+                                - generic [ref=f1e1137]: "Importe:"
+                                - generic [ref=f1e1139]:
+                                  - generic [ref=f1e1141]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1142]:
+                                - generic [ref=f1e1144]: "Encuentro:"
+                                - generic [ref=f1e1146]:
+                                  - generic [ref=f1e1148]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1151]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493647 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1152] [cursor=pointer]':
+                          - generic [ref=f1e1153]:
+                            - generic [ref=f1e1154]: PRE-FACTURA 1393493647
+                            - generic [ref=f1e1158]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1159]:
+                              - generic [ref=f1e1160]:
+                                - generic [ref=f1e1162]: "Importe:"
+                                - generic [ref=f1e1164]:
+                                  - generic [ref=f1e1166]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1167]:
+                                - generic [ref=f1e1169]: "Encuentro:"
+                                - generic [ref=f1e1171]:
+                                  - generic [ref=f1e1173]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1176]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493646 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1177] [cursor=pointer]':
+                          - generic [ref=f1e1178]:
+                            - generic [ref=f1e1179]: PRE-FACTURA 1393493646
+                            - generic [ref=f1e1183]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1184]:
+                              - generic [ref=f1e1185]:
+                                - generic [ref=f1e1187]: "Importe:"
+                                - generic [ref=f1e1189]:
+                                  - generic [ref=f1e1191]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1192]:
+                                - generic [ref=f1e1194]: "Encuentro:"
+                                - generic [ref=f1e1196]:
+                                  - generic [ref=f1e1198]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1201]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493645 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1202] [cursor=pointer]':
+                          - generic [ref=f1e1203]:
+                            - generic [ref=f1e1204]: PRE-FACTURA 1393493645
+                            - generic [ref=f1e1208]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1209]:
+                              - generic [ref=f1e1210]:
+                                - generic [ref=f1e1212]: "Importe:"
+                                - generic [ref=f1e1214]:
+                                  - generic [ref=f1e1216]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1217]:
+                                - generic [ref=f1e1219]: "Encuentro:"
+                                - generic [ref=f1e1221]:
+                                  - generic [ref=f1e1223]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1226]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493644 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1227] [cursor=pointer]':
+                          - generic [ref=f1e1228]:
+                            - generic [ref=f1e1229]: PRE-FACTURA 1393493644
+                            - generic [ref=f1e1233]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1234]:
+                              - generic [ref=f1e1235]:
+                                - generic [ref=f1e1237]: "Importe:"
+                                - generic [ref=f1e1239]:
+                                  - generic [ref=f1e1241]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1242]:
+                                - generic [ref=f1e1244]: "Encuentro:"
+                                - generic [ref=f1e1246]:
+                                  - generic [ref=f1e1248]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1251]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493643 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1252] [cursor=pointer]':
+                          - generic [ref=f1e1253]:
+                            - generic [ref=f1e1254]: PRE-FACTURA 1393493643
+                            - generic [ref=f1e1258]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1259]:
+                              - generic [ref=f1e1260]:
+                                - generic [ref=f1e1262]: "Importe:"
+                                - generic [ref=f1e1264]:
+                                  - generic [ref=f1e1266]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1267]:
+                                - generic [ref=f1e1269]: "Encuentro:"
+                                - generic [ref=f1e1271]:
+                                  - generic [ref=f1e1273]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1276]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493642 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1277] [cursor=pointer]':
+                          - generic [ref=f1e1278]:
+                            - generic [ref=f1e1279]: PRE-FACTURA 1393493642
+                            - generic [ref=f1e1283]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1284]:
+                              - generic [ref=f1e1285]:
+                                - generic [ref=f1e1287]: "Importe:"
+                                - generic [ref=f1e1289]:
+                                  - generic [ref=f1e1291]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1292]:
+                                - generic [ref=f1e1294]: "Encuentro:"
+                                - generic [ref=f1e1296]:
+                                  - generic [ref=f1e1298]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1301]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493641 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1302] [cursor=pointer]':
+                          - generic [ref=f1e1303]:
+                            - generic [ref=f1e1304]: PRE-FACTURA 1393493641
+                            - generic [ref=f1e1308]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1309]:
+                              - generic [ref=f1e1310]:
+                                - generic [ref=f1e1312]: "Importe:"
+                                - generic [ref=f1e1314]:
+                                  - generic [ref=f1e1316]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1317]:
+                                - generic [ref=f1e1319]: "Encuentro:"
+                                - generic [ref=f1e1321]:
+                                  - generic [ref=f1e1323]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1326]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493640 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1327] [cursor=pointer]':
+                          - generic [ref=f1e1328]:
+                            - generic [ref=f1e1329]: PRE-FACTURA 1393493640
+                            - generic [ref=f1e1333]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1334]:
+                              - generic [ref=f1e1335]:
+                                - generic [ref=f1e1337]: "Importe:"
+                                - generic [ref=f1e1339]:
+                                  - generic [ref=f1e1341]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1342]:
+                                - generic [ref=f1e1344]: "Encuentro:"
+                                - generic [ref=f1e1346]:
+                                  - generic [ref=f1e1348]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1351]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493639 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1352] [cursor=pointer]':
+                          - generic [ref=f1e1353]:
+                            - generic [ref=f1e1354]: PRE-FACTURA 1393493639
+                            - generic [ref=f1e1358]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1359]:
+                              - generic [ref=f1e1360]:
+                                - generic [ref=f1e1362]: "Importe:"
+                                - generic [ref=f1e1364]:
+                                  - generic [ref=f1e1366]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1367]:
+                                - generic [ref=f1e1369]: "Encuentro:"
+                                - generic [ref=f1e1371]:
+                                  - generic [ref=f1e1373]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1376]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493638 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1377] [cursor=pointer]':
+                          - generic [ref=f1e1378]:
+                            - generic [ref=f1e1379]: PRE-FACTURA 1393493638
+                            - generic [ref=f1e1383]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1384]:
+                              - generic [ref=f1e1385]:
+                                - generic [ref=f1e1387]: "Importe:"
+                                - generic [ref=f1e1389]:
+                                  - generic [ref=f1e1391]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1392]:
+                                - generic [ref=f1e1394]: "Encuentro:"
+                                - generic [ref=f1e1396]:
+                                  - generic [ref=f1e1398]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1401]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493637 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1402] [cursor=pointer]':
+                          - generic [ref=f1e1403]:
+                            - generic [ref=f1e1404]: PRE-FACTURA 1393493637
+                            - generic [ref=f1e1408]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1409]:
+                              - generic [ref=f1e1410]:
+                                - generic [ref=f1e1412]: "Importe:"
+                                - generic [ref=f1e1414]:
+                                  - generic [ref=f1e1416]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1417]:
+                                - generic [ref=f1e1419]: "Encuentro:"
+                                - generic [ref=f1e1421]:
+                                  - generic [ref=f1e1423]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1426]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493636 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1427] [cursor=pointer]':
+                          - generic [ref=f1e1428]:
+                            - generic [ref=f1e1429]: PRE-FACTURA 1393493636
+                            - generic [ref=f1e1433]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1434]:
+                              - generic [ref=f1e1435]:
+                                - generic [ref=f1e1437]: "Importe:"
+                                - generic [ref=f1e1439]:
+                                  - generic [ref=f1e1441]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1442]:
+                                - generic [ref=f1e1444]: "Encuentro:"
+                                - generic [ref=f1e1446]:
+                                  - generic [ref=f1e1448]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1451]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493635 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1452] [cursor=pointer]':
+                          - generic [ref=f1e1453]:
+                            - generic [ref=f1e1454]: PRE-FACTURA 1393493635
+                            - generic [ref=f1e1458]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1459]:
+                              - generic [ref=f1e1460]:
+                                - generic [ref=f1e1462]: "Importe:"
+                                - generic [ref=f1e1464]:
+                                  - generic [ref=f1e1466]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1467]:
+                                - generic [ref=f1e1469]: "Encuentro:"
+                                - generic [ref=f1e1471]:
+                                  - generic [ref=f1e1473]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1476]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493634 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1477] [cursor=pointer]':
+                          - generic [ref=f1e1478]:
+                            - generic [ref=f1e1479]: PRE-FACTURA 1393493634
+                            - generic [ref=f1e1483]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1484]:
+                              - generic [ref=f1e1485]:
+                                - generic [ref=f1e1487]: "Importe:"
+                                - generic [ref=f1e1489]:
+                                  - generic [ref=f1e1491]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1492]:
+                                - generic [ref=f1e1494]: "Encuentro:"
+                                - generic [ref=f1e1496]:
+                                  - generic [ref=f1e1498]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1501]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493633 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1502] [cursor=pointer]':
+                          - generic [ref=f1e1503]:
+                            - generic [ref=f1e1504]: PRE-FACTURA 1393493633
+                            - generic [ref=f1e1508]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1509]:
+                              - generic [ref=f1e1510]:
+                                - generic [ref=f1e1512]: "Importe:"
+                                - generic [ref=f1e1514]:
+                                  - generic [ref=f1e1516]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1517]:
+                                - generic [ref=f1e1519]: "Encuentro:"
+                                - generic [ref=f1e1521]:
+                                  - generic [ref=f1e1523]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1526]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493632 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1527] [cursor=pointer]':
+                          - generic [ref=f1e1528]:
+                            - generic [ref=f1e1529]: PRE-FACTURA 1393493632
+                            - generic [ref=f1e1533]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1534]:
+                              - generic [ref=f1e1535]:
+                                - generic [ref=f1e1537]: "Importe:"
+                                - generic [ref=f1e1539]:
+                                  - generic [ref=f1e1541]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1542]:
+                                - generic [ref=f1e1544]: "Encuentro:"
+                                - generic [ref=f1e1546]:
+                                  - generic [ref=f1e1548]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1551]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493631 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1552] [cursor=pointer]':
+                          - generic [ref=f1e1553]:
+                            - generic [ref=f1e1554]: PRE-FACTURA 1393493631
+                            - generic [ref=f1e1558]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1559]:
+                              - generic [ref=f1e1560]:
+                                - generic [ref=f1e1562]: "Importe:"
+                                - generic [ref=f1e1564]:
+                                  - generic [ref=f1e1566]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1567]:
+                                - generic [ref=f1e1569]: "Encuentro:"
+                                - generic [ref=f1e1571]:
+                                  - generic [ref=f1e1573]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1576]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493630 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1577] [cursor=pointer]':
+                          - generic [ref=f1e1578]:
+                            - generic [ref=f1e1579]: PRE-FACTURA 1393493630
+                            - generic [ref=f1e1583]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1584]:
+                              - generic [ref=f1e1585]:
+                                - generic [ref=f1e1587]: "Importe:"
+                                - generic [ref=f1e1589]:
+                                  - generic [ref=f1e1591]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1592]:
+                                - generic [ref=f1e1594]: "Encuentro:"
+                                - generic [ref=f1e1596]:
+                                  - generic [ref=f1e1598]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1601]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493629 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1602] [cursor=pointer]':
+                          - generic [ref=f1e1603]:
+                            - generic [ref=f1e1604]: PRE-FACTURA 1393493629
+                            - generic [ref=f1e1608]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1609]:
+                              - generic [ref=f1e1610]:
+                                - generic [ref=f1e1612]: "Importe:"
+                                - generic [ref=f1e1614]:
+                                  - generic [ref=f1e1616]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1617]:
+                                - generic [ref=f1e1619]: "Encuentro:"
+                                - generic [ref=f1e1621]:
+                                  - generic [ref=f1e1623]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1626]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493627 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1627] [cursor=pointer]':
+                          - generic [ref=f1e1628]:
+                            - generic [ref=f1e1629]: PRE-FACTURA 1393493627
+                            - generic [ref=f1e1633]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1634]:
+                              - generic [ref=f1e1635]:
+                                - generic [ref=f1e1637]: "Importe:"
+                                - generic [ref=f1e1639]:
+                                  - generic [ref=f1e1641]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1642]:
+                                - generic [ref=f1e1644]: "Encuentro:"
+                                - generic [ref=f1e1646]:
+                                  - generic [ref=f1e1648]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1651]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493625 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e1652] [cursor=pointer]':
+                          - generic [ref=f1e1653]:
+                            - generic [ref=f1e1654]: PRE-FACTURA 1393493625
+                            - generic [ref=f1e1658]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e1659]:
+                              - generic [ref=f1e1660]:
+                                - generic [ref=f1e1662]: "Importe:"
+                                - generic [ref=f1e1664]:
+                                  - generic [ref=f1e1666]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e1667]:
+                                - generic [ref=f1e1669]: "Encuentro:"
+                                - generic [ref=f1e1671]:
+                                  - generic [ref=f1e1673]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e1676]: 13/03/2024 *HOSP-Hospitalización*
+                - contentinfo [ref=f1e1678]:
+                  - toolbar "Footer actions" [ref=f1e1679]:
+                    - button "Actualizar datos de pagos" [ref=f1e1681] [cursor=pointer]:
+                      - generic [ref=f1e1683]: 
+                    - button "Mostrar opciones para PINPAD" [ref=f1e1685] [cursor=pointer]:
+                      - generic [ref=f1e1687]: 
+              - generic [ref=f1e1690]:
+                - text: 
+                - generic [ref=f1e1692]:
+                  - banner [ref=f1e1693]:
+                    - button "CLINICA INTERNACIONAL S.A.C. - SAN ISIDRO - AMBULATORIA-ADMISION" [ref=f1e1696] [cursor=pointer]:
+                      - generic [ref=f1e1698]: CLINICA INTERNACIONAL S.A.C. - SAN ISIDRO - AMBULATORIA-ADMISION
+                  - generic [ref=f1e1700]:
+                    - region "RUIZ DIEZ, JAQUELINE" [ref=f1e1701]:
+                      - generic [ref=f1e1703]:
+                        - generic [ref=f1e1704]:
+                          - generic [ref=f1e1705]:
+                            - generic [ref=f1e1706]:
+                              - heading "RUIZ DIEZ, JAQUELINE" [level=1] [ref=f1e1708]:
+                                - generic [ref=f1e1710]: RUIZ DIEZ, JAQUELINE
+                              - generic [ref=f1e1713]: HOSP-Hospitalización
+                            - img "RUIZ DIEZ, JAQUELINE" [ref=f1e1715]: 
+                          - generic [ref=f1e1717]:
+                            - generic [ref=f1e1718]: 2,360.00
+                            - generic [ref=f1e1719]: PEN
+                        - generic [ref=f1e1720]:
+                          - generic [ref=f1e1721]:
+                            - generic [ref=f1e1723]:
+                              - generic [ref=f1e1724]: DOC. IDENTIDAD
+                              - generic [ref=f1e1725]: ":"
+                              - generic [ref=f1e1726]: "002764110"
+                            - generic [ref=f1e1728]:
+                              - generic [ref=f1e1729]: CÓDIGO PRE-FACTURA
+                              - generic [ref=f1e1730]: ":"
+                              - generic [ref=f1e1731]: "2393493694"
+                            - generic [ref=f1e1733]:
+                              - generic [ref=f1e1734]: FECHA
+                              - generic [ref=f1e1735]: ":"
+                              - generic [ref=f1e1736]: 13/03/2024
+                          - generic [ref=f1e1737]:
+                            - generic [ref=f1e1739]:
+                              - generic [ref=f1e1740]: ENCUENTRO
+                              - generic [ref=f1e1741]: ":"
+                              - generic [ref=f1e1742]: "100000029"
+                            - generic [ref=f1e1744]:
+                              - generic [ref=f1e1745]: SEDE
+                              - generic [ref=f1e1746]: ":"
+                              - generic [ref=f1e1747]: SAN BORJA (1002)
+                          - generic [ref=f1e1748]:
+                            - generic [ref=f1e1751]: RIMAC S.A. ENTIDAD PRESTADORA DE SALUD
+                            - generic [ref=f1e1753]:
+                              - generic [ref=f1e1754]: SIST. MÉDICO
+                              - generic [ref=f1e1755]: ":"
+                              - generic [ref=f1e1756]: XHIS
+                    - form "Información de pago" [ref=f1e1757]:
+                      - generic [ref=f1e1759]:
+                        - button "Expand/Collapse" [expanded] [ref=f1e1760] [cursor=pointer]:
+                          - generic [ref=f1e1762]: 
+                        - heading "Información de pago" [level=2] [ref=f1e1764]
+                      - generic [ref=f1e1767]:
+                        - generic "Tipo de cambio 3.67 Neutral 06/01/2026 Action Wide Tile" [ref=f1e1769] [cursor=pointer]:
+                          - generic [ref=f1e1773]: Tipo de cambio
+                          - generic "3.67 Neutral 06/01/2026 3.67 Neutral 06/01/2026" [ref=f1e1775]:
+                            - img "3.67 Neutral" [ref=f1e1777]:
+                              - generic [ref=f1e1779]:
+                                - generic [ref=f1e1780]: 
+                                - generic [ref=f1e1781]: "3.67"
+                            - generic [ref=f1e1782]: 06/01/2026
+                        - generic "Monto a cobrar (Soles) 2,360.00PEN Neutral Moneda local Action Wide Tile" [ref=f1e1784] [cursor=pointer]:
+                          - generic [ref=f1e1788]: Monto a cobrar (Soles)
+                          - generic [ref=f1e1790]:
+                            - img [ref=f1e1792]:
+                              - generic [ref=f1e1794]:
+                                - generic [ref=f1e1795]: 2,360.00
+                                - generic [ref=f1e1797]: PEN
+                            - generic [ref=f1e1798]: Moneda local
+                        - generic "Monto a cobrar (Dólares) 643.05USD Neutral Moneda extranjera Action Wide Tile" [ref=f1e1800] [cursor=pointer]:
+                          - generic [ref=f1e1804]: Monto a cobrar (Dólares)
+                          - generic "643.05USD Neutral Moneda extranjera 643.05USD Neutral Moneda extranjera" [ref=f1e1806]:
+                            - img "643.05USD Neutral" [ref=f1e1808]:
+                              - generic [ref=f1e1810]:
+                                - generic [ref=f1e1811]: "643.05"
+                                - generic [ref=f1e1813]: USD
+                            - generic [ref=f1e1814]: Moneda extranjera
+                    - form "Detalle de pago" [ref=f1e1815]:
+                      - generic [ref=f1e1817]:
+                        - button "Expand/Collapse" [expanded] [ref=f1e1818] [cursor=pointer]:
+                          - generic [ref=f1e1820]: 
+                        - toolbar "Detalle de pago" [ref=f1e1821]:
+                          - heading "Detalle de pago" [level=2] [ref=f1e1822]
+                          - button "Efectivo" [ref=f1e1824] [cursor=pointer]:
+                            - generic [ref=f1e1826]: Efectivo
+                          - button "Tarjeta" [ref=f1e1827] [cursor=pointer]:
+                            - generic [ref=f1e1829]: Tarjeta
+                          - button "Depósito" [ref=f1e1830] [cursor=pointer]:
+                            - generic [ref=f1e1832]: Depósito
+                          - button "Anticipo" [ref=f1e1833] [cursor=pointer]:
+                            - generic [ref=f1e1835]: Anticipo
+                          - button "Más medios" [ref=f1e1836] [cursor=pointer]:
+                            - generic [ref=f1e1837]:
+                              - generic [ref=f1e1838]: 
+                              - generic [ref=f1e1839]: Más medios
+                      - grid [ref=f1e1842]:
+                        - rowgroup [ref=f1e1843]:
+                          - row "Selection N° Forma de pago Núm. referencia Núm. tarjeta/Cheque Banco Núm. operación Importe" [ref=f1e1844]:
+                            - columnheader "Selection" [ref=f1e1845]:
+                              - checkbox "Select All" [ref=f1e1846]
+                            - columnheader "N°" [ref=f1e1848]:
+                              - generic [ref=f1e1850]: N°
+                            - columnheader "Forma de pago" [ref=f1e1851]:
+                              - generic [ref=f1e1853]: Forma de pago
+                            - columnheader [ref=f1e1854]
+                            - columnheader [ref=f1e1856]
+                            - columnheader "Núm. referencia" [ref=f1e1858]:
+                              - generic [ref=f1e1860]: Núm. referencia
+                            - columnheader "Núm. tarjeta/Cheque" [ref=f1e1861]:
+                              - generic [ref=f1e1863]: Núm. tarjeta/Cheque
+                            - columnheader "Banco" [ref=f1e1864]:
+                              - generic [ref=f1e1866]: Banco
+                            - columnheader "Núm. operación" [ref=f1e1867]:
+                              - generic [ref=f1e1869]: Núm. operación
+                            - columnheader "Importe" [ref=f1e1870]:
+                              - generic [ref=f1e1872]: Importe
+                        - rowgroup [ref=f1e1873]:
+                          - row "Item Selection 1 Efectivo No aplica No aplica No aplica No aplica 2,360.00 PEN Emphasized" [ref=f1e1874]:
+                            - gridcell "Item Selection" [ref=f1e1875]:
+                              - checkbox "Item Selection" [ref=f1e1876]
+                            - gridcell "1" [ref=f1e1878]:
+                              - generic [ref=f1e1881]: "1"
+                            - gridcell "Efectivo" [ref=f1e1882]:
+                              - generic [ref=f1e1885]: Efectivo
+                            - gridcell [ref=f1e1886]
+                            - gridcell [ref=f1e1887]
+                            - gridcell "No aplica" [ref=f1e1888]:
+                              - generic [ref=f1e1889]: No aplica
+                            - gridcell "No aplica" [ref=f1e1890]:
+                              - generic [ref=f1e1891]: No aplica
+                            - gridcell "No aplica" [ref=f1e1892]:
+                              - generic [ref=f1e1893]: No aplica
+                            - gridcell "No aplica" [ref=f1e1894]:
+                              - generic [ref=f1e1895]: No aplica
+                            - gridcell "2,360.00 PEN Emphasized" [ref=f1e1896]:
+                              - generic [ref=f1e1897]:
+                                - generic [ref=f1e1898]:
+                                  - generic [ref=f1e1899]: 2,360.00
+                                  - generic [ref=f1e1900]: PEN
+                                - generic: Emphasized
+                    - form "Resumen" [ref=f1e1902]:
+                      - generic [ref=f1e1904]:
+                        - button "Expand/Collapse" [expanded] [ref=f1e1905] [cursor=pointer]:
+                          - generic [ref=f1e1907]: 
+                        - heading "Resumen" [level=2] [ref=f1e1909]
+                      - generic [ref=f1e1915]:
+                        - generic [ref=f1e1917]:
+                          - heading "Vueltos" [level=2] [ref=f1e1918]
+                          - form [ref=f1e1920]:
+                            - generic [ref=f1e1924]:
+                              - generic [ref=f1e1927]:
+                                - generic [ref=f1e1928]: Modo abono
+                                - generic [ref=f1e1929]: ":"
+                              - button "Modo abono Seleccionar" [disabled] [ref=f1e1931]:
+                                - generic [ref=f1e1932]:
+                                  - generic [ref=f1e1933]: 
+                                  - generic [ref=f1e1934]: Seleccionar
+                              - generic [ref=f1e1938]:
+                                - generic [ref=f1e1939]: Importe
+                                - generic [ref=f1e1940]: ":"
+                              - generic "Importe" [ref=f1e1942]:
+                                - generic [ref=f1e1944]: "0.00"
+                                - generic: Emphasized
+                              - generic [ref=f1e1946]:
+                                - combobox [disabled] [ref=f1e1947]: Soles
+                                - textbox [disabled] [ref=f1e1948]: PEN
+                                - generic [ref=f1e1949]: Soles
+                                - generic [ref=f1e1950]: 
+                        - generic [ref=f1e1952]:
+                          - heading "Por cobrar" [level=2] [ref=f1e1953]
+                          - generic [ref=f1e1954]:
+                            - generic [ref=f1e1955]: SIN PENDIENTE POR COBRAR
+                            - generic: Info Label
+                        - generic [ref=f1e1957]:
+                          - heading "Resumen" [level=2] [ref=f1e1958]
+                          - form [ref=f1e1960]:
+                            - generic [ref=f1e1964]:
+                              - generic [ref=f1e1967]:
+                                - generic [ref=f1e1968]: Total recibido
+                                - generic [ref=f1e1969]: ":"
+                              - generic "Total recibido" [ref=f1e1971]:
+                                - generic [ref=f1e1972]:
+                                  - generic [ref=f1e1973]: 2,360.00
+                                  - generic [ref=f1e1974]: PEN
+                                - generic: Emphasized
+                              - generic "Total recibido" [ref=f1e1976]:
+                                - generic [ref=f1e1977]:
+                                  - generic [ref=f1e1978]: "0.00"
+                                  - generic [ref=f1e1979]: USD
+                                - generic: Emphasized
+                              - generic [ref=f1e1982]:
+                                - generic [ref=f1e1983]: Total efectivo
+                                - generic [ref=f1e1984]: ":"
+                              - generic "Total efectivo" [ref=f1e1986]:
+                                - generic [ref=f1e1987]:
+                                  - generic [ref=f1e1988]: 2,360.00
+                                  - generic [ref=f1e1989]: PEN
+                                - generic: Emphasized
+                              - generic "Total efectivo" [ref=f1e1991]:
+                                - generic [ref=f1e1992]:
+                                  - generic [ref=f1e1993]: "0.00"
+                                  - generic [ref=f1e1994]: USD
+                                - generic: Emphasized
+                              - generic [ref=f1e1997]:
+                                - generic [ref=f1e1998]: Total tarjeta
+                                - generic [ref=f1e1999]: ":"
+                              - generic "Total tarjeta" [ref=f1e2001]:
+                                - generic [ref=f1e2002]:
+                                  - generic [ref=f1e2003]: "0.00"
+                                  - generic [ref=f1e2004]: PEN
+                                - generic: Emphasized
+                              - generic "Total tarjeta" [ref=f1e2006]:
+                                - generic [ref=f1e2007]:
+                                  - generic [ref=f1e2008]: "0.00"
+                                  - generic [ref=f1e2009]: USD
+                                - generic: Emphasized
+                  - contentinfo [ref=f1e2010]:
+                    - button "Generar" [ref=f1e2013] [cursor=pointer]:
+                      - generic [ref=f1e2014]:
+                        - generic [ref=f1e2015]: 
+                        - generic [ref=f1e2016]: Generar
+    - contentinfo
+```
