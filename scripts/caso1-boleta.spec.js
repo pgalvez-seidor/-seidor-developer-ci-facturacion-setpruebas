@@ -94,7 +94,7 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
 
     const filterSelect = await fastFind('#application-Facturacion-display-component---Home--Master--selectCriterioBusqueda-label, .sapMSFSelect', 5000);
     await filterSelect.click({ force: true });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1000); // Esperar que el popover baje
 
     const filterOption = await fastFind('li:nth-child(3), .sapMSelectListItem:nth-child(3)', 5000);
     await filterOption.click({ force: true });
@@ -105,18 +105,22 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     await page.keyboard.press('Enter');
 
     await page.waitForTimeout(2000);
+    console.log(`🔎 Seleccionando la Pre-factura: ${activeId} ...`);
 
-    const clicked = await activeFrame.evaluate((id) => {
-        const items = Array.from(document.querySelectorAll('li, .sapMLIB, [role="listitem"], .sapMObjLI'));
-        const target = items.find(el => el.textContent && el.textContent.includes(id) && el.offsetHeight > 0);
-        if (target) { target.click(); return true; }
-        return false;
-    }, activeId);
+    // Click NORMAL de Playwright en el bloque general del List Item (para que el master-detail detecte el event)
+    try {
+        const record = await fastFind('.sapMObjLI, .sapMLIB', 10000);
+        // Movemos el mouse primero y hacemos click, simulando humano
+        await record.hover();
+        await record.click();
 
-    if (!clicked) {
+        // Y un enter por si acaso SAP lo tiene enfocado y el enter dispara la ruta 
+        await page.keyboard.press('Enter');
+    } catch (e) {
         await safeScreenshot('error-prefactura-no-encontrada');
-        throw new Error(`Pre-factura ${activeId} no encontrada en la lista`);
+        throw new Error(`Pre-factura ${activeId} no encontrada en la lista: ${e.message}`);
     }
+
     logStep('buscar-prefactura', 'ok');
 
     await page.waitForTimeout(1000);
@@ -126,14 +130,29 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
 
     // --- COBRO EN EFECTIVO ---
     logStep('cobro-efectivo', 'running');
-    const efectivoBtn = await fastFind('button:has-text("Efectivo"), .sapMBtn:has-text("Efectivo"), span:has-text("Efectivo")', 10000);
-    await efectivoBtn.click({ force: true });
 
-    const pagarBtn = await fastFind('button:has-text("Pagar"), button:has-text("Agregar"), span:has-text("Pagar")', 10000);
-    await pagarBtn.click({ force: true });
+    // Respiro esperando que la pestaña derecha termine de cargar
+    await page.waitForTimeout(2000);
 
+    console.log("💵 Cobrando Documento en Efectivo...");
+
+    // Seleccionamos estrictamente el contenedor button para que Fiori detecte el mouse event completo
+    const efectivoBtn = activeFrame.locator('button:has-text("Efectivo")').first();
+    await efectivoBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await efectivoBtn.click(); // Playwright se encarga de despachar hover + mousedown + mouseup
+
+    await page.waitForTimeout(2000); // Dar chance a que cargue el Dialog/Modal de confirmación
+    await page.screenshot({ path: "./evidence/modal_efectivo.png", fullPage: true });
+
+    const pagarBtn = activeFrame.locator('button:has-text("Pagar")').first();
+    await pagarBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await pagarBtn.click();
+
+    // Saltar posibles popups (Bóveda / Confirmación)
+    await page.waitForTimeout(1000);
     await quickClick('.sapMBtn:has-text("OK"), span:has-text("OK"), span:has-text("Sí"), .sapMBtn:has-text("Aceptar")');
     await quickClick('.sapMBtn:has-text("OK"), span:has-text("OK"), span:has-text("Sí"), .sapMBtn:has-text("Aceptar")');
+    await page.waitForTimeout(1000);
     logStep('cobro-efectivo', 'ok');
 
     // --- SCREENSHOT POST-PAGO ---

@@ -49,13 +49,13 @@
                           - generic [ref=f1e31]: Código
                           - generic [ref=f1e32]: 
                         - generic [ref=f1e34]:
-                          - searchbox "Buscar por NIF, pre-factura, pre-abono, nombre, apellido y encuentro" [ref=f1e35]: "1393493669"
+                          - searchbox "Buscar por NIF, pre-factura, pre-abono, nombre, apellido y encuentro" [ref=f1e35]: "1393493678"
                           - generic [ref=f1e36] [cursor=pointer]: 
                           - generic [ref=f1e37] [cursor=pointer]: 
                       - list [ref=f1e38]:
-                        - 'listitem "PRE-FACTURA 1393493669 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status List Item . Is Active . Not Selected" [active] [ref=f1e39] [cursor=pointer]':
+                        - 'listitem "PRE-FACTURA 1393493678 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status List Item . Is Active . Not Selected" [active] [ref=f1e39] [cursor=pointer]':
                           - generic [ref=f1e40]:
-                            - generic [ref=f1e41]: PRE-FACTURA 1393493669
+                            - generic [ref=f1e41]: PRE-FACTURA 1393493678
                             - generic [ref=f1e45]: RUIZ DIEZ, JAQUELINE
                             - generic [ref=f1e46]:
                               - generic [ref=f1e47]:
@@ -103,7 +103,7 @@
                             - generic [ref=f1e115]:
                               - generic [ref=f1e116]: CÓDIGO PRE-FACTURA
                               - generic [ref=f1e117]: ":"
-                              - generic [ref=f1e118]: "1393493669"
+                              - generic [ref=f1e118]: "1393493678"
                             - generic [ref=f1e120]:
                               - generic [ref=f1e121]: FECHA
                               - generic [ref=f1e122]: ":"
