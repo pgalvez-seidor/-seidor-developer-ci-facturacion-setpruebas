@@ -1,6 +1,6 @@
-# Set de Pruebas - Facturación Clínica Internacional
+# Set de Pruebas - Proyecto: NUAM (Clínica Internacional)
 
-Este repositorio contiene los escenarios de prueba automatizada para el portal de Facturación.
+Este repositorio utiliza ramas para separar la configuración por cliente. Actualmente estas en la rama **`NUAM`**.
 
 ## Estructura
 - `/config/`: Configuración de ambientes (URLs y Credenciales).
