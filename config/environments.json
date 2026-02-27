@@ -1,0 +1,17 @@
+{
+    "QAS": {
+        "url": "https://ci-caja-qas.cpp.cfapps.us10.hana.ondemand.com/site?siteId=3293b700-c5f2-40cf-b6de-e40f71c9c3ff#Shell-home",
+        "user": "pgalvez3",
+        "pass": "Pavilion23713.@"
+    },
+    "PRD": {
+        "url": "TODO: URL PRD",
+        "user": "TODO",
+        "pass": "TODO"
+    },
+    "DEV": {
+        "url": "TODO: URL DEV",
+        "user": "TODO",
+        "pass": "TODO"
+    }
+}
