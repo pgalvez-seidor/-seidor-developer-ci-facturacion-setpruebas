@@ -1,0 +1,15 @@
+{
+  "cliente": "CI",
+  "nombre": "Clínica Internacional",
+  "casos": [
+    {
+      "id": "caso1",
+      "nombre": "Boleta Efectivo sin vuelto",
+      "script": "scripts/caso1-boleta.spec.js",
+      "template": "templates/pre-factura-caso-1.json",
+      "medioPago": "efectivo",
+      "tipoComprobante": "boleta",
+      "screenshots": ["pre-pago", "post-pago", "comprobante-emitido"]
+    }
+  ]
+}

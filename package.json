@@ -1,8 +1,8 @@
 {
     "name": "facturacion-setpruebas",
-    "version": "1.0.0",
-    "description": "Set de pruebas automatizadas para Clínica Internacional",
-    "main": "index.js",
+    "version": "2.0.0",
+    "description": "Set de pruebas automatizadas para Facturación - Seidor",
+    "main": "scripts/runner.js",
     "dependencies": {
         "@playwright/test": "^1.40.0",
         "axios": "^1.6.0",
@@ -10,6 +10,10 @@
         "playwright": "^1.40.0"
     },
     "scripts": {
-        "test:caso1": "npx playwright test scripts/caso1-boleta.spec.js --headed"
+        "run:caso1": "node scripts/runner.js --caso caso1 --env QAS",
+        "run:all": "node scripts/runner.js --all --env QAS",
+        "test:caso1": "npx playwright test scripts/caso1-boleta.spec.js --headed",
+        "report": "node scripts/report-generator.js",
+        "dry-run": "node scripts/runner.js --caso caso1 --env QAS --dry-run"
     }
 }
