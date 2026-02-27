@@ -14,6 +14,8 @@ function App() {
   const [logs, setLogs] = useState([]);
   const [evidence, setEvidence] = useState([]);
   const [showReport, setShowReport] = useState(false);
+  const [ruc, setRuc] = useState('');
+  const [showRucInput, setShowRucInput] = useState(false);
 
   const eventSourceRef = useRef(null);
   const terminalEndRef = useRef(null);
@@ -56,10 +58,20 @@ function App() {
       const data = await res.json();
       setScenarios(data);
       if (data.length > 0 && data[0].cases.length > 0) {
-        setSelectedScenario(data[0].cases[0].id);
+        setSelectedScenario(data[0].cases[0]);
       }
     } catch (e) {
       console.error('Error fetching scenarios:', e);
+    }
+  };
+
+  const handleScenarioSelect = (scenario) => {
+    if (isRunning) return;
+    setSelectedScenario(scenario);
+    if (scenario.requiresRuc) {
+      setShowRucInput(true);
+    } else {
+      setShowRucInput(false);
     }
   };
 
@@ -101,12 +113,24 @@ function App() {
   const runTest = () => {
     if (!selectedScenario || isRunning) return;
 
+    if (selectedScenario.requiresRuc && !ruc) {
+      alert("Por favor ingresa un RUC válido.");
+      return;
+    }
+
     setLogs([]);
     setEvidence([]);
     setShowReport(false);
     setIsRunning(true);
+    setShowRucInput(false);
 
-    eventSourceRef.current = new EventSource(`${API_BASE}/run-test?file=${selectedScenario}`);
+    const queryParams = new URLSearchParams({
+      file: selectedScenario.id,
+      template: selectedScenario.template,
+      ruc: ruc
+    });
+
+    eventSourceRef.current = new EventSource(`${API_BASE}/run-test?${queryParams.toString()}`);
 
     eventSourceRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -178,8 +202,8 @@ function App() {
                 {module.cases.map(c => (
                   <li
                     key={c.id}
-                    className={`menu-item ${selectedScenario === c.id ? 'active' : ''}`}
-                    onClick={() => !isRunning && setSelectedScenario(c.id)}
+                    className={`menu-item ${selectedScenario?.id === c.id ? 'active' : ''}`}
+                    onClick={() => handleScenarioSelect(c)}
                   >
                     {c.name}
                   </li>
@@ -188,6 +212,23 @@ function App() {
             </div>
           ))}
         </div>
+
+        {/* Dynamic Inputs (RUC) */}
+        {showRucInput && (
+          <div className="ruc-box">
+            <div className="section-title">Datos Requeridos</div>
+            <input
+              className="ruc-input"
+              type="text"
+              placeholder="Ingresa RUC (11 dígitos)"
+              maxLength={11}
+              value={ruc}
+              onChange={(e) => setRuc(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && runTest()}
+              autoFocus
+            />
+          </div>
+        )}
       </aside>
 
       {/* Main Workspace */}

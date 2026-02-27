@@ -272,6 +272,33 @@ button.danger {
   animation: spin 1s linear infinite;
 }
 
+/* RUC Input Box */
+.ruc-box {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(100, 100, 255, 0.05);
+  border: 1px dashed var(--accent);
+  border-radius: 8px;
+}
+
+.ruc-input {
+  width: 100%;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-top: 0.5rem;
+}
+
+.ruc-input:focus {
+  border-color: var(--accent);
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);

@@ -77,19 +77,29 @@ app.post('/api/checkout', async (req, res) => {
 // 3. Listar Escenarios y Casos de Pruebas
 app.get('/api/scenarios', (req, res) => {
     try {
-        const scriptsDir = path.join(rootDir, 'scripts');
-
-        // Simplemente leeremos los .spec.js como los "tests ejecutables"
-        const files = fs.readdirSync(scriptsDir)
-            .filter(f => f.endsWith('.spec.js'));
-
         const result = [{
             id: 'facturacion',
             name: 'Módulo de Facturación',
-            cases: files.map(file => ({
-                id: file,
-                name: file.replace('.spec.js', '').replace(/-/g, ' ').toUpperCase()
-            }))
+            cases: [
+                {
+                    id: 'caso1-boleta.spec.js',
+                    name: 'CASO 1: BOLETA (EFECTIVO)',
+                    template: 'pre-factura-caso-1',
+                    requiresRuc: false
+                },
+                {
+                    id: 'caso2-factura.spec.js',
+                    name: 'CASO 2: FACTURA (RUC)',
+                    template: 'pre-factura-caso-2',
+                    requiresRuc: true
+                },
+                {
+                    id: 'caso3-boleta-extra.spec.js',
+                    name: 'CASO 3: BOLETA (VARIANT)',
+                    template: 'pre-factura-caso-3',
+                    requiresRuc: false
+                }
+            ]
         }];
 
         res.json(result);
@@ -100,14 +110,25 @@ app.get('/api/scenarios', (req, res) => {
 
 // 4. Ejecutar prueba con SSE
 app.get('/api/run-test', (req, res) => {
-    const { file } = req.query;
+    const { file, ruc, template } = req.query;
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
     const cmd = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
-    const testProcess = spawn(cmd, ['playwright', 'test', `scripts/${file}`, '--headed'], { cwd: rootDir });
+
+    // Pasar ruc y template como variables de entorno
+    const env = {
+        ...process.env,
+        RUC: ruc || '',
+        PREFAC_TEMPLATE: template || 'pre-factura-caso-1'
+    };
+
+    const testProcess = spawn(cmd, ['playwright', 'test', `scripts/${file}`, '--headed'], {
+        cwd: rootDir,
+        env
+    });
 
     const sendLog = (type, message) => {
         const payload = JSON.stringify({ type, message: message.toString(), timestamp: new Date().toISOString() });
@@ -115,6 +136,8 @@ app.get('/api/run-test', (req, res) => {
     };
 
     sendLog('info', `Iniciando prueba: ${file}...`);
+    if (ruc) sendLog('info', `RUC proporcionado: ${ruc}`);
+    if (template) sendLog('info', `Template: ${template}`);
 
     testProcess.stdout.on('data', (data) => {
         sendLog('log', stripAnsi(data.toString()));
