@@ -216,14 +216,19 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     // La emisión puede tardar unos segundos — esperamos hasta que aparezca algo o pase el tiempo
     await page.waitForTimeout(2000);
 
-    // Cerrar todos los dialogs que queden (hasta 4 intentos, 2s cada uno)
-    for (let i = 0; i < 4; i++) {
+    // Cerrar agresivamente todos los dialogs de SAP que queden (Alertas de impresora, éxito, etc.)
+    console.log("🧹 Limpiando diálogos finales...");
+    await page.waitForTimeout(1500);
+
+    for (let i = 0; i < 6; i++) {
+        activeFrame = null; // Reset frame search to be safe
         const closed = await tap(
-            'button:has-text("OK"), button:has-text("Yes"), button:has-text("Sí"), button:has-text("Cerrar"), button:has-text("Close")',
-            2000
+            'button:has-text("OK"), button:has-text("Yes"), button:has-text("Sí"), button:has-text("Cerrar"), button:has-text("Aceptar"), [id*="mbox-btn"], [id*="btncerrar"], [id*="BDI-content"], .sapMBtn',
+            1500
         );
         if (!closed) break;
-        await page.waitForTimeout(500);
+        console.log(`✅ Diálogo ${i + 1} cerrado`);
+        await page.waitForTimeout(600);
     }
 
     // Dar tiempo a SAP para cerrar overlays internos antes de navegar
@@ -233,22 +238,22 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
 
     // =======================
     // PASO 8: TAB DOCUMENTOS → CAPTURAR COMPROBANTE
-    //
-    // Sin ningún overlay activo, ir a DOCUMENTOS, seleccionar el primer
-    // documento emitido (el más reciente aparece al tope) y capturar.
     // =======================
     logStep('verificar-documentos', 'running');
     console.log("📋 Verificando DOCUMENTOS...");
     activeFrame = null;
 
-    await (await find('[role="tab"]:has-text("DOCUMENTOS"), [id*="DOCUMENTOS"]', 8000)).click({ force: true });
-    await page.waitForTimeout(600);
+    const docTab = await find('[role="tab"]:has-text("DOCUMENTOS"), .sapMTabStripItem:has-text("DOCUMENTOS"), .sapMITBText:has-text("DOCUMENTOS")', 10000);
+    await docTab.click({ force: true });
+    await page.waitForTimeout(1500);
 
-    // Seleccionar primer doc emitido y tomar la captura final
-    const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 5000).catch(() => null);
-    if (firstDoc) {
+    // Seleccionar primer doc emitido (al tope)
+    try {
+        const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 8000);
         await firstDoc.click({ force: true });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(800);
+    } catch (e) {
+        console.log("⚠️ No se pudo seleccionar el primer documento del listado");
     }
 
     logStep('verificar-documentos', 'ok');
