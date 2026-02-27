@@ -6,14 +6,23 @@
     "dependencies": {
         "@playwright/test": "^1.40.0",
         "axios": "^1.6.0",
+        "cors": "^2.8.6",
         "dotenv": "^16.3.0",
+        "express": "^5.2.1",
         "playwright": "^1.40.0"
     },
     "scripts": {
         "run:caso1": "node scripts/runner.js --caso caso1 --env QAS",
         "run:all": "node scripts/runner.js --all --env QAS",
+        "test": "playwright test",
         "test:caso1": "npx playwright test scripts/caso1-boleta.spec.js --headed",
+        "ui": "concurrently \"npm run ui:api\" \"npm run ui:web\"",
+        "ui:api": "node scripts/ui-server.js",
+        "ui:web": "cd ui && npm run dev",
         "report": "node scripts/report-generator.js",
         "dry-run": "node scripts/runner.js --caso caso1 --env QAS --dry-run"
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
     }
 }
