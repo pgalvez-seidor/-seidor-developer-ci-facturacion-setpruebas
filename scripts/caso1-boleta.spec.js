@@ -35,98 +35,73 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
 
     // 4. Abrir App Facturación
     console.log("📦 Abriendo App Facturación...");
-    const tile = page.locator('.sapMGT, .sapUiLightSetTile, [role="link"]:has-text("Facturación")').first();
+    // Buscamos el Tile con el texto EXACTO "Facturación" para evitar "Horario Supervisor" u otros
+    const tile = page.locator('.sapMGT, .sapUiLightSetTile, [role="link"]').filter({ hasText: /^Facturación$/ }).first();
     await tile.waitFor({ state: 'visible', timeout: 60000 });
     await tile.click();
 
-    // MUY IMPORTANTE: SAP UI5 puede cargar en iframes.
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(10000); // Espera estratégica para carga de shell
+    console.log("⏳ Esperando cargue de la App (Iframe)...");
+    // SAP Launchpad carga las apps en un iframe. Buscamos el primero que sea visible y tenga ID de aplicación.
+    await page.waitForSelector('iframe[id*="application-"]', { state: 'attached', timeout: 45000 });
+    const appFrame = page.frameLocator('iframe[id*="application-"]').first();
 
     // 5. Buscar Pre-factura
     console.log(`🔍 Buscando ID: ${prefacturaId}`);
 
-    // Intentamos localizar el campo de búsqueda en frames si no está en el principal
-    const findSearchField = async () => {
-        const selectors = ['input[type="search"]', '.sapMSFInput', '[placeholder*="Buscar"]', 'input[id$="-search"]'];
-        for (const s of selectors) {
-            const loc = page.locator(s).first();
-            if (await loc.isVisible()) return loc;
-
-            // Buscar en frames
-            for (const frame of page.frames()) {
-                const fLoc = frame.locator(s).first();
-                if (await fLoc.isVisible()) return fLoc;
-            }
-        }
-        return null;
-    };
-
-    let searchField = await findSearchField();
-    if (!searchField) {
-        console.log("⏳ Reintentando encontrar buscador...");
-        await page.waitForTimeout(10000);
-        searchField = await findSearchField();
-    }
-
-    if (searchField) {
-        await searchField.fill(prefacturaId);
-        await page.keyboard.press('Enter');
-    } else {
-        throw new Error("❌ No se encontró el campo de búsqueda de Facturación.");
-    }
+    const searchField = appFrame.locator('input[type="search"], .sapMSFInput, [placeholder*="Buscar"]').first();
+    await searchField.waitFor({ state: 'visible', timeout: 60000 });
+    await searchField.fill(prefacturaId);
+    await page.keyboard.press('Enter');
 
     // Esperar resultados y seleccionar
-    const item = page.locator(`text=${prefacturaId}`).first();
-    try {
-        await item.waitFor({ state: 'visible', timeout: 10000 });
-    } catch (e) {
-        console.log("⚠️ ID no visible, intentando Refresh del footer...");
-        const refreshBtn = page.locator('button[id$="refresh"], button[title="Refresh"], .sapMBtnIcon > .sapUiIcon[data-sap-ui-icon-content=""]').first();
-        if (await refreshBtn.isVisible()) {
-            await refreshBtn.click();
-            await page.waitForTimeout(5000);
-        }
-    }
+    const item = appFrame.locator(`text=${prefacturaId}`).first();
+    await item.waitFor({ state: 'visible', timeout: 20000 });
     await item.click();
 
     // 6. Proceso de Cobro (Efectivo)
     console.log("💵 Procesando pago en Efectivo...");
-    const efectivoBtn = page.locator('button:has-text("Efectivo"), .sapMBtn:has-text("Efectivo")').first();
+    const efectivoBtn = appFrame.locator('button:has-text("Efectivo"), .sapMBtn:has-text("Efectivo")').first();
     await efectivoBtn.click();
 
-    const pagarBtn = page.locator('button:has-text("Pagar"), button:has-text("Agregar"), .sapMBtn:has-text("Pagar")').first();
+    const pagarBtn = appFrame.locator('button:has-text("Pagar"), button:has-text("Agregar")').first();
     await pagarBtn.waitFor({ state: 'visible' });
     await pagarBtn.click();
 
-    // Manejo de alertas comunes (Bóveda / Confirmación)
-    const dialogBtn = page.locator('button:has-text("OK"), button:has-text("Aceptar"), button:has-text("Sí"), button:has-text("SÍ")').first();
-    for (let i = 0; i < 3; i++) { // Puede haber hasta 2 diálogos
-        if (await dialogBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-            await dialogBtn.click();
-            await page.waitForTimeout(1000);
+    // Manejo de alertas SAP (pueden ser diálogos del sistema o del app)
+    const handleDialogs = async () => {
+        const btns = ['button:has-text("OK")', 'button:has-text("Aceptar")', 'button:has-text("Sí")', 'button:has-text("SÍ")'];
+        for (const b of btns) {
+            const loc = appFrame.locator(b).first();
+            if (await loc.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await loc.click();
+                return true;
+            }
         }
+        return false;
+    };
+
+    for (let i = 0; i < 3; i++) {
+        await page.waitForTimeout(1000);
+        await handleDialogs();
     }
 
     // 7. Generar Boleta
     console.log("📄 Generando Comprobante...");
-    const generarBtn = page.locator('button:has-text("Generar"), .sapMBtn:has-text("Generar")').last();
+    const generarBtn = appFrame.locator('button:has-text("Generar")').last();
     await generarBtn.click();
 
-    const imprimirBtn = page.locator('button:has-text("Imprimir"), .sapMBtn:has-text("Imprimir")').first();
+    const imprimirBtn = appFrame.locator('button:has-text("Imprimir")').first();
     await imprimirBtn.waitFor({ state: 'visible' });
     await imprimirBtn.click();
 
-    // Confirmación final si aplica
-    if (await dialogBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await dialogBtn.click();
-    }
+    await page.waitForTimeout(2000);
+    await handleDialogs();
 
     // 8. Verificación Final
     console.log("🏁 Finalizando y verificando...");
-    const docsTab = page.locator('text=DOCUMENTOS').first();
+    const docsTab = appFrame.locator('text=DOCUMENTOS').first();
     await docsTab.click();
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(5000);
 
     const endTime = Date.now();
     const durationCount = ((endTime - startTime) / 1000).toFixed(2);
