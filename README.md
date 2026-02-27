@@ -8,7 +8,7 @@ Este repositorio utiliza ramas para separar la configuración por cliente. Actua
 - `/evidence/`: (Opcional) Carpeta para guardar capturas de pantalla de las ejecuciones.
 
 ## Escenarios Disponibles
-1. [Facturación Boleta Caso 1 (API + Cobro Efectivo)](scenarios/boleta-efectivo.md)
+1. [Facturación Boleta Caso 1 (Full Flow: API + Cobro Efectivo)](scenarios/boleta-efectivo.md)
 
 ## Cómo funciona el Flujo End-to-End
 1. **Fase API:** Antigravity toma la plantilla `/templates/pre-factura-caso-X.json`, incrementa el ID correlativo, cambia el `CO_USUA_TRAN` y lo envía al endpoint de CPI.
