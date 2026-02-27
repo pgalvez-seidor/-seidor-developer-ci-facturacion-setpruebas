@@ -22,9 +22,11 @@ Este flujo automatiza la creación de una pre-factura vía API y su posterior co
    - **Actualización de Estado:** Una vez exitoso, guardar el nuevo PK en `config/state.properties`.
 
 ### Fase 1: Navegación y Login
-1. Ir a la URL del ambiente (ver `config/environments.json`).
-2. **CRITICAL:** Limpiar campos de usuario y clave (Ctrl+A + Delete) antes de escribir.
-3. Ingresar las credenciales y clic en "Log On".
+1. **Verificación de Sesión:** Ir a la URL del ambiente. Si la página carga directamente el Launchpad (sin pedir login), **continuar de inmediato** a la Fase 2 sin cerrar sesión.
+2. **Login (si es necesario):**
+   - **LIMPIEZA OBLIGATORIA:** Antes de escribir en los campos de usuario y contraseña, se debe hacer clic, seleccionar todo (Ctrl+A / Cmd+A) y borrar el texto existente. **SIEMPRE** realizar este paso para evitar errores de autocompletado.
+   - Ingresar credenciales y clic en "Log On".
+   - Actuar con la mayor rapidez posible (Speedrun mode).
 
 ### Fase 2: Localización y Selección en UI
 1. Localizar el tile **"Facturación"** y entrar.
