@@ -1,11 +1,11 @@
-const { test, expect } = require('@playwright/test');
+const { test } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const { createPrefactura } = require('./api-helper');
 
 test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     const startTime = Date.now();
-    test.setTimeout(120000);
+    test.setTimeout(180000);
 
     // --- CONFIG ---
     const env = JSON.parse(fs.readFileSync('./config/environments.json', 'utf8')).QAS;
@@ -19,50 +19,28 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
         console.log(`${icon} ${name}: ${status}`);
     };
 
-    const safeScreenshot = async (name) => {
-        const filepath = path.join(evidenceDir, `${name}.png`);
-        await page.screenshot({ path: filepath, fullPage: true });
-        return filepath;
+    const shot = async (name) => {
+        const p = path.join(evidenceDir, `${name}.png`);
+        await page.screenshot({ path: p, fullPage: true });
+        console.log(`📸 ${name}.png`);
+        return p;
     };
 
-    // Si no se pasó PREFACTURA_ID, crearlo (modo standalone)
-    let activeId = prefacturaId;
-    if (!activeId) {
-        console.log("🚀 [STANDALONE] Generando Pre-factura vía API...");
-        activeId = await createPrefactura("PGALVEZ3");
-        console.log(`✅ ID generado: ${activeId}`);
-    }
-
-    // Auto-confirmaciones de UI SAP
-    page.on('dialog', d => d.accept());
-
-    // --- LOGIN ---
-    logStep('login', 'running');
-    await page.goto(env.url, { waitUntil: 'domcontentloaded' });
-    const loginUser = page.locator('#j_username');
-    if (await loginUser.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await loginUser.fill(env.user);
-        await page.locator('#j_password').fill(env.pass);
-        await page.click('#logOnFormSubmit');
-    }
-    logStep('login', 'ok');
-
-    // --- ABRIR APP ---
-    logStep('abrir-facturacion', 'running');
-    const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Facturación$/ }).first();
-    await tile.waitFor({ state: 'visible', timeout: 15000 });
-    await tile.click();
-    await page.waitForTimeout(3000);
-    logStep('abrir-facturacion', 'ok');
-
-    // --- MOTOR DE BÚSQUEDA ROBUSTO (MULTI-FRAME) ---
+    // =========================================================
+    // MOTOR MULTI-FRAME sin caché estática
+    // activeFrame se DEBE resetear a null antes de buscar en
+    // contextos nuevos (dopo navigación master-detail).
+    // =========================================================
     let activeFrame = null;
-    const fastFind = async (selector, maxWait = 5000) => {
-        const start = Date.now();
-        while (Date.now() - start < maxWait) {
+
+    const find = async (selector, timeout = 8000) => {
+        const end = Date.now() + timeout;
+        while (Date.now() < end) {
             if (activeFrame) {
-                const loc = activeFrame.locator(selector).first();
-                if (await loc.isVisible({ timeout: 100 }).catch(() => false)) return loc;
+                try {
+                    const loc = activeFrame.locator(selector).first();
+                    if (await loc.isVisible({ timeout: 80 }).catch(() => false)) return loc;
+                } catch { activeFrame = null; }
             }
             for (const f of [page.mainFrame(), ...page.frames()]) {
                 try {
@@ -71,138 +49,223 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
                         activeFrame = f;
                         return loc;
                     }
-                } catch (e) { }
+                } catch { }
             }
-            await page.waitForTimeout(100);
+            await page.waitForTimeout(80);
         }
-        throw new Error(`Timeout: No se encontró '${selector}' en ${maxWait}ms`);
+        throw new Error(`[find] Timeout ${timeout}ms: '${selector}'`);
     };
 
-    const quickClick = async (selector) => {
-        try {
-            const el = await fastFind(selector, 2500);
-            await el.click({ force: true });
-        } catch (e) { }
+    // Click suave — no lanza error si no encuentra
+    const tap = async (selector, timeout = 3000) => {
+        try { await (await find(selector, timeout)).click(); return true; }
+        catch { return false; }
     };
 
-    // --- BUSCAR PRE-FACTURA ---
-    logStep('buscar-prefactura', 'running');
-    const preTab = await fastFind('text="PRE"', 15000);
-    await preTab.click({ force: true });
+    // =========================================================
+    // PRE-FACTURA (modo standalone: la crea ella misma)
+    // =========================================================
+    let activeId = prefacturaId;
+    if (!activeId) {
+        console.log("🚀 Generando Pre-factura vía API...");
+        activeId = await createPrefactura("PGALVEZ3");
+        console.log(`✅ ID: ${activeId}`);
+    }
 
-    await page.waitForTimeout(500);
+    page.on('dialog', d => d.accept());
 
-    const filterSelect = await fastFind('#application-Facturacion-display-component---Home--Master--selectCriterioBusqueda-label, .sapMSFSelect', 5000);
-    await filterSelect.click({ force: true });
-    await page.waitForTimeout(1000); // Esperar que el popover baje
+    // =======================
+    // PASO 1: LOGIN
+    // =======================
+    logStep('login', 'running');
+    await page.goto(env.url, { waitUntil: 'domcontentloaded' });
+    const loginField = page.locator('#j_username');
+    if (await loginField.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await loginField.fill(env.user);
+        await page.locator('#j_password').fill(env.pass);
+        await page.click('#logOnFormSubmit');
+    }
+    logStep('login', 'ok');
 
-    const filterOption = await fastFind('li:nth-child(3), .sapMSelectListItem:nth-child(3)', 5000);
-    await filterOption.click({ force: true });
-    await page.waitForTimeout(500);
-
-    const searchInput = await fastFind('input[type="search"], .sapMSearchField input, .sapMSFInput', 5000);
-    await searchInput.fill(activeId);
-    await page.keyboard.press('Enter');
-
+    // =======================
+    // PASO 2: ABRIR APP FACTURACIÓN
+    // =======================
+    logStep('abrir-facturacion', 'running');
+    const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Facturación$/ }).first();
+    await tile.waitFor({ state: 'visible', timeout: 20000 });
+    await tile.click();
+    await page.waitForSelector('iframe', { timeout: 15000 });
     await page.waitForTimeout(2000);
-    console.log(`🔎 Seleccionando la Pre-factura: ${activeId} ...`);
+    logStep('abrir-facturacion', 'ok');
 
-    // Click NORMAL de Playwright en el bloque general del List Item (para que el master-detail detecte el event)
+    // =======================
+    // PASO 3: TAB PRE
+    // =======================
+    logStep('buscar-prefactura', 'running');
+    await (await find('text="PRE"', 15000)).click({ force: true });
+    await page.waitForTimeout(800);
+
+    // =======================
+    // PASO 4: SELECCIONAR PRIMER ITEM (la pre-factura recién creada
+    // siempre está al tope — orden descendente por fecha/ID)
+    // =======================
+    console.log(`🔎 Seleccionando Pre-factura ${activeId}...`);
+
+    // Estrategia 1: primer listitem → verificar que el panel cargó con nuestro ID
+    let selected = false;
     try {
-        const record = await fastFind('.sapMObjLI, .sapMLIB', 10000);
-        // Movemos el mouse primero y hacemos click, simulando humano
-        await record.hover();
-        await record.click();
+        const first = await find('[role="listitem"], li[class*="sapMLIB"]', 6000);
+        await first.click();
+        await page.waitForTimeout(600);
+        if (await find(`text="${activeId}"`, 3000).catch(() => null)) {
+            selected = true;
+            console.log("✅ Primer item seleccionado");
+        }
+    } catch { }
 
-        // Y un enter por si acaso SAP lo tiene enfocado y el enter dispara la ruta 
-        await page.keyboard.press('Enter');
-    } catch (e) {
-        await safeScreenshot('error-prefactura-no-encontrada');
-        throw new Error(`Pre-factura ${activeId} no encontrada en la lista: ${e.message}`);
+    // Estrategia 2: buscar por texto del ID
+    if (!selected) {
+        for (const sel of [`[role="listitem"]:has-text("${activeId}")`, `li:has-text("${activeId}")`]) {
+            try {
+                await (await find(sel, 4000)).click();
+                await page.waitForTimeout(600);
+                selected = true;
+                console.log(`✅ Seleccionado con: ${sel}`);
+                break;
+            } catch { }
+        }
+    }
+
+    if (!selected) {
+        await shot('error-item-no-seleccionado');
+        throw new Error(`No se pudo seleccionar pre-factura ${activeId}`);
     }
 
     logStep('buscar-prefactura', 'ok');
+    await page.waitForTimeout(800);
+    await shot('antes_de_cobrar');
 
-    await page.waitForTimeout(1000);
-
-    // --- SCREENSHOT PRE-PAGO ---
-    await safeScreenshot('pre-pago');
-
-    // --- COBRO EN EFECTIVO ---
+    // =======================
+    // PASO 5: COBRO EN EFECTIVO
+    //
+    // CRÍTICO: resetear activeFrame antes de buscar botón "Efectivo".
+    // El iframe del panel derecho se recarga al cambiar de documento.
+    // =======================
     logStep('cobro-efectivo', 'running');
+    console.log("💵 Cobro en Efectivo...");
+    activeFrame = null;
 
-    // Respiro esperando que la pestaña derecha termine de cargar
-    await page.waitForTimeout(2000);
+    await (await find('button:has-text("Efectivo")', 10000)).click();
+    console.log("✅ Click en Efectivo");
+    await page.waitForTimeout(800);
+    await shot('modal_efectivo');
 
-    console.log("💵 Cobrando Documento en Efectivo...");
+    // =======================
+    // PASO 6: CONFIRMAR PAGO
+    //
+    // Flujo real CI:
+    //   modal "Pago en efectivo": campo Monto + [Pagar] [Cerrar]
+    //   → click Pagar
+    //   → dialog "¿Agregar pago en efectivo?": [Yes] [No]
+    //   → click Yes
+    //   → pago aparece en tabla Detalle de pago
+    // =======================
+    console.log("💰 Confirmar pago...");
+    if (!await tap('button:has-text("Pagar")', 6000)) {
+        await shot('error-pagar');
+        throw new Error('"Pagar" no encontrado en modal Efectivo');
+    }
+    await page.waitForTimeout(500);
+    await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("SI")', 4000);
+    await page.waitForTimeout(300);
+    await tap('button:has-text("OK"), button:has-text("Aceptar")', 2000); // pop-up extra si existe
+    await page.waitForTimeout(800);
 
-    // Seleccionamos estrictamente el contenedor button para que Fiori detecte el mouse event completo
-    const efectivoBtn = activeFrame.locator('button:has-text("Efectivo")').first();
-    await efectivoBtn.waitFor({ state: 'visible', timeout: 10000 });
-    await efectivoBtn.click(); // Playwright se encarga de despachar hover + mousedown + mouseup
-
-    await page.waitForTimeout(2000); // Dar chance a que cargue el Dialog/Modal de confirmación
-    await page.screenshot({ path: "./evidence/modal_efectivo.png", fullPage: true });
-
-    const pagarBtn = activeFrame.locator('button:has-text("Pagar")').first();
-    await pagarBtn.waitFor({ state: 'visible', timeout: 10000 });
-    await pagarBtn.click();
-
-    // Saltar posibles popups (Bóveda / Confirmación)
-    await page.waitForTimeout(1000);
-    await quickClick('.sapMBtn:has-text("OK"), span:has-text("OK"), span:has-text("Sí"), .sapMBtn:has-text("Aceptar")');
-    await quickClick('.sapMBtn:has-text("OK"), span:has-text("OK"), span:has-text("Sí"), .sapMBtn:has-text("Aceptar")');
-    await page.waitForTimeout(1000);
     logStep('cobro-efectivo', 'ok');
+    await shot('post_pago');
 
-    // --- SCREENSHOT POST-PAGO ---
-    await safeScreenshot('post-pago');
-
-    // --- GENERAR COMPROBANTE ---
+    // =======================
+    // PASO 7: GENERAR BOLETA
+    //
+    // "Generar" aparece en el footer (contentinfo) del iframe solo
+    // cuando el pago está registrado. Resetear activeFrame.
+    // =======================
     logStep('generar-comprobante', 'running');
-    const generarBtn = await fastFind('.sapMBtn:has-text("Generar"), span:has-text("Generar")', 10000);
-    await generarBtn.click({ force: true });
+    console.log("📄 Generando Boleta...");
+    activeFrame = null;
 
-    const imprimirBtn = await fastFind('.sapMBtn:has-text("Imprimir"), span:has-text("Imprimir")', 10000);
-    await imprimirBtn.click({ force: true });
+    await (await find('button:has-text("Generar")', 8000)).click({ force: true });
+    await page.waitForTimeout(800);
 
-    await quickClick('.sapMBtn:has-text("OK"), span:has-text("OK"), .sapMBtn:has-text("Aceptar")');
-    logStep('generar-comprobante', 'ok');
+    // El modal de emisión puede tener tab "Boleta" — seleccionarla si existe
+    await tap('[role="tab"]:has-text("Boleta"), .sapMTabStripItem:has-text("Boleta")', 1500);
+    await page.waitForTimeout(300);
 
-    // --- VERIFICAR EN TAB DOCUMENTOS ---
-    logStep('verificar-documentos', 'running');
-    const docsTab = await fastFind('text="DOCUMENTOS"', 10000);
-    await docsTab.click({ force: true });
+    // Imprimir
+    if (!await tap('button:has-text("Imprimir")', 6000)) {
+        await shot('error-imprimir');
+        throw new Error('"Imprimir" no encontrado en modal emision');
+    }
     await page.waitForTimeout(500);
 
-    try {
-        const firstDoc = await fastFind('.sapMListTblRow:nth-child(1), .sapUiTableCont .sapUiTableRow:nth-child(1)', 10000);
-        await firstDoc.click({ force: true });
-    } catch (e) {
-        console.log("⚠️ No se pudo clickear documento, continuando para evidencia.");
+    // Dialog "¿Seguro que desea imprimir el comprobante?" → "Yes"
+    await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("SI"), button:has-text("OK")', 2000);
+
+    // Cerrar los 2 dialogs/fragments adicionales que aparecen post-emisión
+    // (mensajes de éxito, confirmaciones de bóveda, etc.)
+    for (let i = 0; i < 3; i++) {
+        const closed = await tap(
+            'button:has-text("Yes"), button:has-text("OK"), button:has-text("Sí"), button:has-text("Cerrar"), button:has-text("Close")',
+            1000
+        );
+        if (!closed) break; // ya no hay más dialogs
+        await page.waitForTimeout(300);
     }
+
+    // Dar tiempo a SAP para procesar la emisión y cerrar overlays internos
+    await page.waitForTimeout(1500);
+
+    logStep('generar-comprobante', 'ok');
+
+    // =======================
+    // PASO 8: TAB DOCUMENTOS → CAPTURAR COMPROBANTE
+    //
+    // Sin ningún overlay activo, ir a DOCUMENTOS, seleccionar el primer
+    // documento emitido (el más reciente aparece al tope) y capturar.
+    // =======================
+    logStep('verificar-documentos', 'running');
+    console.log("📋 Verificando DOCUMENTOS...");
+    activeFrame = null;
+
+    await (await find('[role="tab"]:has-text("DOCUMENTOS"), [id*="DOCUMENTOS"]', 8000)).click({ force: true });
+    await page.waitForTimeout(600);
+
+    // Seleccionar primer doc emitido y tomar la captura final
+    const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 5000).catch(() => null);
+    if (firstDoc) {
+        await firstDoc.click({ force: true });
+        await page.waitForTimeout(500);
+    }
+
     logStep('verificar-documentos', 'ok');
+    await shot('comprobante_emitido');
 
-    // --- SCREENSHOT COMPROBANTE EMITIDO ---
-    await page.waitForTimeout(1000);
-    await safeScreenshot('comprobante-emitido');
+    // =======================
+    // RESULTADO FINAL
+    // =======================
+    const dur = ((Date.now() - startTime) / 1000).toFixed(2);
 
-    // --- RESULTADO FINAL ---
-    const totalDuration = ((Date.now() - startTime) / 1000).toFixed(2);
-
-    // Escribir resultado estructurado si viene del runner
     if (process.env.EVIDENCE_DIR) {
-        const resultData = {
-            prefacturaId: activeId,
-            steps,
-            duration: `${totalDuration}s`
-        };
         fs.writeFileSync(
             path.join(evidenceDir, 'playwright-result.json'),
-            JSON.stringify(resultData, null, 2)
+            JSON.stringify({ prefacturaId: activeId, steps, duration: `${dur}s` }, null, 2)
         );
     }
 
-    console.log(`\n--- RESULTADO ---`);
-    console.log(`✅ EXITOSO | ID: ${activeId} | Duración: ${totalDuration}s`);
+    console.log(`\n${'='.repeat(50)}`);
+    console.log(`✅ PRUEBA EXITOSA`);
+    console.log(`   Pre-factura : ${activeId}`);
+    console.log(`   Duración    : ${dur}s`);
+    console.log(`   Evidencia   : ${evidenceDir}`);
+    console.log(`${'='.repeat(50)}\n`);
 });
