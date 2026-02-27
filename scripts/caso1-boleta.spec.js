@@ -209,21 +209,25 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     await page.waitForTimeout(500);
 
     // Dialog "¿Seguro que desea imprimir el comprobante?" → "Yes"
-    await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("SI"), button:has-text("OK")', 2000);
+    await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("OK")', 2000);
 
-    // Cerrar los 2 dialogs/fragments adicionales que aparecen post-emisión
-    // (mensajes de éxito, confirmaciones de bóveda, etc.)
-    for (let i = 0; i < 3; i++) {
+    // Esperar que el servidor procese la emisión y aparezcan los dialogs de resultado
+    // (ej: "Alerta: No hay conexión con la impresora / Se facturó correctamente")
+    // La emisión puede tardar unos segundos — esperamos hasta que aparezca algo o pase el tiempo
+    await page.waitForTimeout(2000);
+
+    // Cerrar todos los dialogs que queden (hasta 4 intentos, 2s cada uno)
+    for (let i = 0; i < 4; i++) {
         const closed = await tap(
-            'button:has-text("Yes"), button:has-text("OK"), button:has-text("Sí"), button:has-text("Cerrar"), button:has-text("Close")',
-            1000
+            'button:has-text("OK"), button:has-text("Yes"), button:has-text("Sí"), button:has-text("Cerrar"), button:has-text("Close")',
+            2000
         );
-        if (!closed) break; // ya no hay más dialogs
-        await page.waitForTimeout(300);
+        if (!closed) break;
+        await page.waitForTimeout(500);
     }
 
-    // Dar tiempo a SAP para procesar la emisión y cerrar overlays internos
-    await page.waitForTimeout(1500);
+    // Dar tiempo a SAP para cerrar overlays internos antes de navegar
+    await page.waitForTimeout(1000);
 
     logStep('generar-comprobante', 'ok');
 
