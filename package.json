@@ -1,0 +1,15 @@
+{
+    "name": "facturacion-setpruebas",
+    "version": "1.0.0",
+    "description": "Set de pruebas automatizadas para Clínica Internacional",
+    "main": "index.js",
+    "dependencies": {
+        "@playwright/test": "^1.40.0",
+        "axios": "^1.6.0",
+        "dotenv": "^16.3.0",
+        "playwright": "^1.40.0"
+    },
+    "scripts": {
+        "test:caso1": "npx playwright test scripts/caso1-boleta.spec.js --headed"
+    }
+}

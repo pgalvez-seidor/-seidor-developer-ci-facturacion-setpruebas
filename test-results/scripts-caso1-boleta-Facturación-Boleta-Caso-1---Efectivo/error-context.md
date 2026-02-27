@@ -1,0 +1,113 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic:
+    - status
+    - status
+  - generic [ref=e7]:
+    - banner "Shell Bar" [ref=e9]:
+      - generic [ref=e10]:
+        - button "Back" [ref=e11] [cursor=pointer]:
+          - generic [ref=e12]: 
+        - button "Company Logo" [ref=e13] [cursor=pointer]:
+          - img "Company Logo" [ref=e14]
+        - generic [ref=e15] [cursor=pointer]:
+          - heading "Facturación" [level=1]
+          - button "Facturación" [ref=e16]:
+            - generic [ref=e17]: Facturación
+            - generic [ref=e19]: 
+      - generic [ref=e22]:
+        - button "Open Search" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: 
+        - button "Profile of Pierre Galvez" [ref=e25] [cursor=pointer]:
+          - generic: PG
+    - generic [ref=e29]:
+      - text:   
+      - main "Content" [ref=e35]:
+        - text:                              
+        - iframe [active] [ref=e36]:
+          - generic [active] [ref=f1e1]:
+            - generic:
+              - status
+              - status
+            - generic [ref=f1e5]:
+              - generic [ref=f1e9]:
+                - generic [ref=f1e11]:
+                  - navigation [ref=f1e12]:
+                    - tablist [ref=f1e13]:
+                      - tab "PRE" [selected] [ref=f1e14] [cursor=pointer]:
+                        - generic [ref=f1e17]: PRE
+                      - tab "DOCUMENTOS" [ref=f1e19] [cursor=pointer]:
+                        - generic [ref=f1e22]: DOCUMENTOS
+                  - tabpanel "PRE" [ref=f1e25]:
+                    - generic [ref=f1e26]:
+                      - toolbar [ref=f1e27]:
+                        - generic [ref=f1e28] [cursor=pointer]:
+                          - combobox [ref=f1e29]: Nombre
+                          - textbox [ref=f1e30]: Nombre
+                          - generic [ref=f1e31]: Nombre
+                          - generic [ref=f1e32]: 
+                        - generic [ref=f1e34]:
+                          - searchbox "Buscar por NIF, pre-factura, pre-abono, nombre, apellido y encuentro" [ref=f1e35]
+                          - generic [ref=f1e36] [cursor=pointer]: 
+                      - list [ref=f1e37]:
+                        - 'listitem "PRE-FACTURA 1393493629 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e38] [cursor=pointer]':
+                          - generic [ref=f1e39]:
+                            - generic [ref=f1e40]: PRE-FACTURA 1393493629
+                            - generic [ref=f1e44]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e45]:
+                              - generic [ref=f1e46]:
+                                - generic [ref=f1e48]: "Importe:"
+                                - generic [ref=f1e50]:
+                                  - generic [ref=f1e52]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e53]:
+                                - generic [ref=f1e55]: "Encuentro:"
+                                - generic [ref=f1e57]:
+                                  - generic [ref=f1e59]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e62]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493627 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e63] [cursor=pointer]':
+                          - generic [ref=f1e64]:
+                            - generic [ref=f1e65]: PRE-FACTURA 1393493627
+                            - generic [ref=f1e69]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e70]:
+                              - generic [ref=f1e71]:
+                                - generic [ref=f1e73]: "Importe:"
+                                - generic [ref=f1e75]:
+                                  - generic [ref=f1e77]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e78]:
+                                - generic [ref=f1e80]: "Encuentro:"
+                                - generic [ref=f1e82]:
+                                  - generic [ref=f1e84]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e87]: 13/03/2024 *HOSP-Hospitalización*
+                        - 'listitem "PRE-FACTURA 1393493625 RUIZ DIEZ, JAQUELINE Importe: Encuentro: 13/03/2024 *HOSP-Hospitalización* 2,360.00 PEN Object Status 100000029 Object Status" [ref=f1e88] [cursor=pointer]':
+                          - generic [ref=f1e89]:
+                            - generic [ref=f1e90]: PRE-FACTURA 1393493625
+                            - generic [ref=f1e94]: RUIZ DIEZ, JAQUELINE
+                            - generic [ref=f1e95]:
+                              - generic [ref=f1e96]:
+                                - generic [ref=f1e98]: "Importe:"
+                                - generic [ref=f1e100]:
+                                  - generic [ref=f1e102]: 2,360.00 PEN
+                                  - generic: Object Status
+                              - generic [ref=f1e103]:
+                                - generic [ref=f1e105]: "Encuentro:"
+                                - generic [ref=f1e107]:
+                                  - generic [ref=f1e109]: "100000029"
+                                  - generic: Object Status
+                              - generic [ref=f1e112]: 13/03/2024 *HOSP-Hospitalización*
+                - contentinfo [ref=f1e114]:
+                  - toolbar "Footer actions" [ref=f1e115]:
+                    - button "Actualizar datos de pagos" [ref=f1e117] [cursor=pointer]:
+                      - generic [ref=f1e119]: 
+                    - button "Mostrar opciones para PINPAD" [ref=f1e121] [cursor=pointer]:
+                      - generic [ref=f1e123]: 
+              - generic [ref=f1e132]:
+                - generic [ref=f1e133]: 
+                - generic [ref=f1e134]: Seleccione un elemento de la lista.
+    - contentinfo
+```
