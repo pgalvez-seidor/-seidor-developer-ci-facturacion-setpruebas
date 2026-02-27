@@ -16,13 +16,18 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
 
     // 3. Fase UI: Login
     console.log("🌐 [FASE UI] Navegando al Portal...");
+
+    // Configurar manejo de diálogos automático
+    page.on('dialog', async dialog => {
+        console.log(`💬 Diálogo detectado: ${dialog.message()}`);
+        await dialog.accept();
+    });
+
     await page.goto(env.url, { waitUntil: 'networkidle' });
 
     if (page.url().includes('accounts.ondemand.com') || await page.locator('input[id="j_username"]').isVisible({ timeout: 15000 }).catch(() => false)) {
         console.log("🔑 Realizando Login...");
-        await page.locator('input[id="j_username"]').fill('');
         await page.locator('input[id="j_username"]').fill(env.user);
-        await page.locator('input[id="j_password"]').fill('');
         await page.locator('input[id="j_password"]').fill(env.pass);
         await page.click('button[id="logOnFormSubmit"]');
         await page.waitForLoadState('networkidle');
@@ -30,22 +35,46 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
 
     // 4. Abrir App Facturación
     console.log("📦 Abriendo App Facturación...");
-    // Usamos un selector más flexible para el Tile
-    const tile = page.locator('div[role="link"]:has-text("Facturación"), .sapMGT:has-text("Facturación")').first();
-    await tile.waitFor({ state: 'visible', timeout: 45000 });
+    const tile = page.locator('.sapMGT, .sapUiLightSetTile, [role="link"]:has-text("Facturación")').first();
+    await tile.waitFor({ state: 'visible', timeout: 60000 });
     await tile.click();
 
-    // Esperar a que el shell de la app cargue
+    // MUY IMPORTANTE: SAP UI5 puede cargar en iframes.
     await page.waitForLoadState('networkidle');
-    console.log("⏳ Esperando cargue de la lista de documentos...");
+    await page.waitForTimeout(10000); // Espera estratégica para carga de shell
 
     // 5. Buscar Pre-factura
-    // En UI5, el buscador suele ser un sap.m.SearchField
     console.log(`🔍 Buscando ID: ${prefacturaId}`);
-    const searchField = page.locator('input[type="search"], .sapMSFInput').first();
-    await searchField.waitFor({ state: 'visible', timeout: 60000 });
-    await searchField.fill(prefacturaId);
-    await page.keyboard.press('Enter');
+
+    // Intentamos localizar el campo de búsqueda en frames si no está en el principal
+    const findSearchField = async () => {
+        const selectors = ['input[type="search"]', '.sapMSFInput', '[placeholder*="Buscar"]', 'input[id$="-search"]'];
+        for (const s of selectors) {
+            const loc = page.locator(s).first();
+            if (await loc.isVisible()) return loc;
+
+            // Buscar en frames
+            for (const frame of page.frames()) {
+                const fLoc = frame.locator(s).first();
+                if (await fLoc.isVisible()) return fLoc;
+            }
+        }
+        return null;
+    };
+
+    let searchField = await findSearchField();
+    if (!searchField) {
+        console.log("⏳ Reintentando encontrar buscador...");
+        await page.waitForTimeout(10000);
+        searchField = await findSearchField();
+    }
+
+    if (searchField) {
+        await searchField.fill(prefacturaId);
+        await page.keyboard.press('Enter');
+    } else {
+        throw new Error("❌ No se encontró el campo de búsqueda de Facturación.");
+    }
 
     // Esperar resultados y seleccionar
     const item = page.locator(`text=${prefacturaId}`).first();
