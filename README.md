@@ -1,6 +1,6 @@
-# Set de Pruebas - Proyecto: NUAM (Clínica Internacional)
+# Set de Pruebas - Proyecto: CI (Clínica Internacional)
 
-Este repositorio utiliza ramas para separar la configuración por cliente. Actualmente estas en la rama **`NUAM`**.
+Este repositorio utiliza ramas para separar la configuración por cliente. Actualmente estas en la rama **`CI`**.
 
 ## Estructura
 - `/config/`: Configuración de ambientes (URLs y Credenciales).
