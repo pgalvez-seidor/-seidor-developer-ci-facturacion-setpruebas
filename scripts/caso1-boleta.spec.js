@@ -78,8 +78,12 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
 
     page.on('dialog', d => d.accept());
 
-    // =======================
-    // PASO 1: LOGIN
+    let testStatus = "✅ EXITOSO";
+    let testError = "";
+
+    try {
+        // =======================
+        // PASO 1: LOGIN
     // =======================
     logStep('login', 'running');
     await page.goto(env.url, { waitUntil: 'domcontentloaded' });
@@ -218,38 +222,57 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     console.log("⏳ Esperando respuesta de emisión...");
     await page.waitForTimeout(5000);
 
-    // Fuerza bruta para cerrar todos los modales que puedan haber quedado abiertos (ej: tickets de impresión, success, info)
-    console.log("🧹 Cerrando popups y overlays...");
+    // Fuerza bruta para cerrar todos los modales (SAP Fragments, MessageToasts, Dialogs)
+    console.log("🧹 Cerrando popups y overlays (Fragments)...");
     
+    // Selectores más amplios, incluyendo los propios del iframe activo si lo hay
     const possibleCloseButtons = [
         'footer button:has-text("OK")',
         'footer button:has-text("Yes")',
+        'footer button:has-text("Sí")',
         '.sapMDialog footer button:has-text("Aceptar")',
+        '.sapMDialog footer button:has-text("Cerrar")',
         'button[title="Cerrar"]',
         'button:has-text("Cerrar")'
     ];
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 8; i++) {
         let clickedAny = false;
+        
+        // Enfocamos el body del documento para asegurar que ESC funcione a nivel global
+        await page.locator('body').click({ position: { x: 10, y: 10 }, force: true }).catch(() => {});
+        // Multi-escape
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(300);
+
         for (const selector of possibleCloseButtons) {
             try {
-                const btn = page.locator(selector).first();
-                if (await btn.isVisible({ timeout: 500 })) {
+                // Buscar en el frame principal
+                let btn = page.locator(selector).first();
+                if (await btn.isVisible({ timeout: 100 }).catch(() => false)) {
                     await btn.click({ force: true });
-                    await page.waitForTimeout(800);
+                    await page.waitForTimeout(500);
                     clickedAny = true;
-                    break;
+                    continue;
                 }
-            } catch (e) {
-                // Selector no encontrado o no visible
-            }
+                
+                // Buscar dentro de todos los iframes adicionales
+                for (const f of page.frames()) {
+                    btn = f.locator(selector).first();
+                    if (await btn.isVisible({ timeout: 100 }).catch(() => false)) {
+                        await btn.click({ force: true });
+                        await page.waitForTimeout(500);
+                        clickedAny = true;
+                    }
+                }
+            } catch (e) {}
         }
         
         if (!clickedAny) {
-            // Si no encontró botón, lanza tecla ESC como último recurso
+            // Un escape más fuerte si no reaccionó a botones
             await page.keyboard.press('Escape');
-            await page.waitForTimeout(500);
         }
+        await page.waitForTimeout(600);
     }
 
     // Dar un tiempo extra y asegurarse que desaparezca la caparazón de overlays
@@ -283,84 +306,98 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     // =======================
     // RESULTADO FINAL
     // =======================
-    const dur = ((Date.now() - startTime) / 1000).toFixed(2);
+    } catch (error) {
+        testStatus = "❌ FALLIDO";
+        testError = error.message;
+        await shot('error_flujo');
+        console.log(`🛑 Prueba falló: ${testError}`);
+    } finally {
+        const dur = ((Date.now() - startTime) / 1000).toFixed(2);
 
-    if (process.env.EVIDENCE_DIR) {
-        fs.writeFileSync(
-            path.join(evidenceDir, 'playwright-result.json'),
-            JSON.stringify({ prefacturaId: activeId, steps, duration: `${dur}s` }, null, 2)
-        );
-    }
-
-    // =========================================================
-    // GENERAR PDF DE REPORTE TÉCNICO
-    // =========================================================
-    try {
-        console.log("📄 Generando PDF con evidencias...");
-        const { chromium } = require('@playwright/test');
-        // Lanzamos un browser headless temporal solo para imprimir el documento
-        const pdfBrowser = await chromium.launch({ headless: true });
-        const pdfPage = await pdfBrowser.newPage();
-        
-        let html = `
-        <html>
-            <head>
-                <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
-                    h1 { color: #005587; border-bottom: 2px solid #005587; padding-bottom: 10px; }
-                    .step { margin-bottom: 40px; page-break-inside: avoid; }
-                    img { max-width: 100%; border: 1px solid #ccc; border-radius: 4px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); margin-top: 10px; }
-                    .meta { background: #f8fafc; padding: 15px; border-radius: 5px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
-                </style>
-            </head>
-            <body>
-                <h1>Reporte Técnico - SetPruebas CI</h1>
-                <h2>Caso 1: Boleta Efectivo</h2>
-                <div class="meta">
-                    <p><strong>Pre-Factura ID:</strong> ${activeId}</p>
-                    <p><strong>Duración del flujo:</strong> ${dur} segundos</p>
-                    <p><strong>Fecha de ejecución:</strong> ${new Date().toLocaleString('es-PE')}</p>
-                    <p><strong>Estado:</strong> ✅ EXITOSO</p>
-                    <p><strong>Descripción:</strong> Flujo automatizado sin intervención manual que ingresa un pago en efectivo y emite el documento electrónico.</p>
-                </div>
-                <h2>Evidencias Fotográficas</h2>
-        `;
-
-        const pics = [
-            { id: 'antes_de_cobrar', title: '1. Antes del Cobro (Detalle de pre-factura cargado)' },
-            { id: 'modal_efectivo', title: '2. Modal de Pago (Monto ingresado)' },
-            { id: 'post_pago', title: '3. Posterior al Pago (Efectivo registrado)' },
-            { id: 'comprobante_emitido', title: '4. Comprobante Emitido (Verificación en tab Documentos)' }
-        ];
-
-        for (const p of pics) {
-            const imgPath = path.join(evidenceDir, p.id + '.png');
-            if (fs.existsSync(imgPath)) {
-                const base64 = fs.readFileSync(imgPath).toString('base64');
-                html += `
-                <div class="step">
-                    <h3>${p.title}</h3>
-                    <img src="data:image/png;base64,${base64}" />
-                </div>
-                `;
-            }
+        if (process.env.EVIDENCE_DIR) {
+            fs.writeFileSync(
+                path.join(evidenceDir, 'playwright-result.json'),
+                JSON.stringify({ prefacturaId: activeId, steps, duration: `${dur}s`, status: testStatus, error: testError }, null, 2)
+            );
         }
-        
-        html += `</body></html>`;
-        
-        await pdfPage.setContent(html, { waitUntil: 'networkidle' });
-        const pdfPath = path.join(evidenceDir, `Reporte_Tecnico_${activeId}.pdf`);
-        await pdfPage.pdf({ path: pdfPath, format: 'A4', margin: { top: '20px', bottom: '20px' } });
-        await pdfBrowser.close();
-        console.log(`✅ PDF Generado: ${pdfPath}`);
-    } catch (err) {
-        console.log("⚠️ No se pudo generar el PDF:", err.message);
-    }
 
-    console.log(`\n${'='.repeat(50)}`);
-    console.log(`✅ PRUEBA EXITOSA`);
-    console.log(`   Pre-factura : ${activeId}`);
-    console.log(`   Duración    : ${dur}s`);
-    console.log(`   Evidencia   : ${evidenceDir}`);
-    console.log(`${'='.repeat(50)}\n`);
+        // =========================================================
+        // GENERAR PDF DE REPORTE TÉCNICO
+        // =========================================================
+        try {
+            console.log("📄 Generando PDF con evidencias...");
+            const { chromium } = require('@playwright/test');
+            // Lanzamos un browser headless temporal solo para imprimir el documento
+            const pdfBrowser = await chromium.launch({ headless: true });
+            const pdfPage = await pdfBrowser.newPage();
+            
+            let html = `
+            <html>
+                <head>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
+                        h1 { color: #005587; border-bottom: 2px solid #005587; padding-bottom: 10px; }
+                        .step { margin-bottom: 40px; page-break-inside: avoid; }
+                        img { max-width: 100%; border: 1px solid #ccc; border-radius: 4px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); margin-top: 10px; }
+                        .meta { background: #f8fafc; padding: 15px; border-radius: 5px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
+                        .error-box { background: #fee2e2; border: 1px solid #ef4444; padding: 15px; border-radius: 5px; color: #b91c1c; margin-bottom: 30px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Reporte Técnico - SetPruebas CI</h1>
+                    <h2>Caso 1: Boleta Efectivo</h2>
+                    <div class="meta">
+                        <p><strong>Pre-Factura ID:</strong> ${activeId}</p>
+                        <p><strong>Duración del flujo:</strong> ${dur} segundos</p>
+                        <p><strong>Fecha de ejecución:</strong> ${new Date().toLocaleString('es-PE')}</p>
+                        <p><strong>Estado:</strong> ${testStatus}</p>
+                        <p><strong>Descripción:</strong> Flujo automatizado sin intervención manual que ingresa un pago en efectivo y emite el documento electrónico.</p>
+                    </div>
+                    ${testError ? `<div class="error-box"><strong>Error en ejecución:</strong> ${testError}</div>` : ''}
+                    <h2>Evidencias Fotográficas</h2>
+            `;
+
+            const pics = [
+                { id: 'antes_de_cobrar', title: '1. Antes del Cobro (Detalle de pre-factura cargado)' },
+                { id: 'modal_efectivo', title: '2. Modal de Pago (Monto ingresado)' },
+                { id: 'post_pago', title: '3. Posterior al Pago (Efectivo registrado)' },
+                { id: 'comprobante_emitido', title: '4. Comprobante Emitido (Verificación en tab Documentos)' },
+                { id: 'error_flujo', title: '🔴 Error de Flujo (Captura de pantalla al fallar el test)' }
+            ];
+
+            for (const p of pics) {
+                const imgPath = path.join(evidenceDir, p.id + '.png');
+                if (fs.existsSync(imgPath)) {
+                    const base64 = fs.readFileSync(imgPath).toString('base64');
+                    html += `
+                    <div class="step">
+                        <h3>${p.title}</h3>
+                        <img src="data:image/png;base64,${base64}" />
+                    </div>
+                    `;
+                }
+            }
+            
+            html += `</body></html>`;
+            
+            await pdfPage.setContent(html, { waitUntil: 'networkidle' });
+            const pdfPath = path.join(evidenceDir, `Reporte_Tecnico_${activeId}.pdf`);
+            await pdfPage.pdf({ path: pdfPath, format: 'A4', margin: { top: '20px', bottom: '20px' } });
+            await pdfBrowser.close();
+            console.log(`✅ PDF Generado: ${pdfPath}`);
+        } catch (err) {
+            console.log("⚠️ No se pudo generar el PDF:", err.message);
+        }
+
+        console.log(`\n${'='.repeat(50)}`);
+        console.log(`✅ PRUEBA FINALIZADA: ${testStatus}`);
+        console.log(`   Pre-factura : ${activeId}`);
+        console.log(`   Duración    : ${dur}s`);
+        console.log(`   Evidencia   : ${evidenceDir}`);
+        console.log(`${'='.repeat(50)}\n`);
+        
+        if (testError) {
+            throw new Error(testError);
+        }
+    }
 });
