@@ -1,15 +1,59 @@
-{
-  "cliente": "CI",
-  "nombre": "Clínica Internacional",
-  "casos": [
-    {
-      "id": "caso1",
-      "nombre": "Boleta Efectivo sin vuelto",
-      "script": "scripts/caso1-boleta.spec.js",
-      "template": "templates/pre-factura-caso-1.json",
-      "medioPago": "efectivo",
-      "tipoComprobante": "boleta",
-      "screenshots": ["pre-pago", "post-pago", "comprobante-emitido"]
-    }
-  ]
-}
+[
+  {
+    "id": "CI",
+    "name": "Clínica Internacional",
+    "procesos": [
+      {
+        "id": "facturacion",
+        "name": "Facturación",
+        "escenarios": [
+          {
+            "id": "esc_1709140000000",
+            "name": "Efectivo 100% de la Deuda",
+            "config": {
+              "tipoComprobante": "Boleta",
+              "iteraciones": 1,
+              "headless": true,
+              "medioVuelto": "Efectivo",
+              "pagos": [
+                {
+                  "id": 1,
+                  "tipo": "Efectivo",
+                  "monto": ""
+                }
+              ]
+            }
+          },
+          {
+            "id": "esc_1709140000001",
+            "name": "Mixto: Efectivo y Tarjeta Manual",
+            "config": {
+              "tipoComprobante": "Factura",
+              "iteraciones": 1,
+              "headless": true,
+              "medioVuelto": "Efectivo",
+              "pagos": [
+                {
+                  "id": 1,
+                  "tipo": "Tarjeta",
+                  "monto": "25.00",
+                  "autoData": true
+                },
+                {
+                  "id": 2,
+                  "tipo": "Efectivo",
+                  "monto": ""
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "notas_credito",
+        "name": "Notas de Crédito",
+        "escenarios": []
+      }
+    ]
+  }
+]

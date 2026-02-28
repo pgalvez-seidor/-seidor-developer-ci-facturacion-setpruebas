@@ -87,6 +87,21 @@ body { margin: 0; min-height: 100vh; }
   background: rgba(52, 152, 219, 0.15);
   border: 1px solid rgba(52, 152, 219, 0.3);
 }
+.client-icon {
+  font-size: 1.5rem;
+}
+.client-info {
+  display: flex;
+  flex-direction: column;
+}
+.client-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.client-sub {
+  font-size: 0.75rem;
+  color: #bdc3c7;
+}
 .branch-select {
   width: 100%;
   padding: 0.8rem;

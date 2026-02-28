@@ -4,6 +4,7 @@ const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { createPrefactura } = require('./api-helper.js');
+const { db, initDb } = require('./db.js');
 
 const app = express();
 const PORT = 3001;
@@ -75,28 +76,75 @@ app.post('/api/checkout', async (req, res) => {
     }
 });
 
-// 3. Listar Escenarios y Casos de Pruebas
-app.get('/api/scenarios', (req, res) => {
-    try {
-        const scriptsDir = path.join(rootDir, 'scripts');
+// 3. Obtener el Registro Central de SQLite (Clientes -> Procesos -> Escenarios)
+app.get('/api/registry', (req, res) => {
+    db.serialize(() => {
+        db.all("SELECT * FROM clientes", [], (err, clientesRows) => {
+            if (err) return res.status(500).json({ error: err.toString() });
+            
+            db.all("SELECT * FROM procesos", [], (err, procesosRows) => {
+                if (err) return res.status(500).json({ error: err.toString() });
 
-        // Simplemente leeremos los .spec.js como los "tests ejecutables"
-        const files = fs.readdirSync(scriptsDir)
-            .filter(f => f.endsWith('.spec.js'));
+                db.all("SELECT * FROM escenarios", [], (err, escenariosRows) => {
+                    if (err) return res.status(500).json({ error: err.toString() });
 
-        const result = [{
-            id: 'facturacion',
-            name: 'Módulo de Facturación',
-            cases: files.map(file => ({
-                id: file,
-                name: file.replace('.spec.js', '').replace(/-/g, ' ').toUpperCase()
-            }))
-        }];
+                    const result = clientesRows.map(c => {
+                        const procs = procesosRows.filter(p => p.client_id === c.id).map(p => {
+                            const escens = escenariosRows.filter(e => e.process_id === p.id).map(e => ({
+                                id: e.id,
+                                name: e.name,
+                                config: JSON.parse(e.config_json),
+                                instrucciones_ia: e.instrucciones_ia || ""
+                            }));
+                            return { id: p.id, name: p.name, escenarios: escens };
+                        });
+                        return { id: c.id, name: c.name, procesos: procs };
+                    });
 
-        res.json(result);
-    } catch (e) {
-        res.status(500).json({ error: e.toString() });
+                    res.json(result);
+                });
+            });
+        });
+    });
+});
+
+// 3.5. Guardar un Nuevo Escenario (UPSERT en SQLite)
+app.post('/api/registry/scenario', (req, res) => {
+    const { clientId, processId, scenario } = req.body;
+    if (!clientId || !processId || !scenario) {
+        return res.status(400).json({ error: 'Faltan parámetros de jerarquía' });
     }
+
+    const { id, name, config, instrucciones_ia } = scenario;
+    const configStr = JSON.stringify(config);
+    const instStr = instrucciones_ia || "";
+
+    db.get("SELECT id FROM escenarios WHERE id = ?", [id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.toString() });
+
+        if (row) {
+            db.run(`UPDATE escenarios SET name = ?, config_json = ?, instrucciones_ia = ? WHERE id = ?`, 
+                [name, configStr, instStr, id], function(err) {
+                if (err) return res.status(500).json({ error: err.toString() });
+                res.json({ success: true, message: 'Escenario actualizado' });
+            });
+        } else {
+            db.run(`INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia) VALUES (?, ?, ?, ?, ?)`, 
+                [id, processId, name, configStr, instStr], function(err) {
+                if (err) return res.status(500).json({ error: err.toString() });
+                res.json({ success: true, message: 'Escenario guardado' });
+            });
+        }
+    });
+});
+
+// 3.6. Eliminar un Escenario
+app.delete('/api/registry/scenario/:id', (req, res) => {
+    const { id } = req.params;
+    db.run("DELETE FROM escenarios WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.toString() });
+        res.json({ success: true, message: 'Escenario eliminado' });
+    });
 });
 
 // 4. Ejecutar prueba con SSE (POST paramétrico multi-hilos)
@@ -187,6 +235,7 @@ app.post('/api/run-test', async (req, res) => {
 
 // 4.5. Ejecutar Lote (POST paramétrico multi-hilos con Array)
 app.post('/api/run-batch', async (req, res) => {
+    console.log("--> [BACKEND] Endpoint POST /api/run-batch invocado!");
     const { tasks, parallel } = req.body;
     
     if (!tasks || !tasks.length) {
@@ -201,7 +250,8 @@ app.post('/api/run-batch', async (req, res) => {
 
     const sendLog = (taskId, type, message, docData = null) => {
         const payload = JSON.stringify({ taskId, type, message: message.toString(), docData, timestamp: new Date().toISOString() });
-        res.write(`data: ${payload}\\n\\n`);
+        res.write(`data: ${payload}\n\n`);
+        console.log(`[SSE Emit] Type: ${type}, Msg: ${message}`);
     };
 
     let activeProcesses = [];
@@ -225,7 +275,7 @@ app.post('/api/run-batch', async (req, res) => {
                     sendLog(taskId, 'log', `Advertencia: no se reservó prefactura previa.`);
                 }
 
-                const cmdArgs = ['playwright', 'test', `scripts/${file || 'caso1-boleta.spec.js'}`];
+                const cmdArgs = ['playwright', 'test', `scripts/${file || 'caso1-boleta.spec.js'}`, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
                 
                 const testEnv = { 
@@ -297,6 +347,10 @@ app.get('/api/evidence', (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`✅ UI Backend API Server running at http://localhost:${PORT}`);
+initDb().then(() => {
+    app.listen(PORT, () => {
+        console.log(`✅ UI Backend API Server running at http://localhost:${PORT}`);
+    });
+}).catch(err => {
+    console.error("❌ Error inicializando base de datos SQLite:", err);
 });
