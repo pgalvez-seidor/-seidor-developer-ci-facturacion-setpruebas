@@ -294,9 +294,9 @@ export default function App() {
         </div>
       </div>
 
-      {evidence.length > 0 && (
+      {evidence.filter(img => img.name.endsWith('.png')).length > 0 && (
         <div className="evidence-grid">
-          {evidence.slice(0, 4).map(img => (
+          {evidence.filter(img => img.name.endsWith('.png')).slice(0, 4).map(img => (
             <div key={img.name} className="evidence-thumb" onClick={() => window.open(img.url, '_blank')}>
               <img src={img.url} alt={img.name} />
               <div className="evidence-thumb-label">{img.name.replace(/_/g, ' ').replace('.png', '')}</div>
@@ -306,7 +306,20 @@ export default function App() {
       )}
 
       <div className="result-actions">
-        <button className="btn-primary" onClick={() => window.open('/evidence', '_blank')}>📄 Ver Reporte</button>
+        {/* Encontrar PDF si existe en las evidencias */}
+        {evidence.find(file => file.name.endsWith('.pdf')) && (
+          <button 
+            className="btn-primary" 
+            onClick={() => {
+              const pdf = evidence.find(file => file.name.endsWith('.pdf'));
+              window.open(pdf.url, '_blank');
+            }}
+            style={{ backgroundColor: '#dc2626', color: 'white', border: 'none' }}
+          >
+            📄 Descargar Reporte PDF
+          </button>
+        )}
+        
         <button className="btn-outline" onClick={() => { setView('main'); }}>🔁 Nueva Prueba</button>
         {testSuccess && (
           <div className="git-status">✓ Commit automático en CI + main</div>

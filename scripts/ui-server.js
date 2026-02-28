@@ -141,7 +141,7 @@ app.get('/api/evidence', (req, res) => {
         if (!fs.existsSync(evidenceDir)) return res.json([]);
 
         const files = fs.readdirSync(evidenceDir)
-            .filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f))
+            .filter(f => /\.(png|jpg|jpeg|webp|pdf)$/i.test(f))
             .map(f => ({
                 name: f,
                 url: `http://localhost:${PORT}/evidence/${f}`,
