@@ -261,6 +261,32 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         console.log(`⚠️ Pestaña específica '${testConfig.tipoComprobante}' no encontrada, asumiendo selección por defecto.`);
     }
 
+    // Lógica para Factura (Ingresar RUC y esperar SUNAT)
+    if (testConfig.tipoComprobante === 'Factura') {
+        const ruc = testConfig.ruc || '20100047218';
+        console.log(`🆔 Ingresando RUC: ${ruc}`);
+        const rucInput = await find('input[placeholder*="Buscar"], .sapMSFInput, [type="search"]', 6000);
+        await rucInput.clear();
+        await rucInput.fill(ruc);
+        await page.keyboard.press('Enter');
+        console.log("⏳ Esperando respuesta de SUNAT...");
+        await page.waitForTimeout(4000); // Dar margen para la consulta externa
+
+        // Verificar si se cargaron los datos (Razón Social)
+        const infoCargada = await page.evaluate(() => {
+            // Buscamos inputs que no sean el placeholder de RUC y tengan un valor razonable
+            const inputs = Array.from(document.querySelectorAll('input.sapMInputBaseInner'));
+            return inputs.some(i => i.value.length > 5 && !i.getAttribute('placeholder')?.includes('RUC'));
+        }).catch(() => false);
+
+        if (!infoCargada) {
+            console.log("❌ No se detectaron datos cargados tras ingresar RUC.");
+            await shot('error-ruc-sin-datos');
+            throw new Error(`Los datos para el RUC ${ruc} no se cargaron automáticamente.`);
+        }
+        await shot('factura_datos_ruc');
+    }
+
     // Modal opcional de simulación de error SUNAT if config checkbox was ticked
     if (testConfig.forzarErrorSunat) {
         console.log("🚨 SIMULACIÓN: Config 'forzarErrorSunat' detectada (Mock Error SUNAT).");
