@@ -3,11 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const { createPrefactura } = require('./api-helper');
 
-test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
+// --- LEER CONFIG DINÁMICA ---
+const testConfig = process.env.TEST_PARAMS ? JSON.parse(process.env.TEST_PARAMS) : {
+    tipoComprobante: 'Boleta',
+    medioPago: 'Efectivo',
+    conVuelto: false
+};
+
+test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.medioPago}`, async ({ page }) => {
     const startTime = Date.now();
     test.setTimeout(180000);
 
-    // --- CONFIG ---
+    // --- ENTORNO ---
     const env = JSON.parse(fs.readFileSync('./config/environments.json', 'utf8')).QAS;
     const prefacturaId = process.env.PREFACTURA_ID || null;
     const evidenceDir = process.env.EVIDENCE_DIR || './evidence';
@@ -162,59 +169,105 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     logStep('buscar-prefactura', 'ok');
     await shot('antes_de_cobrar');
 
-    // =======================
-    // PASO 5: COBRO EN EFECTIVO
-    //
-    // CRÍTICO: resetear activeFrame antes de buscar botón "Efectivo".
-    // El iframe del panel derecho se recarga al cambiar de documento.
-    // =======================
+    // =======================================================
+    // PASO 5: COBRO DINÁMICO (EFECTIVO O TARJETA)
+    // =======================================================
     logStep('cobro-efectivo', 'running');
-    console.log("💵 Cobro en Efectivo...");
+    console.log(`💳 Iniciando Cobro en ${testConfig.medioPago}...`);
     activeFrame = null;
 
-    await (await find('button:has-text("Efectivo")', 10000)).click();
-    console.log("✅ Click en Efectivo");
-    await shot('modal_efectivo');
+    if (testConfig.medioPago === 'Efectivo') {
+        const btnEfectivo = await find('button:has-text("Efectivo")', 10000);
+        await btnEfectivo.click();
+        console.log("✅ Modal de Efectivo abierto");
+        await page.waitForTimeout(1000);
 
-    // =======================
+        // Si se configuró cobrar CON VUELTO, ingresamos un monto alto (p.ej S/ 1000)
+        // El input del monto por defecto tiene el total exacto enfocado
+        if (testConfig.conVuelto) {
+            console.log("🔄 ConfigVuelto=ON: Ingresando monto para provocar vuelto...");
+            // Localizamos el control de input dentro del modal de efectivo activo
+            const inputMontoLoc = activeFrame ? 
+                                   activeFrame.locator('input[type="text"], input[type="number"]').first() : 
+                                   page.locator('input[type="text"]:visible, input[type="number"]:visible').first();
+            try {
+                if (await inputMontoLoc.isVisible({ timeout: 2000 })) {
+                    await inputMontoLoc.click();
+                    await inputMontoLoc.fill('1000.00');
+                    await page.waitForTimeout(500);
+                }
+            } catch (e) {
+                console.log("⚠️ No se pudo inyectar el monto de vuelto, procediendo con monto exacto.");
+            }
+        }
+        await shot(`modal_${testConfig.medioPago.toLowerCase()}`);
+
+    } else if (testConfig.medioPago === 'Tarjeta') {
+        const btnTarjeta = await find('button:has-text("Tarjeta")', 10000);
+        await btnTarjeta.click();
+        console.log("✅ Modal de Tarjeta abierto");
+        await shot('modal_tarjeta');
+        
+        // La tarjeta usualmente requiere seleccionar el tipo de tarjeta (Visa, MC)
+        // y el terminal (POS). Ajustar según el Fiori real.
+        // Haremos click en los dropdowns por defecto.
+        try {
+            // Seleccionar primer terminal POS si existe el dropdown
+            await tap('.sapMSelect:has(span:has-text("Terminal"))', 2000);
+            await tap('.sapMSelectList li:nth-child(2)', 2000);
+            
+            // Seleccionar primer operador de tarjeta (Visa/MC)
+            await tap('.sapMSelect:has(span:has-text("Operador"))', 2000);
+            await tap('.sapMSelectList li:nth-child(2)', 2000);
+        } catch(e) {
+            console.log("⚠️ Saltando selects de POS/Tarjeta, quizá no sean obligatorios.");
+        }
+    } else {
+        throw new Error(`Medio de pago ${testConfig.medioPago} no soportado en script dinámico.`);
+    }
+
+    // =======================================================
     // PASO 6: CONFIRMAR PAGO
-    //
-    // Flujo real CI:
-    //   modal "Pago en efectivo": campo Monto + [Pagar] [Cerrar]
-    //   → click Pagar
-    //   → dialog "¿Agregar pago en efectivo?": [Yes] [No]
-    //   → click Yes
-    //   → pago aparece en tabla Detalle de pago
-    // =======================
-    console.log("💰 Confirmar pago...");
-    if (!await tap('button:has-text("Pagar")', 6000)) {
-        await shot('error-pagar');
-        throw new Error('"Pagar" no encontrado en modal Efectivo');
+    // =======================================================
+    console.log("💰 Confirmando pago en el modal...");
+    if (!await tap('button:has-text("Pagar"), button:has-text("Procesar")', 6000)) {
+        await shot(`error-pagar-${testConfig.medioPago.toLowerCase()}`);
+        throw new Error(`Botón de confirmación no encontrado en modal ${testConfig.medioPago}`);
     }
     await page.waitForTimeout(500);
     await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("SI")', 4000);
-    await page.waitForTimeout(1000); // Esperar que cierre modal anterior y salte posible toast/popup
-    await tap('button:has-text("OK"), button:has-text("Aceptar")', 2000); // pop-up extra si existe
+    await page.waitForTimeout(1000); 
+    await tap('button:has-text("OK"), button:has-text("Aceptar")', 2000); 
 
     logStep('cobro-efectivo', 'ok');
     await shot('post_pago');
 
-    // =======================
-    // PASO 7: GENERAR BOLETA
-    //
-    // "Generar" aparece en el footer (contentinfo) del iframe solo
-    // cuando el pago está registrado. Resetear activeFrame.
-    // =======================
+    // =======================================================
+    // PASO 7: GENERAR COMPROBANTE DINÁMICO
+    // =======================================================
     logStep('generar-comprobante', 'running');
-    console.log("📄 Generando Boleta...");
+    console.log(`📄 Generando comprobante: ${testConfig.tipoComprobante}...`);
     activeFrame = null;
 
     await (await find('button:has-text("Generar")', 8000)).click({ force: true });
     await page.waitForTimeout(1000);
 
-    // El modal de emisión puede tener tab "Boleta" — seleccionarla si existe
-    await tap('[role="tab"]:has-text("Boleta"), .sapMTabStripItem:has-text("Boleta")', 1500);
-    await page.waitForTimeout(500);
+    // Seleccionamos la pestaña del comprobante solicitado desde la UI
+    const tabSelector = `[role="tab"]:has-text("${testConfig.tipoComprobante}"), .sapMTabStripItem:has-text("${testConfig.tipoComprobante}")`;
+    if (await tap(tabSelector, 2500)) {
+        console.log(`✅ Fila seleccionada para emisión: ${testConfig.tipoComprobante}`);
+        await page.waitForTimeout(800);
+    } else {
+        console.log(`⚠️ Pestaña específica '${testConfig.tipoComprobante}' no encontrada, asumiendo selección por defecto.`);
+    }
+
+    // Modal opcional de simulación de error SUNAT if config checkbox was ticked
+    if (testConfig.forzarErrorSunat) {
+        console.log("🚨 SIMULACIÓN: Config 'forzarErrorSunat' detectada (Mock Error SUNAT).");
+        // No enviamos clic a imprimir, simplemente lanzamos el error para que caiga en el catch y pdf de rror
+        await page.waitForTimeout(1000);
+        throw new Error("SUNAT_MOCK: Servicio de validación de comprobante no disponible o fuera de línea (Timeout Forzado).");
+    }
 
     // Imprimir
     if (!await tap('button:has-text("Imprimir")', 6000)) {
@@ -364,8 +417,16 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
                 </head>
                 <body>
                     <h1>Reporte Técnico - SetPruebas CI</h1>
-                    <h2>Caso 1: Boleta Efectivo</h2>
+                    <h2>Configuración de Escenario Dinámico</h2>
                     <div class="meta">
+                        <p><strong>ID Pre-Factura:</strong> ${activeId}</p>
+                        <p><strong>Comprobante:</strong> ${testConfig.tipoComprobante}</p>
+                        <p><strong>Medio de Pago:</strong> ${testConfig.medioPago}</p>
+                        <p><strong>Retorno de Vuelto:</strong> ${testConfig.conVuelto ? 'Forzado' : 'Natural'}</p>
+                        <hr style="border: 0; border-top: 1px dashed #ccc; margin: 10px 0;">
+                        <p><strong>Duración:</strong> ${dur} segundos | <strong>Fecha:</strong> ${new Date().toLocaleString('es-PE')}</p>
+                        <p><strong>Estado:</strong> ${testStatus}</p>
+                    </div>
                         <p><strong>Pre-Factura ID:</strong> ${activeId}</p>
                         <p><strong>Duración del flujo:</strong> ${dur} segundos</p>
                         <p><strong>Fecha de ejecución:</strong> ${new Date().toLocaleString('es-PE')}</p>

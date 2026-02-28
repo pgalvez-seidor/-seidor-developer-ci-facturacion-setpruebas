@@ -98,23 +98,37 @@ app.get('/api/scenarios', (req, res) => {
     }
 });
 
-// 4. Ejecutar prueba con SSE
-app.get('/api/run-test', (req, res) => {
-    const { file } = req.query;
+// 4. Ejecutar prueba con SSE (POST paramétrico)
+app.post('/api/run-test', (req, res) => {
+    const { file, config } = req.body;
+    
+    if (!file) {
+        return res.status(400).json({ error: "No se especificó un archivo de prueba." });
+    }
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
     const cmd = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
-    const testProcess = spawn(cmd, ['playwright', 'test', `scripts/${file}`, '--headed'], { cwd: rootDir });
+    
+    // Inyectamos la configuración como variable de entorno
+    const testEnv = { 
+        ...process.env, 
+        TEST_PARAMS: config ? JSON.stringify(config) : '{}'
+    };
+
+    const testProcess = spawn(cmd, ['playwright', 'test', `scripts/${file}`, '--headed'], { 
+        cwd: rootDir,
+        env: testEnv
+    });
 
     const sendLog = (type, message) => {
         const payload = JSON.stringify({ type, message: message.toString(), timestamp: new Date().toISOString() });
         res.write(`data: ${payload}\n\n`);
     };
 
-    sendLog('info', `Iniciando prueba: ${file}...`);
+    sendLog('info', `Iniciando prueba: ${file} con config: ${JSON.stringify(config || {})}`);
 
     testProcess.stdout.on('data', (data) => {
         sendLog('log', stripAnsi(data.toString()));
