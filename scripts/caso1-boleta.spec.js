@@ -176,54 +176,93 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     console.log(`💳 Iniciando Cobro en ${testConfig.medioPago}...`);
     activeFrame = null;
 
-    if (testConfig.medioPago === 'Efectivo') {
-        const btnEfectivo = await find('button:has-text("Efectivo")', 10000);
-        await btnEfectivo.click();
-        console.log("✅ Modal de Efectivo abierto");
-        await page.waitForTimeout(1000);
+    // Procesar array de pagos configurados (Mixtos, Efectivo, Tarjeta)
+    const pagos = testConfig.pagos || [];
+    if (pagos.length === 0) {
+        throw new Error("No se configuró ningún medio de pago.");
+    }
 
-        // Si se configuró cobrar CON VUELTO, ingresamos un monto alto (p.ej S/ 1000)
-        // El input del monto por defecto tiene el total exacto enfocado
-        if (testConfig.conVuelto) {
-            console.log("🔄 ConfigVuelto=ON: Ingresando monto para provocar vuelto...");
-            // Localizamos el control de input dentro del modal de efectivo activo
-            const inputMontoLoc = activeFrame ? 
-                                   activeFrame.locator('input[type="text"], input[type="number"]').first() : 
-                                   page.locator('input[type="text"]:visible, input[type="number"]:visible').first();
-            try {
-                if (await inputMontoLoc.isVisible({ timeout: 2000 })) {
-                    await inputMontoLoc.click();
-                    await inputMontoLoc.fill('1000.00');
-                    await page.waitForTimeout(500);
-                }
-            } catch (e) {
-                console.log("⚠️ No se pudo inyectar el monto de vuelto, procediendo con monto exacto.");
-            }
-        }
-        await shot(`modal_${testConfig.medioPago.toLowerCase()}`);
-
-    } else if (testConfig.medioPago === 'Tarjeta') {
-        const btnTarjeta = await find('button:has-text("Tarjeta")', 10000);
-        await btnTarjeta.click();
-        console.log("✅ Modal de Tarjeta abierto");
-        await shot('modal_tarjeta');
+    for (const pago of pagos) {
+        console.log(`💳 Agregando pago: ${pago.tipo} por S/ ${pago.monto || '(auto-completado)'}...`);
         
-        // La tarjeta usualmente requiere seleccionar el tipo de tarjeta (Visa, MC)
-        // y el terminal (POS). Ajustar según el Fiori real.
-        // Haremos click en los dropdowns por defecto.
-        try {
-            // Seleccionar primer terminal POS si existe el dropdown
-            await tap('.sapMSelect:has(span:has-text("Terminal"))', 2000);
-            await tap('.sapMSelectList li:nth-child(2)', 2000);
+        if (pago.tipo === 'Efectivo') {
+            const btnEfectivo = await find('button:has-text("Efectivo")', 10000);
+            await btnEfectivo.click();
+            await page.waitForTimeout(500);
+
+            if (pago.monto) {
+                console.log(`🔄 Ingresando monto exacto/Vuelto para Efectivo: S/ ${pago.monto}`);
+                const inputMontoLoc = activeFrame ? 
+                                       activeFrame.locator('input[type="text"], input[type="number"]').first() : 
+                                       page.locator('input[type="text"]:visible, input[type="number"]:visible').first();
+                try {
+                    if (await inputMontoLoc.isVisible({ timeout: 2000 })) {
+                        await inputMontoLoc.click();
+                        await inputMontoLoc.fill(pago.monto.toString());
+                        await page.waitForTimeout(500);
+                    }
+                } catch (e) {
+                    console.log("⚠️ No se pudo inyectar el monto de efectivo.");
+                }
+            }
+            await shot(`modal_efectivo`);
+
+        } else if (pago.tipo === 'Tarjeta') {
+            const btnTarjeta = await find('button:has-text("Tarjeta")', 10000);
+            await btnTarjeta.click();
+            await page.waitForTimeout(500);
             
-            // Seleccionar primer operador de tarjeta (Visa/MC)
-            await tap('.sapMSelect:has(span:has-text("Operador"))', 2000);
-            await tap('.sapMSelectList li:nth-child(2)', 2000);
-        } catch(e) {
-            console.log("⚠️ Saltando selects de POS/Tarjeta, quizá no sean obligatorios.");
+            // Navegar al tab Manual
+            const manualTab = activeFrame ? activeFrame.locator('div[role="tab"] bdi:has-text("Manual")').first() : page.locator('div[role="tab"] bdi:has-text("Manual")').first();
+            if (await manualTab.isVisible({timeout: 3000}).catch(()=>false)) {
+                await manualTab.click();
+                await page.waitForTimeout(500);
+                
+                // Si la UI mandó flag de auto-generar datos:
+                if (pago.autoData) {
+                    const idTransaccion = 'TRx' + Math.floor(Math.random() * 1000000);
+                    const digitos = Math.floor(1000 + Math.random() * 9000).toString();
+                    console.log(`🔄 Ingresando Tarjeta Manual (Auto): ID ${idTransaccion}, Terminada en ${digitos}`);
+                    try {
+                        // Buscar inputs. Usualmente es por placeholder o label, usaremos una heurística
+                        const inputs = activeFrame ? activeFrame.locator('input[type="text"]:visible') : page.locator('input[type="text"]:visible');
+                        const count = await inputs.count();
+                        if (count >= 2) {
+                            await inputs.nth(count - 2).fill(idTransaccion); // penultimo: ID Transaccion?
+                            await inputs.nth(count - 1).fill(digitos);       // ultimo: Digitos?
+                        }
+                    } catch(e) {
+                        console.log("⚠️ Falló llenado manual de tarjeta.");
+                    }
+                }
+            } else {
+                console.log("⚠️ Tab Manual no encontrado, continuando...");
+            }
+
+            if (pago.monto) {
+                // Inyectar monto en tarjeta
+                 const inputMontoLoc = activeFrame ? 
+                                       activeFrame.locator('input[type="text"], input[type="number"]').first() : 
+                                       page.locator('input[type="text"]:visible, input[type="number"]:visible').first();
+                try {
+                    if (await inputMontoLoc.isVisible({ timeout: 2000 })) {
+                        await inputMontoLoc.fill(pago.monto.toString());
+                    }
+                } catch(e){}
+            }
+            
+            await shot('modal_tarjeta_manual');
+        } else {
+            console.log(`⚠️ Medio de pago ${pago.tipo} desconocido.`);
         }
-    } else {
-        throw new Error(`Medio de pago ${testConfig.medioPago} no soportado en script dinámico.`);
+
+        // Si hay más de un pago (o si Fiori lo requiere manual), presionar "Añadir pago"
+        if (pagos.length > 1) {
+             const aniadirBtn = activeFrame ? activeFrame.locator('bdi:text-is("Añadir pago")') : page.locator('bdi:text-is("Añadir pago")');
+             if (await aniadirBtn.isVisible({timeout:2000}).catch(()=>false)) {
+                 await aniadirBtn.click();
+             }
+        }
     }
 
     // =======================================================
@@ -392,11 +431,18 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     await page.waitForTimeout(600);
 
     // Seleccionar primer doc emitido y tomar la captura final
+    let docExtracted = "Desconocido";
     const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 5000).catch(() => null);
     if (firstDoc) {
         await firstDoc.click({ force: true });
         await page.waitForTimeout(500);
+        const text = await firstDoc.textContent() || "";
+        const docMatch = text.match(/[BF]\\d{3}-\\d+/);
+        if (docMatch) docExtracted = docMatch[0];
+        else docExtracted = text.substring(0, 25).trim();
     }
+
+    console.log(`\\[RESULT\\] Prefactura: ${activeId} | Doc: ${docExtracted}`);
 
     logStep('verificar-documentos', 'ok');
     await shot('comprobante_emitido');
@@ -443,21 +489,17 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                 </head>
                 <body>
                     <h1>Reporte Técnico - SetPruebas CI</h1>
-                    <h2>Configuración de Escenario Dinámico</h2>
+                    <h2>Configuración de Escenario Lote (Batch)</h2>
                     <div class="meta">
                         <p><strong>ID Pre-Factura:</strong> ${activeId}</p>
-                        <p><strong>Comprobante:</strong> ${testConfig.tipoComprobante}</p>
-                        <p><strong>Medio de Pago:</strong> ${testConfig.medioPago}</p>
-                        <p><strong>Retorno de Vuelto:</strong> ${testConfig.conVuelto ? 'Forzado' : 'Natural'}</p>
+                        <p><strong>Documento Generado:</strong> ${docExtracted || "No detectado"}</p>
+                        <p><strong>Medios de Pago:</strong> ${(testConfig.pagos||[]).map(p=>p.tipo).join(' + ')}</p>
+                        <p><strong>Medio de Vuelto (Si aplica):</strong> ${testConfig.medioVuelto}</p>
                         <hr style="border: 0; border-top: 1px dashed #ccc; margin: 10px 0;">
                         <p><strong>Duración:</strong> ${dur} segundos | <strong>Fecha:</strong> ${new Date().toLocaleString('es-PE')}</p>
                         <p><strong>Estado:</strong> ${testStatus}</p>
                     </div>
-                        <p><strong>Pre-Factura ID:</strong> ${activeId}</p>
-                        <p><strong>Duración del flujo:</strong> ${dur} segundos</p>
-                        <p><strong>Fecha de ejecución:</strong> ${new Date().toLocaleString('es-PE')}</p>
-                        <p><strong>Estado:</strong> ${testStatus}</p>
-                        <p><strong>Descripción:</strong> Flujo automatizado sin intervención manual que ingresa un pago en efectivo y emite el documento electrónico.</p>
+                        <p><strong>Descripción:</strong> Flujo automatizado sin intervención manual que ingresa pagos múltiples y emite el documento electrónico.</p>
                     </div>
                     ${testError ? `<div class="error-box"><strong>Error en ejecución:</strong> ${testError}</div>` : ''}
                     <h2>Evidencias Fotográficas</h2>
