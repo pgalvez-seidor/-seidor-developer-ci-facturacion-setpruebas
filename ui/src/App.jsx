@@ -170,6 +170,19 @@ const ViewMain = ({
               </select>
             </div>
 
+            {(testConfig.tipoComprobante === 'Factura' || testConfig.medioPago === 'Tarjeta') && (
+              <div className="form-group" style={{ marginTop: '10px', background: 'rgba(0,0,0,0.1)', padding: '10px', borderLeft: '3px solid #005587' }}>
+                <label>Número de RUC</label>
+                <input 
+                  type="text" 
+                  value={testConfig.ruc}
+                  onChange={e => setTestConfig({...testConfig, ruc: e.target.value})}
+                  style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-color)', padding: '8px', borderRadius: '4px', width: '100%' }}
+                  placeholder="Ej: 20100047218"
+                />
+              </div>
+            )}
+
             <div className="form-group checkbox-group">
               <label>
                 <input 
@@ -332,6 +345,7 @@ export default function App() {
   const [testConfig, setTestConfig]       = useState({
     tipoComprobante: 'Boleta', // Boleta, Factura
     medioPago: 'Efectivo',     // Efectivo, Tarjeta, Mixto
+    ruc: '20100047218',        // Valor de defecto útil para Facturas
     conVuelto: false,          
     pacienteExtranjero: false,
     forzarErrorSunat: false
