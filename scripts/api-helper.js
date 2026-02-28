@@ -1,11 +1,20 @@
 const axios = require('axios');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 async function createPrefactura(user) {
     const config = JSON.parse(fs.readFileSync('./config/api-config.json', 'utf8')).QAS;
     const template = fs.readFileSync('./templates/pre-factura-caso-1.json', 'utf8');
-    const state = fs.readFileSync('./config/state.properties', 'utf8');
 
+    // Sincronizar correlativo más reciente con git antes de leer
+    try {
+        console.log("🔄 Sincronizando correlativo con repositorio...");
+        execSync('git pull origin HEAD --rebase', { stdio: 'ignore' });
+    } catch(e) {
+        console.log("⚠️ Advertencia: No se pudo hacer git pull del correlativo.");
+    }
+
+    const state = fs.readFileSync('./config/state.properties', 'utf8');
     let lastId = parseInt(state.match(/last_prefactura_id=(\d+)/)[1]);
     let currentId = lastId + 1;
 

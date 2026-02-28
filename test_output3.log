@@ -1,0 +1,36 @@
+
+Running 1 test using 1 worker
+
+🚀 Generando Pre-factura vía API...
+Intentando con PK: 1393494005
+ÉXITO: Pre-factura 1393494005 creada.
+✅ ID: 1393494005
+⏳ login: running
+✅ login: ok
+⏳ abrir-facturacion: running
+✅ abrir-facturacion: ok
+⏳ buscar-prefactura: running
+🔎 Seleccionando Pre-factura 1393494005...
+✅ Primer item seleccionado
+✅ buscar-prefactura: ok
+  ✘  1 scripts/caso1-boleta.spec.js:6:1 › Facturación Boleta Caso 1 - Efectivo (23.6s)
+
+
+  1) scripts/caso1-boleta.spec.js:6:1 › Facturación Boleta Caso 1 - Efectivo ───────────────────────
+
+    Test was interrupted.
+
+    Error: page.screenshot: Target page, context or browser has been closed
+
+      26 |         
+      27 |         const p = path.join(evidenceDir, `${name}.png`);
+    > 28 |         await page.screenshot({ path: p, fullPage: true });
+         |                    ^
+      29 |         console.log(`📸 ${name}.png`);
+      30 |         return p;
+      31 |     };
+        at shot (/Users/ender/Desktop/Apps/Testing/-seidor-developer-ci-facturacion-setpruebas/scripts/caso1-boleta.spec.js:28:20)
+        at /Users/ender/Desktop/Apps/Testing/-seidor-developer-ci-facturacion-setpruebas/scripts/caso1-boleta.spec.js:149:5
+
+  1 interrupted
+    scripts/caso1-boleta.spec.js:6:1 › Facturación Boleta Caso 1 - Efectivo ────────────────────────

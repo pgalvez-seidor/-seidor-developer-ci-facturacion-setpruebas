@@ -20,6 +20,10 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     };
 
     const shot = async (name) => {
+        await page.waitForTimeout(1500); // Esperar que desaparezcan los busy indicators
+        // Intentar esperar a que no haya loaders
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 3000 }).catch(() => {});
+        
         const p = path.join(evidenceDir, `${name}.png`);
         await page.screenshot({ path: p, fullPage: true });
         console.log(`📸 ${name}.png`);
@@ -142,7 +146,6 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     }
 
     logStep('buscar-prefactura', 'ok');
-    await page.waitForTimeout(800);
     await shot('antes_de_cobrar');
 
     // =======================
@@ -157,7 +160,6 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
 
     await (await find('button:has-text("Efectivo")', 10000)).click();
     console.log("✅ Click en Efectivo");
-    await page.waitForTimeout(800);
     await shot('modal_efectivo');
 
     // =======================
@@ -177,9 +179,8 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     }
     await page.waitForTimeout(500);
     await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("SI")', 4000);
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(1000); // Esperar que cierre modal anterior y salte posible toast/popup
     await tap('button:has-text("OK"), button:has-text("Aceptar")', 2000); // pop-up extra si existe
-    await page.waitForTimeout(800);
 
     logStep('cobro-efectivo', 'ok');
     await shot('post_pago');
@@ -195,39 +196,64 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     activeFrame = null;
 
     await (await find('button:has-text("Generar")', 8000)).click({ force: true });
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(1000);
 
     // El modal de emisión puede tener tab "Boleta" — seleccionarla si existe
     await tap('[role="tab"]:has-text("Boleta"), .sapMTabStripItem:has-text("Boleta")', 1500);
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(500);
 
     // Imprimir
     if (!await tap('button:has-text("Imprimir")', 6000)) {
         await shot('error-imprimir');
         throw new Error('"Imprimir" no encontrado en modal emision');
     }
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
 
     // Dialog "¿Seguro que desea imprimir el comprobante?" → "Yes"
     await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("OK")', 2000);
 
     // Esperar que el servidor procese la emisión y aparezcan los dialogs de resultado
     // (ej: "Alerta: No hay conexión con la impresora / Se facturó correctamente")
-    // La emisión puede tardar unos segundos — esperamos hasta que aparezca algo o pase el tiempo
-    await page.waitForTimeout(2000);
+    // La emisión puede tardar varios segundos (API SUNAT, etc.) — aumentamos el tiempo
+    console.log("⏳ Esperando respuesta de emisión...");
+    await page.waitForTimeout(5000);
 
-    // Cerrar todos los dialogs que queden (hasta 4 intentos, 2s cada uno)
-    for (let i = 0; i < 4; i++) {
-        const closed = await tap(
-            'button:has-text("OK"), button:has-text("Yes"), button:has-text("Sí"), button:has-text("Cerrar"), button:has-text("Close")',
-            2000
-        );
-        if (!closed) break;
-        await page.waitForTimeout(500);
+    // Fuerza bruta para cerrar todos los modales que puedan haber quedado abiertos (ej: tickets de impresión, success, info)
+    console.log("🧹 Cerrando popups y overlays...");
+    
+    const possibleCloseButtons = [
+        'footer button:has-text("OK")',
+        'footer button:has-text("Yes")',
+        '.sapMDialog footer button:has-text("Aceptar")',
+        'button[title="Cerrar"]',
+        'button:has-text("Cerrar")'
+    ];
+
+    for (let i = 0; i < 5; i++) {
+        let clickedAny = false;
+        for (const selector of possibleCloseButtons) {
+            try {
+                const btn = page.locator(selector).first();
+                if (await btn.isVisible({ timeout: 500 })) {
+                    await btn.click({ force: true });
+                    await page.waitForTimeout(800);
+                    clickedAny = true;
+                    break;
+                }
+            } catch (e) {
+                // Selector no encontrado o no visible
+            }
+        }
+        
+        if (!clickedAny) {
+            // Si no encontró botón, lanza tecla ESC como último recurso
+            await page.keyboard.press('Escape');
+            await page.waitForTimeout(500);
+        }
     }
 
-    // Dar tiempo a SAP para cerrar overlays internos antes de navegar
-    await page.waitForTimeout(1000);
+    // Dar un tiempo extra y asegurarse que desaparezca la caparazón de overlays
+    await page.waitForTimeout(2000);
 
     logStep('generar-comprobante', 'ok');
 
@@ -264,6 +290,71 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
             path.join(evidenceDir, 'playwright-result.json'),
             JSON.stringify({ prefacturaId: activeId, steps, duration: `${dur}s` }, null, 2)
         );
+    }
+
+    // =========================================================
+    // GENERAR PDF DE REPORTE TÉCNICO
+    // =========================================================
+    try {
+        console.log("📄 Generando PDF con evidencias...");
+        const { chromium } = require('@playwright/test');
+        // Lanzamos un browser headless temporal solo para imprimir el documento
+        const pdfBrowser = await chromium.launch({ headless: true });
+        const pdfPage = await pdfBrowser.newPage();
+        
+        let html = `
+        <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
+                    h1 { color: #005587; border-bottom: 2px solid #005587; padding-bottom: 10px; }
+                    .step { margin-bottom: 40px; page-break-inside: avoid; }
+                    img { max-width: 100%; border: 1px solid #ccc; border-radius: 4px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); margin-top: 10px; }
+                    .meta { background: #f8fafc; padding: 15px; border-radius: 5px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
+                </style>
+            </head>
+            <body>
+                <h1>Reporte Técnico - SetPruebas CI</h1>
+                <h2>Caso 1: Boleta Efectivo</h2>
+                <div class="meta">
+                    <p><strong>Pre-Factura ID:</strong> ${activeId}</p>
+                    <p><strong>Duración del flujo:</strong> ${dur} segundos</p>
+                    <p><strong>Fecha de ejecución:</strong> ${new Date().toLocaleString('es-PE')}</p>
+                    <p><strong>Estado:</strong> ✅ EXITOSO</p>
+                    <p><strong>Descripción:</strong> Flujo automatizado sin intervención manual que ingresa un pago en efectivo y emite el documento electrónico.</p>
+                </div>
+                <h2>Evidencias Fotográficas</h2>
+        `;
+
+        const pics = [
+            { id: 'antes_de_cobrar', title: '1. Antes del Cobro (Detalle de pre-factura cargado)' },
+            { id: 'modal_efectivo', title: '2. Modal de Pago (Monto ingresado)' },
+            { id: 'post_pago', title: '3. Posterior al Pago (Efectivo registrado)' },
+            { id: 'comprobante_emitido', title: '4. Comprobante Emitido (Verificación en tab Documentos)' }
+        ];
+
+        for (const p of pics) {
+            const imgPath = path.join(evidenceDir, p.id + '.png');
+            if (fs.existsSync(imgPath)) {
+                const base64 = fs.readFileSync(imgPath).toString('base64');
+                html += `
+                <div class="step">
+                    <h3>${p.title}</h3>
+                    <img src="data:image/png;base64,${base64}" />
+                </div>
+                `;
+            }
+        }
+        
+        html += `</body></html>`;
+        
+        await pdfPage.setContent(html, { waitUntil: 'networkidle' });
+        const pdfPath = path.join(evidenceDir, `Reporte_Tecnico_${activeId}.pdf`);
+        await pdfPage.pdf({ path: pdfPath, format: 'A4', margin: { top: '20px', bottom: '20px' } });
+        await pdfBrowser.close();
+        console.log(`✅ PDF Generado: ${pdfPath}`);
+    } catch (err) {
+        console.log("⚠️ No se pudo generar el PDF:", err.message);
     }
 
     console.log(`\n${'='.repeat(50)}`);
