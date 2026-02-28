@@ -222,19 +222,20 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
 
         // 6. AGREGAR DETALLE (+) DE UN DÍA
         logStep('agregar-dia', 'running');
-        // El usuario proporcionó una captura donde el botón de "Agregar" es el último a la derecha del toolbar
-        // Intentamos directamente el último botón del toolbar, o los iconos comunes
-        const btnMasParams = '.sapMTitle:has-text("Horario") + * button, .sapMTableToolbar button, .sapMTable + .sapMTB button';
+        // El icono de SAP para "Agregar" es el código  (e105)
+        const selectorIconoMas = '[data-sap-ui-icon-content=""]';
+        
         let btnMas;
         try {
-            // Buscamos el botón de agregar dentro de la página o el frame activo
-            btnMas = frameInputs.locator('button[title*="Agregar"], button[title*="agregar"], .sapMTableToolbar button').last();
+            // Buscamos cualquier botón que contenga el icono de '+' en el panel de detalle
+            btnMas = frameInputs.locator(`button:has(${selectorIconoMas}), .sapMTableToolbar button, .sapMTB button`).last();
             await btnMas.click({ timeout: 5000, force: true });
         } catch {
-            btnMas = await find('button[title*="Agregar Detalle"], button[title*="agregar detalle"], .sapMTableToolbar button:last-child', 5000);
+            console.log("⚠️ No se encontró por icono, intentando por título o clases de toolbar...");
+            btnMas = await find('button[title*="Agregar"], button[title*="agregar"], .sapMTableToolbar button:last-child', 5000);
             await btnMas.click({ timeout: 5000, force: true });
         }
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(500);
 
         // Identificar los inputs de fecha
         const dateInputsList = await frameInputs.locator('input[placeholder*="echa"], input[type="date"], input.sapMInputBaseInner').all();
