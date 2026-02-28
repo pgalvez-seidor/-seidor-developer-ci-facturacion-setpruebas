@@ -53,6 +53,41 @@
         "id": "notas_credito",
         "name": "Notas de Crédito",
         "escenarios": []
+      },
+      {
+        "id": "horarios",
+        "name": "Horarios",
+        "escenarios": [
+          {
+            "id": "esc_horario_supervisor_01",
+            "name": "Crear Horario Supervisor (Flujo Diario)",
+            "config": {
+              "area": "AMBULATORIA-ADMISION"
+            },
+            "script": "scripts/caso-horario-supervisor.spec.js",
+            "prerequisito": null,
+            "instrucciones_ia": "Verificar si en el detalle del usuario ya existe una fila de horario con la fecha de hoy. Si no existe, agregar una fila nueva (+) con las fechas currentes, confirmar (check), habilitar en el popup (persona) y guardar."
+          },
+          {
+            "id": "esc_horario_cajero_01",
+            "name": "Consultar Horario Cajero",
+            "config": {
+              "area": "AMBULATORIA-ADMISION",
+              "periodo": "03-2026",
+              "semana": "Semana 1",
+              "turnos": {
+                "Lunes": "08:00-14:00",
+                "Martes": "08:00-14:00",
+                "Miércoles": "08:00-14:00",
+                "Jueves": "08:00-14:00",
+                "Viernes": "08:00-14:00"
+              }
+            },
+            "script": "scripts/caso-horario-cajero.spec.js",
+            "prerequisito": "esc_horario_supervisor_01",
+            "instrucciones_ia": "Consultar y asignar el horario del cajero para el usuario logueado. PREREQUISITO: debe existir un Horario Supervisor activo. Se ingresan las horas por día según la configuración."
+          }
+        ]
       }
     ]
   }

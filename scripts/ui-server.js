@@ -299,6 +299,14 @@ app.post('/api/run-batch', async (req, res) => {
                     if (match) {
                         sendLog(taskId, 'result', 'Documentos generados', match[1]);
                     }
+
+                    // Extraer Ruta del PDF si el script avisa su culminación
+                    const pdfMatch = text.match(/✅ PDF Generado:\s*(.+)/);
+                    if (pdfMatch) {
+                        const arrPath = pdfMatch[1].split(/[\\/]/);
+                        const fileName = arrPath[arrPath.length - 1]; // "Reporte_Tecnico_123.pdf"
+                        sendLog(taskId, 'pdf', 'Reporte PDF', `/evidence/${fileName}`);
+                    }
                 });
                 workerProcess.stderr.on('data', (data) => {
                     sendLog(taskId, 'log', `[ERROR] ` + stripAnsi(data.toString()));
