@@ -4,9 +4,9 @@ Este proyecto es una herramienta de automatización para flujos de pago complejo
 
 ---
 
-## 🚀 Guía de Inicio y Apagado (Start / Stop)
+## 🚀 Guía de Inicio Rápido (Start / Stop)
 
-La aplicación requiere levantar dos servicios independientes en tu terminal: **El Servidor Node (Backend)** y **El Servidor Web (Frontend)**.
+Gracias al orquestador global, la aplicación Frontend y Backend se levantan con un solo comando mágico.
 
 ### Paso 1: Instalar Dependencias (Solo la primera vez)
 
@@ -19,36 +19,27 @@ cd ..
 npx playwright install
 ```
 
-### Paso 2: Levantar el Backend (Orquestador)
+### Paso 2: Levantar Todo (Magic Command)
 
-En la raíz del proyecto, ejecuta el servidor Node. Este servidor recibirá las órdenes de la interfaz web y lanzará los navegadores automatizados:
-
-```bash
-node scripts/ui-server.js
-```
-
-_(Debe aparecer el mensaje: `✅ UI Backend API Server running at http://localhost:3001`)_
-
-### Paso 3: Levantar el Frontend (Interfaz Web)
-
-Abre **una nueva pestaña/ventana de terminal**, navega a la carpeta `ui` y lanza la interfaz gráfica:
+En la raíz del proyecto, ejecuta el siguiente comando. Esto lanzará simultáneamente el servidor Node y la Interfaz Web:
 
 ```bash
-cd ui
-npm run dev
+npm start
 ```
 
-_(La terminal te indicará una URL local, generalmente `http://localhost:5173`. Ábrela en tu navegador Chrome/Safari)._
+_(Se abrirá tu navegador automáticamente en `http://localhost:5173`. Verás logs de ambos servicios en la misma terminal)._
 
 ---
 
-### Paso 4: Apagar la Aplicación Correctamente (Shutdown)
+### Paso 3: Apagar la Aplicación Correctamente (Shutdown)
 
-Para detener la herramienta y liberar la memoria de tu computadora, debes ir a **ambas terminales** y presionar:
-`Ctrl + C` (En Mac o Windows)
+Para detener la herramienta y liberar la memoria de tu computadora:
 
-1. En la terminal del Frontend (`npm run dev`), presiona `Ctrl + C`.
-2. En la terminal del Backend (`node scripts/ui-server.js`), presiona `Ctrl + C`. **Es muy importante detener este proceso para asegurar que los navegadores fantasma (Headless) de Playwright se destruyan y no consuman RAM en segundo plano.**
+1. Ve a la terminal donde ejecutaste `npm start`.
+2. Presiona `Ctrl + C` (En Mac o Windows).
+3. Confirma con `Y` si la terminal te pregunta "Terminate batch job?".
+
+**Es muy importante hacer esto para asegurar que los navegadores fantasma (Headless) de Playwright se destruyan y no consuman RAM en segundo plano.**
 
 ---
 

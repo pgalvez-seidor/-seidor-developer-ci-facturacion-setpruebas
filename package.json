@@ -12,10 +12,14 @@
         "playwright": "^1.40.0"
     },
     "scripts": {
+        "start": "concurrently \"node scripts/ui-server.js\" \"npm run dev --prefix ui\"",
         "run:caso1": "node scripts/runner.js --caso caso1 --env QAS",
         "run:all": "node scripts/runner.js --all --env QAS",
         "test:caso1": "npx playwright test scripts/caso1-boleta.spec.js --headed",
         "report": "node scripts/report-generator.js",
         "dry-run": "node scripts/runner.js --caso caso1 --env QAS --dry-run"
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
     }
 }
