@@ -31,10 +31,7 @@ const Sidebar = ({
         <div className="sidebar-label">Selección de Cliente</div>
         {registry.map(c => (
            <div key={c.id} className={`client-item ${activeClient === c.id ? 'active' : ''}`} onClick={() => { setActiveClient(c.id); setActiveProcess(c.procesos[0]?.id || ''); }}>
-               <div className="client-icon">[ {c.id} ]</div>
-               <div className="client-info">
-                   <div className="client-name">{c.name}</div>
-               </div>
+               <div className="client-name">[{c.id}] {c.name}</div>
            </div>
         ))}
 
@@ -124,11 +121,16 @@ export default function App() {
 
   // Builder State
   const [builderConfig, setBuilderConfig] = useState({
-    tipoComprobante: 'Boleta',
+    // Generic
     iteraciones: 1,
     headless: true,
+    // Facturación only
+    tipoComprobante: 'Boleta',
     medioVuelto: 'Efectivo',
-    pagos: []
+    pagos: [],
+    // Horarios only
+    area: 'AMBULATORIA-ADMISION',
+    periodo: '02-2026'
   });
 
   // Batch Queue State
@@ -242,7 +244,7 @@ export default function App() {
   };
 
   const addToBatch = () => {
-    if (builderConfig.pagos.length === 0) {
+    if (activeProcess === 'facturacion' && builderConfig.pagos.length === 0) {
       alert("Debes agregar al menos un medio de pago al escenario.");
       return;
     }
@@ -281,13 +283,24 @@ export default function App() {
     setQueue(q => q.map(t => t.status === 'idle' ? { ...t, status: 'running', progress: 5, result: null, currentLog: '⏳ Iniciando worker...' } : t));
 
     const tasksToRun = queue.filter(t => t.status === 'idle' || t.status === 'error');
+    
+    // Mapeo de procesos a scripts
+    const processScripts = {
+      'facturacion': 'caso1-boleta.spec.js',
+      'horario_supervisor': 'caso-horario-supervisor.spec.js',
+      'horario_cajero': 'caso-horario-cajero.spec.js'
+    };
 
     try {
       const response = await fetch(`${API_BASE}/run-batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-            tasks: tasksToRun.map(t => ({ taskId: t.taskId, config: t.config, file: 'caso1-boleta.spec.js' })), 
+            tasks: tasksToRun.map(t => ({ 
+                taskId: t.taskId, 
+                config: t.config, 
+                file: processScripts[activeProcess] || 'caso1-boleta.spec.js' 
+            })), 
             parallel: batchParallel 
         })
       });
@@ -319,6 +332,7 @@ export default function App() {
                 let newSt = t.status;
                 let newRes = t.result;
                 let newLog = t.currentLog;
+                let newPdfUrl = t.pdfUrl;
                 const msg = d.message || "";
 
                 if (type === 'log') {
@@ -338,9 +352,12 @@ export default function App() {
                     newProg = 100;
                     const cleanError = msg.split('\n')[0].replace(/\[Worker \d+\]\s*/, '').replace('Error:', '').trim();
                     newRes = cleanError || "Error desconocido";
+                } else if (type === 'pdf') {
+                    // msg contiene la URL relativa de descarga
+                    newPdfUrl = msg;
                 }
 
-                return { ...t, progress: newProg, status: newSt, result: newRes, currentLog: newLog };
+                return { ...t, progress: newProg, status: newSt, result: newRes, currentLog: newLog, pdfUrl: newPdfUrl };
               }));
             } catch (err) { 
                console.error("Error parsing chunk:", err, chunk);
@@ -409,11 +426,33 @@ export default function App() {
                </div>
             </div>
             <div className="config-form">
-              <label>Tipo Comprobante</label>
-              <select value={builderConfig.tipoComprobante} onChange={e => setBuilderConfig({...builderConfig, tipoComprobante: e.target.value})}>
-                <option value="Boleta">Boleta</option>
-                <option value="Factura">Factura</option>
-              </select>
+              {activeProcess === 'facturacion' ? (
+                <>
+                  <label>Tipo Comprobante</label>
+                  <select value={builderConfig.tipoComprobante} onChange={e => setBuilderConfig({...builderConfig, tipoComprobante: e.target.value})}>
+                    <option value="Boleta">Boleta</option>
+                    <option value="Factura">Factura</option>
+                  </select>
+                </>
+              ) : (
+                <>
+                  <label>Área de Selección</label>
+                  <select value={builderConfig.area} onChange={e => setBuilderConfig({...builderConfig, area: e.target.value})}>
+                    <option value="AMBULATORIA-ADMISION">AMBULATORIA-ADMISION</option>
+                    <option value="EMERGENCIA-ADMISION">EMERGENCIA-ADMISION</option>
+                    <option value="HOSPITAL-ADMISION">HOSPITAL-ADMISION</option>
+                  </select>
+
+                  <label>Período (MM-YYYY)</label>
+                  <input 
+                    type="text" 
+                    className="mini-input" 
+                    style={{width: '100%', textAlign: 'left'}}
+                    value={builderConfig.periodo} 
+                    onChange={e => setBuilderConfig({...builderConfig, periodo: e.target.value})} 
+                  />
+                </>
+              )}
 
               <label>Modo de Navegador</label>
               <div className="switch-line">
@@ -421,12 +460,14 @@ export default function App() {
                   <span>Headless (Oculto - Rápido)</span>
               </div>
               
-              <PaymentTray 
-                pagos={builderConfig.pagos} 
-                medioVuelto={builderConfig.medioVuelto}
-                updatePagos={(newPagos) => setBuilderConfig({...builderConfig, pagos: newPagos})}
-                updateMedioVuelto={(val) => setBuilderConfig({...builderConfig, medioVuelto: val})}
-              />
+              {activeProcess === 'facturacion' && (
+                <PaymentTray 
+                  pagos={builderConfig.pagos} 
+                  medioVuelto={builderConfig.medioVuelto}
+                  updatePagos={(newPagos) => setBuilderConfig({...builderConfig, pagos: newPagos})}
+                  updateMedioVuelto={(val) => setBuilderConfig({...builderConfig, medioVuelto: val})}
+                />
+              )}
 
               <div className="add-batch-row" style={{alignItems: 'center'}}>
                  <div style={{flex: 1}}>
@@ -480,7 +521,10 @@ export default function App() {
                           <div className="batch-item-info">
                               <span className="b-idx">{idx + 1}.</span>
                               <span className="b-title">
-                                  {qItem.config.tipoComprobante} - {qItem.config.pagos.map(p=>p.tipo).join('+')}
+                                  {activeProcess === 'facturacion' 
+                                    ? `${qItem.config.tipoComprobante} - ${qItem.config.pagos.map(p=>p.tipo).join('+')}`
+                                    : `${activeProcess === 'horario_supervisor' ? 'HS' : 'HC'} - ${qItem.config.area} (${qItem.config.periodo})`
+                                  }
                               </span>
                               <div className="b-tags">
                                  {qItem.config.headless ? <span className="tag">Headless</span> : <span className="tag">Visible</span>}
@@ -491,11 +535,19 @@ export default function App() {
                               {qItem.status === 'idle' ? (
                                  <span className="status-text idle">Pendiente</span>
                               ) : qItem.status === 'done' && qItem.result ? (
-                                  <span className="final-result">{qItem.result}</span>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span className="final-result">{qItem.result}</span>
+                                      {qItem.pdfUrl && (
+                                          <a href={`http://localhost:3001${qItem.pdfUrl}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '4px', background: '#e2e8f0', color: '#005587', textDecoration: 'none', border: '1px solid #cbd5e1' }}>📄 Ver PDF</a>
+                                      )}
+                                  </div>
                               ) : qItem.status === 'error' ? (
                                   <div className="error-result-container">
                                      <span className="error-title">Fallo Crítico:</span>
                                      <div className="error-text" title={qItem.result}>{qItem.result}</div>
+                                     {qItem.pdfUrl && (
+                                          <a href={`http://localhost:3001${qItem.pdfUrl}`} target="_blank" rel="noreferrer" style={{ alignSelf: 'flex-start', fontSize: '0.8rem', marginTop: '4px', padding: '2px 8px', borderRadius: '4px', background: '#fee2e2', color: '#b91c1c', textDecoration: 'none', border: '1px solid #fca5a5' }}>📄 Ver PDF (Fallo)</a>
+                                      )}
                                   </div>
                               ) : (
                                  <div style={{ flex: 1, minWidth: 0, marginLeft: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
