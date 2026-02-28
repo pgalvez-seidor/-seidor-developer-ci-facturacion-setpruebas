@@ -1,0 +1,41 @@
+
+Running 1 test using 1 worker
+
+🚀 Generando Pre-factura vía API...
+Intentando con PK: 1393493687
+Respuesta API: Ya existe código de prefactura 1393493687.
+Intentando con PK: 1393493688
+Respuesta API: Ya existe código de prefactura 1393493688.
+Intentando con PK: 1393493689
+Respuesta API: Ya existe código de prefactura 1393493689.
+Intentando con PK: 1393493690
+Respuesta API: Ya existe código de prefactura 1393493690.
+Intentando con PK: 1393493691
+Respuesta API: Ya existe código de prefactura 1393493691.
+
+🛑 PRUEBA FALLIDA. Estado: failed
+⏸  Pausando navegador para inspección iterativa...
+👉 Revisa el Playwright Inspector o la ventana del navegador.
+👉 Cierra la ventana del Inspector o haz click en 'Resume' para finalizar.
+
+  ✘  1 scripts/caso1-boleta.spec.js:17:1 › Facturación Boleta Caso 1 - Efectivo (12.0s)
+
+
+  1) scripts/caso1-boleta.spec.js:17:1 › Facturación Boleta Caso 1 - Efectivo ──────────────────────
+
+    Error: No se pudo crear la pre-factura tras varios intentos.
+
+       at scripts/api-helper.js:40
+
+      38 |         }
+      39 |     }
+    > 40 |     throw new Error("No se pudo crear la pre-factura tras varios intentos.");
+         |           ^
+      41 | }
+      42 |
+      43 | module.exports = { createPrefactura };
+        at createPrefactura (/Users/ender/Desktop/Apps/Testing/-seidor-developer-ci-facturacion-setpruebas/scripts/api-helper.js:40:11)
+        at /Users/ender/Desktop/Apps/Testing/-seidor-developer-ci-facturacion-setpruebas/scripts/caso1-boleta.spec.js:82:20
+
+  1 failed
+    scripts/caso1-boleta.spec.js:17:1 › Facturación Boleta Caso 1 - Efectivo ───────────────────────

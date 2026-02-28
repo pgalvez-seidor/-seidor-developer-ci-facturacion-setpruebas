@@ -1,0 +1,51 @@
+
+Running 1 test using 1 worker
+
+🚀 Generando Pre-factura vía API...
+Intentando con PK: 1393494001
+ÉXITO: Pre-factura 1393494001 creada.
+✅ ID: 1393494001
+⏳ login: running
+✅ login: ok
+⏳ abrir-facturacion: running
+✅ abrir-facturacion: ok
+⏳ buscar-prefactura: running
+🔎 Seleccionando Pre-factura 1393494001...
+✅ Primer item seleccionado
+✅ buscar-prefactura: ok
+📸 antes_de_cobrar.png
+⏳ cobro-efectivo: running
+💵 Cobro en Efectivo...
+✅ Click en Efectivo
+📸 modal_efectivo.png
+💰 Confirmar pago...
+✅ cobro-efectivo: ok
+📸 post_pago.png
+⏳ generar-comprobante: running
+📄 Generando Boleta...
+
+🛑 PRUEBA FALLIDA. Estado: interrupted
+⏸  Pausando navegador para inspección iterativa...
+👉 Revisa el Playwright Inspector o la ventana del navegador.
+👉 Cierra la ventana del Inspector o haz click en 'Resume' para finalizar.
+
+  ✘  1 scripts/caso1-boleta.spec.js:17:1 › Facturación Boleta Caso 1 - Efectivo (49.4s)
+
+
+  1) scripts/caso1-boleta.spec.js:17:1 › Facturación Boleta Caso 1 - Efectivo ──────────────────────
+
+    Test was interrupted.
+
+    Error: page.waitForTimeout: Target page, context or browser has been closed
+
+      239 |     // =======================
+      240 |     logStep('verificar-documentos', 'running');
+    > 241 |     console.log("📋 Verificando DOCUMENTOS...");
+          |                ^
+      242 |     activeFrame = null;
+      243 |
+      244 |     await (await find('[role="tab"]:has-text("DOCUMENTOS"), [id*="DOCUMENTOS"]', 8000)).click({ force: true });
+        at /Users/ender/Desktop/Apps/Testing/-seidor-developer-ci-facturacion-setpruebas/scripts/caso1-boleta.spec.js:241:16
+
+  1 interrupted
+    scripts/caso1-boleta.spec.js:17:1 › Facturación Boleta Caso 1 - Efectivo ───────────────────────
