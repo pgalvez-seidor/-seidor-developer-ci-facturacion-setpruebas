@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './index.css';
 
 const API_BASE = 'http://localhost:3001/api';
@@ -9,30 +9,47 @@ const CLIENTS = [
 
 const MEDIOS_VUELTO = ["Efectivo", "Depósito CTA", "Nota de Crédito"];
 
-const Sidebar = ({ activeClient, setActiveClient, currentBranch, branches, handleBranchChange }) => (
-  <aside className="sidebar">
-    <div className="sidebar-section">
-      <div className="sidebar-label">Clientes</div>
-      {CLIENTS.map(c => (
-        <div key={c.id} className={`client-item ${activeClient === c.id ? 'active' : ''}`} onClick={() => setActiveClient(c.id)}>
-          <div className="client-icon">{c.icon}</div>
-          <div className="client-info">
-            <div className="client-name">{c.name}</div>
-            <div className="client-sub">{c.env}</div>
-          </div>
-        </div>
-      ))}
-    </div>
+const Sidebar = ({ 
+  registry, activeClient, setActiveClient, 
+  activeProcess, setActiveProcess,
+  currentBranch, branches, handleBranchChange 
+}) => {
+  const clientData = registry.find(c => c.id === activeClient);
+  const procesos = clientData ? clientData.procesos : [];
 
-    <div className="sidebar-section" style={{marginTop:'auto'}}>
-      <div className="sidebar-label">Rama / Entorno</div>
-      <select className="branch-select" value={currentBranch} onChange={handleBranchChange}>
-        <option value="">-- seleccionar --</option>
-        {branches.map(b => <option key={b} value={b}>{b}</option>)}
-      </select>
-    </div>
-  </aside>
-);
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-section">
+        <div className="sidebar-label">Entorno Git</div>
+        <select className="branch-select" value={currentBranch} onChange={handleBranchChange}>
+          <option value="">-- seleccionar --</option>
+          {branches.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+      </div>
+
+      <div className="sidebar-section" style={{flex: 1, marginTop: '1rem'}}>
+        <div className="sidebar-label">Selección de Cliente</div>
+        {registry.map(c => (
+           <div key={c.id} className={`client-item ${activeClient === c.id ? 'active' : ''}`} onClick={() => { setActiveClient(c.id); setActiveProcess(c.procesos[0]?.id || ''); }}>
+               <div className="client-icon">[ {c.id} ]</div>
+               <div className="client-info">
+                   <div className="client-name">{c.name}</div>
+               </div>
+           </div>
+        ))}
+
+        {procesos.length > 0 && (
+          <div style={{marginTop: '2rem'}}>
+            <div className="sidebar-label">Proceso Analítico</div>
+            <select className="branch-select" value={activeProcess} onChange={e => setActiveProcess(e.target.value)}>
+              {procesos.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+};
 
 const PaymentTray = ({ pagos, medioVuelto, updatePagos, updateMedioVuelto }) => {
   const addPago = (tipo) => updatePagos([...pagos, { id: Date.now(), tipo, monto: '', autoData: true }]);
@@ -93,10 +110,18 @@ const PaymentTray = ({ pagos, medioVuelto, updatePagos, updateMedioVuelto }) => 
 };
 
 export default function App() {
+  const [registry, setRegistry] = useState([]);
   const [activeClient, setActiveClient] = useState('CI');
+  const [activeProcess, setActiveProcess] = useState('facturacion');
+
   const [branches, setBranches] = useState([]);
   const [currentBranch, setBranch] = useState('');
   
+  // Estado para el Escenario Seleccionado / Edición
+  const [activeScenarioId, setActiveScenarioId] = useState('');
+  const [newScenarioName, setNewScenarioName] = useState('');
+  const [instruccionesIa, setInstruccionesIa] = useState('');
+
   // Builder State
   const [builderConfig, setBuilderConfig] = useState({
     tipoComprobante: 'Boleta',
@@ -111,9 +136,24 @@ export default function App() {
   const [isBatchRunning, setIsBatchRunning] = useState(false);
   const [batchParallel, setBatchParallel] = useState(true);
 
+  const fetchRegistry = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/registry`);
+      const data = await res.json();
+      setRegistry(data);
+      if(data.length > 0 && !data.find(c => c.id === activeClient)) {
+         setActiveClient(data[0].id);
+         setActiveProcess(data[0].procesos[0]?.id || '');
+      }
+    } catch {
+       // Ignore registry fetch error
+    }
+  }, [activeClient]);
+
   useEffect(() => {
     fetch(`${API_BASE}/branches`).then(r => r.json()).then(d => { setBranches(d.branches || []); setBranch(d.current || ''); }).catch(()=>{});
-  }, []);
+    fetchRegistry();
+  }, [fetchRegistry]);
 
   const handleBranchChange = async e => {
     const branch = e.target.value;
@@ -123,6 +163,81 @@ export default function App() {
       if ((await r.json()).success) setBranch(branch);
     } catch {
        // Ignorar error de red al cambiar rama
+    }
+  };
+
+  // Carga la configuración visual de un escenario previamente guardado
+  const handleScenarioSelect = (scenarioId) => {
+    setActiveScenarioId(scenarioId);
+    if (!scenarioId) {
+        setNewScenarioName('');
+        setInstruccionesIa('');
+        return;
+    }
+    
+    const clientData = registry.find(c => c.id === activeClient);
+    if (!clientData) return;
+    
+    const processData = clientData.procesos.find(p => p.id === activeProcess);
+    if (!processData) return;
+    
+    const sData = processData.escenarios.find(e => e.id === scenarioId);
+    if (sData) {
+        setBuilderConfig(JSON.parse(JSON.stringify(sData.config)));
+        setNewScenarioName(sData.name);
+        setInstruccionesIa(sData.instrucciones_ia || "");
+    }
+  };
+
+  // Metodo para hacer POST a SQLite y guardar/actualizar el escenario actual
+  const saveScenario = async () => {
+    if (!newScenarioName.trim()) { 
+        alert("Ingresa un nombre para el escenario"); 
+        return; 
+    }
+
+    const scenarioToSave = {
+        id: activeScenarioId || `esc_${Date.now()}`,
+        name: newScenarioName.trim(),
+        instrucciones_ia: instruccionesIa,
+        config: builderConfig
+    };
+
+    try {
+        const res = await fetch(`${API_BASE}/registry/scenario`, {
+            method: 'POST',
+            body: JSON.stringify({ clientId: activeClient, processId: activeProcess, scenario: scenarioToSave }),
+            headers:{'Content-Type': 'application/json'}
+        });
+        if((await res.json()).success) {
+            await fetchRegistry();
+            setActiveScenarioId(scenarioToSave.id);
+            alert("Escenario guardado en SQLite de forma exitosa.");
+        }
+    } catch { 
+       alert("Error de red al guardar el escenario."); 
+    }
+  };
+
+  // Metodo para hacer DELETE a SQLite
+  const deleteScenario = async () => {
+    if (!activeScenarioId) return;
+    if (!window.confirm("¿Seguro que deseas eliminar este escenario permanentemente?")) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/registry/scenario/${activeScenarioId}`, {
+            method: 'DELETE'
+        });
+        if((await res.json()).success) {
+            await fetchRegistry();
+            // Reset state
+            setActiveScenarioId('');
+            setNewScenarioName('');
+            setInstruccionesIa('');
+            alert("Escenario eliminado.");
+        }
+    } catch {
+       alert("Error de red al eliminar el escenario.");
     }
   };
 
@@ -140,6 +255,7 @@ export default function App() {
             status: 'idle', // idle, running, done, error
             progress: 0,
             result: null, // "Prefactura: 123 | Doc: 456"
+            currentLog: '', // Texto en vivo del worker
             config: JSON.parse(JSON.stringify({
                 ...builderConfig,
                 iteraciones: 1 // cada fila es 1 iteración real
@@ -162,7 +278,7 @@ export default function App() {
     setIsBatchRunning(true);
     
     // Set pending to running visually at 5%
-    setQueue(q => q.map(t => t.status === 'idle' ? { ...t, status: 'running', progress: 5, result: null } : t));
+    setQueue(q => q.map(t => t.status === 'idle' ? { ...t, status: 'running', progress: 5, result: null, currentLog: '⏳ Iniciando worker...' } : t));
 
     const tasksToRun = queue.filter(t => t.status === 'idle' || t.status === 'error');
 
@@ -178,16 +294,22 @@ export default function App() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = '';
 
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
         
-        for (const line of chunk.split('\n\n')) {
-          if (line.startsWith('data: ')) {
+        buffer += decoder.decode(value, { stream: true });
+        
+        let boundary = buffer.indexOf('\n\n');
+        while (boundary !== -1) {
+          const chunk = buffer.slice(0, boundary);
+          buffer = buffer.slice(boundary + 2);
+          
+          if (chunk.startsWith('data: ')) {
             try {
-              const d = JSON.parse(line.substring(6));
+              const d = JSON.parse(chunk.substring(6));
               const { taskId, type, docData } = d;
 
               setQueue(q => q.map(t => {
@@ -196,26 +318,35 @@ export default function App() {
                 let newProg = t.progress;
                 let newSt = t.status;
                 let newRes = t.result;
+                let newLog = t.currentLog;
+                const msg = d.message || "";
 
                 if (type === 'log') {
                     newProg = Math.min(90, newProg + 5);
+                    // Actualizar UI de logs
+                    if (/[⏳💳✅🔄👉❌]/u.test(msg)) {
+                        newLog = msg.replace(/\[Worker \d+\]\s*/, '').trim(); 
+                    }
                 } else if (type === 'result') {
-                    newRes = docData; // "Prefactura: X | Doc: Y"
+                    newRes = docData || msg;
                 } else if (type === 'done') {
                     newSt = 'done';
                     newProg = 100;
+                    if(!newRes) newRes = "Completado con éxito";
                 } else if (type === 'error') {
                     newSt = 'error';
                     newProg = 100;
-                    if(!newRes) newRes = "Error en ejecución";
+                    const cleanError = msg.split('\n')[0].replace(/\[Worker \d+\]\s*/, '').replace('Error:', '').trim();
+                    newRes = cleanError || "Error desconocido";
                 }
 
-                return { ...t, progress: newProg, status: newSt, result: newRes };
+                return { ...t, progress: newProg, status: newSt, result: newRes, currentLog: newLog };
               }));
-            } catch { 
-               // Parse error
+            } catch (err) { 
+               console.error("Error parsing chunk:", err, chunk);
             }
           }
+          boundary = buffer.indexOf('\n\n');
         }
       }
     } catch (err) {
@@ -227,8 +358,9 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* BARRA SUPERIOR */}
       <div className="topbar">
-        <div className="topbar-logo">⚡ <span>Set</span>Pruebas Batch</div>
+        <div className="topbar-logo">SetPruebas Batch</div>
         <div className="topbar-right">
           <span className="badge badge-green">● QAS</span>
           <span className="badge badge-blue">⎇ {currentBranch || 'CI'}</span>
@@ -237,15 +369,45 @@ export default function App() {
       
       <div className="body">
         <Sidebar 
+          registry={registry}
           activeClient={activeClient} setActiveClient={setActiveClient} 
+          activeProcess={activeProcess} setActiveProcess={setActiveProcess}
           currentBranch={currentBranch} branches={branches} handleBranchChange={handleBranchChange}
         />
         
         <main className="main split-layout">
           
-          {/* LADO IZQUIERDO: Configurador del caso */}
+          {/* LADO IZQUIERDO: CONFIGURADOR DINÁMICO */}
           <div className="config-panel">
-            <h2>1. Configurar Caso</h2>
+            <h2>1. Configurar Caso de Prueba</h2>
+
+            {/* Panel de Selección de Escenarios Guardados */}
+            <div className="scenario-selector-box" style={{marginBottom: '1.5rem', padding: '1rem', background: '#ecf0f1', borderRadius: '8px'}}>
+               <label style={{fontSize: '0.85rem', fontWeight: 600, color: '#34495e'}}>Escenarios Guardados (SQLite):</label>
+               <div style={{display: 'flex', gap: '0.5rem', marginTop: '0.5rem'}}>
+                 <select 
+                   style={{flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid #bdc3c7'}}
+                   value={activeScenarioId} 
+                   onChange={e => handleScenarioSelect(e.target.value)}
+                 >
+                   <option value="">-- Nuevo Escenario (En Blanco) --</option>
+                   {registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                   ))}
+                 </select>
+                 
+                 {/* Botón Eliminar Escenario Habilitado Solo Si Hay Uno Seleccionado */}
+                 <button 
+                    className="btn-icon" 
+                    title="Eliminar este escenario"
+                    style={{background: '#e74c3c', color: 'white', padding: '0 0.8rem', borderRadius: '4px', opacity: activeScenarioId ? 1 : 0.5}} 
+                    onClick={deleteScenario}
+                    disabled={!activeScenarioId}
+                 >
+                    Borrar
+                 </button>
+               </div>
+            </div>
             <div className="config-form">
               <label>Tipo Comprobante</label>
               <select value={builderConfig.tipoComprobante} onChange={e => setBuilderConfig({...builderConfig, tipoComprobante: e.target.value})}>
@@ -266,12 +428,36 @@ export default function App() {
                 updateMedioVuelto={(val) => setBuilderConfig({...builderConfig, medioVuelto: val})}
               />
 
+              <div className="add-batch-row" style={{alignItems: 'center'}}>
+                 <div style={{flex: 1}}>
+                    <label>Nombre a Guardar (Escenario):</label>
+                    <div style={{display:'flex', gap:'0.5rem', marginTop: '0.3rem'}}>
+                        <input type="text" className="mini-input" style={{flex: 1}} placeholder="Ej: Pago total efectivo" value={newScenarioName} onChange={e => setNewScenarioName(e.target.value)} />
+                    </div>
+
+                    <label style={{marginTop: '1rem', display: 'block'}}>Instrucciones para IA / QA (Narrativa):</label>
+                    <textarea 
+                        className="mini-input" 
+                        style={{width: '100%', resize: 'vertical', minHeight: '60px', marginTop: '0.3rem'}} 
+                        placeholder="Escribe el paso a paso o reglas de negocio de este escenario..." 
+                        value={instruccionesIa} 
+                        onChange={e => setInstruccionesIa(e.target.value)} 
+                    />
+                    
+                    <button className="btn-icon" style={{background: '#3498db', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', marginTop: '0.5rem', width: '100%'}} onClick={saveScenario}>
+                        Guardar Configuración en SQLite
+                    </button>
+                 </div>
+              </div>
+
+              <hr style={{opacity: 0.2, margin: '1rem 0'}} />
+
               <div className="add-batch-row">
                  <div>
-                    <label>Repeticiones:</label>
+                    <label>Nº Repeticiones:</label>
                     <input type="number" min="1" max="100" className="mini-input" value={builderConfig.iteraciones} onChange={e => setBuilderConfig({...builderConfig, iteraciones: parseInt(e.target.value)||1})}/>
                  </div>
-                 <button className="btn-primary" onClick={addToBatch} disabled={isBatchRunning}>＋ Añadir al Lote</button>
+                 <button className="btn-primary" onClick={addToBatch} disabled={isBatchRunning}>＋ Añadir Escenario al Lote</button>
               </div>
             </div>
           </div>
@@ -302,15 +488,26 @@ export default function App() {
                           </div>
                           
                           <div className="batch-item-progress">
-                             {qItem.status === 'idle' ? (
-                                <span className="status-text idle">Pendiente</span>
-                             ) : qItem.result ? (
-                                 <span className="final-result">{qItem.result}</span>
-                             ) : (
-                                <div className="bar-wrapper">
-                                    <div className="bar-fill" style={{width: `${qItem.progress}%`, background: qItem.status==='error'?'#e74c3c':'#3498db'}}></div>
+                              {qItem.status === 'idle' ? (
+                                 <span className="status-text idle">Pendiente</span>
+                              ) : qItem.status === 'done' && qItem.result ? (
+                                  <span className="final-result">{qItem.result}</span>
+                              ) : qItem.status === 'error' ? (
+                                  <div className="error-result-container">
+                                     <span className="error-title">Fallo Crítico:</span>
+                                     <div className="error-text" title={qItem.result}>{qItem.result}</div>
+                                  </div>
+                              ) : (
+                                 <div style={{ flex: 1, minWidth: 0, marginLeft: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                <div style={{ width: '100%', height: '8px', background: '#ccc', borderRadius: '4px', overflow: 'hidden' }}>
+                                  <div style={{ height: '100%', background: qItem.status === 'error' ? '#ef4444' : '#3498db', width: `${qItem.progress}%`, transition: 'width 0.3s' }}></div>
                                 </div>
-                             )}
+                                {qItem.currentLog && (
+                                    <div style={{ fontSize: '0.8rem', fontStyle: 'italic', color: qItem.status === 'error' ? '#991b1b' : '#666', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {qItem.currentLog}
+                                    </div>
+                                )}
+                              </div>)}
                           </div>
 
                           <button className="btn-icon del-btn" onClick={() => removeBatchItem(qItem.taskId)} disabled={qItem.status !== 'idle'}>✕</button>

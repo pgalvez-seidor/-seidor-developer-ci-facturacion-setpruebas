@@ -454,7 +454,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         testStatus = "❌ FALLIDO";
         testError = error.message;
         await shot('error_flujo');
-        console.log(`🛑 Prueba falló: ${testError}`);
+        console.error(`❌ Error Crítico: ${testError}`);
     } finally {
         const dur = ((Date.now() - startTime) / 1000).toFixed(2);
 
