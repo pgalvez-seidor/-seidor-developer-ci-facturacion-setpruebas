@@ -1,0 +1,7 @@
+node_modules/
+evidence/*.png
+evidence/playwright-result.json
+test-results/
+.env
+.DS_Store
+config/state.properties
