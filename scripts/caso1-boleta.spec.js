@@ -76,8 +76,18 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
         console.log(`✅ ID: ${activeId}`);
     }
 
-    page.on('dialog', d => d.accept());
+    // =========================================================
+    // INTERCEPTAR MODALES DEL NAVEGADOR Y VENTANAS EMERGENTES
+    // =========================================================
+    page.on('dialog', async dialog => {
+        console.log(`⚠️ Dialog interceptado [${dialog.type()}]: ${dialog.message()}`);
+        await dialog.accept().catch(() => {});
+    });
 
+    page.on('popup', async popup => {
+        console.log(`⚠️ Popup de nueva ventana interceptado (ej: Print Preview). Cerrando...`);
+        await popup.close().catch(() => {});
+    });
     let testStatus = "✅ EXITOSO";
     let testError = "";
 
@@ -239,7 +249,16 @@ test('Facturación Boleta Caso 1 - Efectivo', async ({ page }) => {
     for (let i = 0; i < 8; i++) {
         let clickedAny = false;
         
-        // Enfocamos el body del documento para asegurar que ESC funcione a nivel global
+        // Enfocamos el body de la página para asegurar que no perdimos el foco 
+        // por culpa de un popup del navegador o diálogo de impresión
+        await page.bringToFront();
+        await page.evaluate(() => {
+            if (document.activeElement && document.activeElement !== document.body) {
+                document.activeElement.blur();
+            }
+            window.focus();
+        }).catch(() => {});
+        
         await page.locator('body').click({ position: { x: 10, y: 10 }, force: true }).catch(() => {});
         // Multi-escape
         await page.keyboard.press('Escape');
