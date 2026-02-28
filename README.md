@@ -1,95 +1,64 @@
-# Set de Pruebas Automatizadas — Facturación Seidor
+# SetPruebas CI - Motor de Pruebas Fiori
 
-Sistema de pruebas E2E para portales de facturación SAP Fiori, con arquitectura híbrida: **Playwright ejecuta, IA valida**.
+Este proyecto es una herramienta de automatización para flujos de pago complejos en SAP Fiori construida mediante una arquitectura híbrida: un Frontend en React (El Lote de Pruebas) y un Backend en Node.js que orquesta múltiples hilos de Playwright simultáneos.
 
-## Arquitectura
+---
 
-```
-┌─────────────────────────────────────────────┐
-│            Antigravity (IA)                 │
-│  • Saluda y guía al tester                  │
-│  • Sincroniza rama del cliente              │
-│  • Lee resultados y genera reportes         │
-│  • Diagnostica errores                      │
-│  • Consumo: ~5-10 tool calls               │
-└──────────────┬──────────────────────────────┘
-               │ ejecuta
-┌──────────────▼──────────────────────────────┐
-│         runner.js (Node.js)                 │
-│  • Crea pre-factura vía API                 │
-│  • Lanza Playwright                         │
-│  • Genera result.json + screenshots         │
-│  • Consumo de IA: CERO                      │
-└──────────────┬──────────────────────────────┘
-               │ controla
-┌──────────────▼──────────────────────────────┐
-│      Playwright (Navegador)                 │
-│  • Login al portal SAP                      │
-│  • Busca pre-factura, cobra, emite boleta   │
-│  • Capturas automáticas en puntos clave     │
-│  • Consumo de IA: CERO                      │
-└─────────────────────────────────────────────┘
-```
+## 🚀 Guía de Inicio y Apagado (Start / Stop)
 
-## Inicio Rápido
+La aplicación requiere levantar dos servicios independientes en tu terminal: **El Servidor Node (Backend)** y **El Servidor Web (Frontend)**.
 
-### Ejecutar pruebas (recomendado: usar el workflow)
+### Paso 1: Instalar Dependencias (Solo la primera vez)
+
+Abre una terminal en la carpeta principal del proyecto e instala todo:
 
 ```bash
-# Antigravity ejecuta esto por ti con /run-tests
-node scripts/runner.js --caso caso1 --env QAS --tester Pierre
+npm install
+cd ui && npm install
+cd ..
+npx playwright install
 ```
 
-### Ejecución directa (sin runner)
+### Paso 2: Levantar el Backend (Orquestador)
+
+En la raíz del proyecto, ejecuta el servidor Node. Este servidor recibirá las órdenes de la interfaz web y lanzará los navegadores automatizados:
 
 ```bash
-npm run test:caso1
+node scripts/ui-server.js
 ```
 
-### Dry run (sin tocar API ni portal)
+_(Debe aparecer el mensaje: `✅ UI Backend API Server running at http://localhost:3001`)_
+
+### Paso 3: Levantar el Frontend (Interfaz Web)
+
+Abre **una nueva pestaña/ventana de terminal**, navega a la carpeta `ui` y lanza la interfaz gráfica:
 
 ```bash
-npm run dry-run
+cd ui
+npm run dev
 ```
 
-## Estructura
+_(La terminal te indicará una URL local, generalmente `http://localhost:5173`. Ábrela en tu navegador Chrome/Safari)._
 
-```
-├── SYSTEM.md              ← Comportamiento de la IA
-├── CONTRIBUTING.md        ← Guía para nuevos clientes
-├── config/
-│   ├── environments.json  ← URLs y credenciales portal
-│   ├── api-config.json    ← Endpoint y auth del API
-│   ├── state.properties   ← Último ID usado
-│   └── test-registry.json ← Catálogo de casos
-├── scripts/
-│   ├── runner.js          ← Orquestador
-│   ├── api-helper.js      ← Creación de pre-facturas
-│   ├── report-generator.js← Reportes .md
-│   └── caso1-boleta.spec.js ← Playwright caso 1
-├── templates/             ← Plantillas JSON
-├── scenarios/             ← Docs de escenarios
-└── evidence/              ← Capturas y reportes
-```
+---
 
-## Clientes
+### Paso 4: Apagar la Aplicación Correctamente (Shutdown)
 
-Cada rama = un cliente:
+Para detener la herramienta y liberar la memoria de tu computadora, debes ir a **ambas terminales** y presionar:
+`Ctrl + C` (En Mac o Windows)
 
-| Rama   | Cliente               |
-| ------ | --------------------- |
-| `CI`   | Clínica Internacional |
-| `main` | Template base         |
+1. En la terminal del Frontend (`npm run dev`), presiona `Ctrl + C`.
+2. En la terminal del Backend (`node scripts/ui-server.js`), presiona `Ctrl + C`. **Es muy importante detener este proceso para asegurar que los navegadores fantasma (Headless) de Playwright se destruyan y no consuman RAM en segundo plano.**
 
-## Workflows (Slash Commands)
+---
 
-| Comando          | Descripción                      |
-| ---------------- | -------------------------------- |
-| `/run-tests`     | Ejecutar pruebas para un cliente |
-| `/nuevo-cliente` | Integrar un nuevo cliente        |
+## 🛠 Arquitectura del Proyecto
 
-## Escenarios Disponibles (CI)
+- `/ui/`: Contiene la aplicación React (Vite) que sirve como "Shopping Cart" / Constructor Dinámico de Lotes.
+- `/scripts/ui-server.js`: El corazón del proyecto. Recibe el Array JSON desde React, reserva las prefacturas usando `api-helper.js` y lanza los `workers` de Playwright. Emite logs en tiempo real vía Server Sent Events (SSE).
+- `/scripts/casoX-boleta.spec.js`: Los scripts de Playwright que navegan por el DOM de Fiori. Leen la variable de entorno `TEST_PARAMS` inyectada por el servidor Node.
+- `/evidence/`: Directorio donde de guardan los Screenshots y los Reportes PDF finales.
 
-| Caso  | Descripción                | Medio de Pago |
-| ----- | -------------------------- | ------------- |
-| caso1 | Boleta Efectivo sin vuelto | Efectivo      |
+## 🤖 Integración de Nuevos Clientes (Flujo IA)
+
+Consultar el archivo `.agents/workflows/nuevo-cliente.md` para entender el protocolo estricto _"Exploration First"_ que las Inteligencias Artificiales deben seguir antes de programar automatizaciones en este repositorio.
