@@ -163,18 +163,23 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             
             // ESPERAR A QUE CARGUE EL DETALLE (Panel derecho con título "Horario")
             console.log("⏳ Esperando que cargue el panel de Horario...");
-            const detalleCargado = await frameInputs.locator('.sapMTitle:has-text("Horario"), .sapMPageTitle:has-text("Horario"), .sapMTable').first().waitFor({ state: 'visible', timeout: 10000 })
+            const detalleCargado = await frameInputs.locator('.sapMTitle:has-text("Horario"), .sapMPageTitle:has-text("Horario"), .sapMTable').first().waitFor({ state: 'visible', timeout: 5000 })
                 .then(()=>true).catch(() => false);
             
-            if (!detalleCargado) {
-                 console.log("⚠️ El detalle parece estar vacío o no cargó la tabla. Intentando forzar creación...");
+            const esVacio = await frameInputs.locator('.sapMTitle:has-text("Asignación Supervisor")').isVisible().catch(()=>false);
+            
+            if (!detalleCargado || esVacio) {
+                 console.log("⚠️ El detalle está vacío. Creando nueva asignación desde el pie de lista...");
+                 const btnFooterAdd = frameInputs.locator('.sapMPageFooter button, .sapMTB button').filter({ has: page.locator('[data-sap-ui-icon-content=""]') }).first();
+                 await btnFooterAdd.click({ force: true });
+                 await page.waitForTimeout(1500);
             }
             
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(500);
             await shot('hs_03_detalle_abierto');
             
             // VALIDAR ÚLTIMA FILA (FECHA DE HOY)
-            console.log("📝 Haciendo scroll hasta el final de la lista de horarios por semana...");
+            console.log("📝 Haciendo scroll al contenedor de la tabla...");
             await page.evaluate(() => {
                 const scrollable = document.querySelector('[id$="--table-scroll"], .sapUiTableCtrlScr, .sapMScrollCont:last-child');
                 if (scrollable) scrollable.scrollTop = scrollable.scrollHeight;
