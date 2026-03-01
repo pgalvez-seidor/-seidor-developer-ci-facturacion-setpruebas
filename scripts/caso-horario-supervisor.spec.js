@@ -107,7 +107,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         console.log(`🔍 Filtrando: Área -> ${testConfig.periodo} -> ${env.user.toUpperCase()} -> Buscar`);
         
         // Área
-        const areaField = await find('span:has-text("Seleccione Área"), [title*="Área"], .sapMComboBox input', 5000);
+        const areaField = await find('span:has-text("Seleccione Área"), input[placeholder*="rea" i]', 10000);
         await areaField.click({ force: true });
         await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}")`, 3000);
         await page.waitForTimeout(2000);
@@ -119,37 +119,24 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         await page.keyboard.press('Enter');
         await page.waitForTimeout(2000);
         
-        // Supervisor (Simulación Humana Completa)
-        console.log("👤 Ingresando Supervisor lentamente para validación Fiori...");
+        // Supervisor
         const supervisorInput = await find('input[placeholder*="upervisor" i]', 3000);
         await supervisorInput.click({ force: true });
         await supervisorInput.fill("");
-        await page.keyboard.type(env.user.toUpperCase(), { delay: 150 });
-        await page.waitForTimeout(1000);
-        // Validar token en Fiori (Sugerencia)
-        await page.keyboard.press('ArrowDown');
+        await supervisorInput.fill(env.user.toUpperCase());
+        await page.keyboard.press('Escape'); 
         await page.waitForTimeout(500);
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(1000);
         
-        // LUPA DE BÚSQUEDA PRINCIPAL
+        // LUPA DE BÚSQUEDA DEL LISTADO
         console.log("🔍 Clic en Lupa de búsqueda...");
-        // Excluimos las lupas que estén dentro de un diálogo (para evitar popups)
-        const btnLupa = page.locator('button:has(.sapUiIcon[data-sap-ui-icon-content=""]), button[id$="-search"]').filter({
-            hasNot: page.locator('ancestor::div[contains(@class, "sapMDialog")]') // no funciona bien en playwright css
-        });
+        // Usamos el ID exacto y title "Search" extraído del DOM real de este frame
+        const btnLupa = await find('button[title="Search"], button[title="Buscar"]', 5000);
         
-        // Método seguro: de todos los search buttons, es el que está en la barra superior o fuera de popovers
-        const btnSafeLupa = page.locator('.sapMPageHeader button, .sapMBarRight button, .sapDynamicPageTitle button, aside button').locator('.sapUiIcon[data-sap-ui-icon-content=""]').first();
-        
-        await btnSafeLupa.click({ force: true }).catch(async () => {
-             // Fallback
-             await page.locator('button[title="Buscar"]').first().click({ force: true });
-        });
+        await btnLupa.click({ force: true });
         await page.waitForTimeout(1500);
 
         console.log("🔍 Re-presionando Lupa...");
-        await btnSafeLupa.click({ force: true }).catch(() => {});
+        await btnLupa.click({ force: true }).catch(() => {});
         
         // Espera Busy Final
         await page.waitForSelector('.sapMBusyIndicator', { state: 'hidden', timeout: 10000 }).catch(() => {});
@@ -160,8 +147,8 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         // 4. VERIFICAR EXISTENCIA DEL SUPERVISOR EN LA LISTA
         logStep('seleccionar-supervisor', 'running');
         const userPeriodoTexto = `${env.user.toUpperCase()}`;
-        // Re-declaramos por seguridad o reutilizamos
-        frameInputs = activeFrame ? activeFrame : page;
+        // Declarar frameInputs!
+        let frameInputs = activeFrame ? activeFrame : page;
         
         const listItem = frameInputs.locator(`.sapMList .sapMLIBContent, .sapMList [role="listitem"]`)
                              .filter({ hasText: userPeriodoTexto })
@@ -175,69 +162,85 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             supervisorExiste = false;
         }
         
+        let necesitaCrear = false;
+
         if (supervisorExiste) {
             console.log("✅ El supervisor YA EXISTE para este período. Seleccionando de la lista...");
-            // Aseguramos el click en el supervisor
             await listItem.click({ timeout: 5000, force: true });
             
-            // ESPERAR A QUE CARGUE EL DETALLE (Panel derecho con título "Horario")
             console.log("⏳ Esperando que cargue el panel de Horario...");
-            const detalleCargado = await frameInputs.locator('.sapMTitle:has-text("Horario"), .sapMPageTitle:has-text("Horario"), .sapMTable').first().waitFor({ state: 'visible', timeout: 5000 })
-                .then(()=>true).catch(() => false);
+            await frameInputs.locator('.sapMTitle:has-text("Horario"), .sapMPageTitle:has-text("Horario"), .sapMTable').first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
             
-            const esVacio = await frameInputs.locator('.sapMTitle:has-text("Asignación Supervisor")').isVisible().catch(()=>false);
+            // Check for empty screen (No Data/MessagePage) by absence of table or presence of Asignación text
+            const tieneTabla = await frameInputs.locator('.sapMTable').first().isVisible().catch(() => false);
+            const textEmpty = await frameInputs.locator('text="Asignación Supervisor"').first().isVisible().catch(() => false);
+            const esVacio = !tieneTabla || textEmpty;
             
-            if (!detalleCargado || esVacio) {
-                 console.log("⚠️ El detalle está vacío. Iniciando flujo de creación de asignación...");
-                 const btnFooterAdd = frameInputs.locator('.sapMPageFooter button, .sapMTB button').filter({ has: frameInputs.locator('[data-sap-ui-icon-content=""]') }).first();
-                 await btnFooterAdd.click({ force: true });
-                 await page.waitForTimeout(2000);
-                 
-                 // Flujo Popup Buscar Supervisor (común para ambos casos de creación)
-                 console.log("📝 Buscando supervisor en el popup...");
-                 const popInput = await find('[role="dialog"] input[type="search"], .sapMDialog input', 5000);
-                 await popInput.fill(env.user.toUpperCase());
-                 await page.keyboard.press('Enter');
-                 await page.waitForTimeout(1000);
-                 
-                 const userText = `Usuario: ${env.user.toUpperCase()}`;
-                 const popItem = frameInputs.locator('.sapMDialog, [role="dialog"]').getByText(userText, { exact: false }).first();
-                 await popItem.click({ timeout: 5000, force: true });
-                 await page.waitForTimeout(2000);
-            }
-            
-            await shot('hs_03_detalle_abierto');
-            
-            // VALIDAR ÚLTIMA FILA (FECHA DE HOY)
-            console.log("📝 Haciendo scroll al contenedor de la tabla...");
-            await page.evaluate(() => {
-                const scrollable = document.querySelector('[id$="--table-scroll"], .sapUiTableCtrlScr, .sapMScrollCont:last-child');
-                if (scrollable) scrollable.scrollTop = scrollable.scrollHeight;
-            }).catch(() => {});
-            await page.waitForTimeout(500);
+            if (esVacio) {
+                 console.log("⚠️ El detalle está vacío.");
+                 necesitaCrear = true;
+            } else {
+                 await shot('hs_03_detalle_abierto');
+                 console.log("📝 Haciendo scroll al contenedor de la tabla...");
+                 await page.evaluate(() => {
+                     const scrollable = document.querySelector('[id$="--table-scroll"], .sapUiTableCtrlScr, .sapMScrollCont:last-child');
+                     if (scrollable) scrollable.scrollTop = scrollable.scrollHeight;
+                 }).catch(() => {});
+                 await page.waitForTimeout(500);
 
-            // Obtener el contenido de la última fila visible
-            const lastRowContent = await frameInputs.locator('.sapMTable tbody tr, [role="row"]').last().textContent({ timeout: 3000 }).catch(() => "");
-            if (lastRowContent.includes(testConfig.fechaHoy)) {
-                console.log(`✅ ¡Ya existe un horario activo para hoy (${testConfig.fechaHoy})!`);
-                testStatus = '✅ EXITOSO (Ya existía)';
-                return;
+                 const lastRowContent = await frameInputs.locator('.sapMTable tbody tr, [role="row"]').last().textContent({ timeout: 3000 }).catch(() => "");
+                 if (lastRowContent.includes(testConfig.fechaHoy)) {
+                     console.log(`✅ ¡Ya existe un horario activo para hoy (${testConfig.fechaHoy})!`);
+                     testStatus = '✅ EXITOSO (Ya existía)';
+                     return;
+                 }
+                 console.log(`📝 Procediendo a crear el horario para HOY (${testConfig.fechaHoy})...`);
             }
-            console.log(`📝 Procediendo a crear el horario para HOY (${testConfig.fechaHoy})...`);
         } else {
-            console.log("⚠️ El supervisor NO SE ENCONTRÓ en la lista. CREANDO NUEVA ASIGNACIÓN...");
-            const btnAgregarSup = await find('button[title*="Agregar"], button .sapUiIcon[data-sap-ui-icon-content=""]', 5000);
-            await btnAgregarSup.click({ timeout: 5000, force: true });
+            console.log("⚠️ El supervisor NO SE ENCONTRÓ en la lista.");
+            necesitaCrear = true;
+        }
+
+        if (necesitaCrear) {
+            console.log("📝 Iniciando flujo CREACIÓN NUEVA ASIGNACIÓN...");
+            const btnAgregarSup = frameInputs.locator('button, .sapMBtn').filter({has: frameInputs.locator('.sapUiIcon[data-sap-ui-icon-content=""]')}).last();
+            await btnAgregarSup.click({ timeout: 5000, force: true }).catch(async () => {
+                await frameInputs.locator('button[title="Agregar Supervisor"]').click({ force: true });
+            });
             await page.waitForTimeout(2000);
             
-            const popInput = await find('[role="dialog"] input[type="search"], .sapMDialog input', 5000);
-            await popInput.fill(env.user.toUpperCase());
-            await page.keyboard.press('Enter');
-            await page.waitForTimeout(1000);
-
-            const userText = `Usuario: ${env.user.toUpperCase()}`;
-            const popItem = frameInputs.locator('.sapMDialog, [role="dialog"]').getByText(userText, { exact: false }).first();
-            await popItem.click({ timeout: 5000, force: true });
+            console.log("📝 Llenando formulario Agregar Asignación en el panel derecho...");
+            
+            try {
+                console.log("   -> Seleccionando Área...");
+                const areaDropDer = frameInputs.locator('.sapMSplitContainerDetail .sapMComboBox, .sapMSplitContainerDetail .sapMSelect, .sapMSplitContainerDetail [role="combobox"]').first();
+                await areaDropDer.click({force: true, timeout: 5000});
+                await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}")`, 5000);
+                await page.waitForTimeout(1000);
+                
+                console.log("   -> Ingresando Supervisor...");
+                // Es el primer input vacío no-readonly (el de Sede es readonly)
+                const supInpDer = frameInputs.locator('.sapMSplitContainerDetail input:not([readonly])').first();
+                await supInpDer.click({force: true});
+                await supInpDer.fill(env.user.toUpperCase());
+                await page.waitForTimeout(500);
+                await page.keyboard.press('Escape'); 
+                await page.waitForTimeout(500);
+                
+                console.log("   -> Ingresando Período...");
+                const perInpDer = frameInputs.locator('.sapMSplitContainerDetail input[placeholder*="eríodo"], .sapMSplitContainerDetail input[placeholder*="eriod"], .sapMSplitContainerDetail input:not([readonly])').nth(1);
+                await perInpDer.click({force: true});
+                await perInpDer.fill(testConfig.periodo);
+                await page.keyboard.press('Enter');
+                await page.waitForTimeout(1000);
+            } catch (err) {
+                console.log("⚠️ Hubo un error al llenar el formulario explícito. Fallback...", err.message);
+                const supInputFallback = await find('.sapMSplitContainerDetail input[placeholder*="upervisor" i], .sapMSplitContainerDetail input:not([readonly])', 3000);
+                await supInputFallback.first().fill(env.user.toUpperCase());
+                await page.keyboard.press('Escape');
+                await page.waitForTimeout(1000);
+            }
+            
             await shot('hs_03_form_nuevo');
         }
         
