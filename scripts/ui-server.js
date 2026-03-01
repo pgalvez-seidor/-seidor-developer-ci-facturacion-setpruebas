@@ -254,7 +254,12 @@ app.post('/api/run-batch', async (req, res) => {
         console.log(`[SSE Emit] Type: ${type}, Msg: ${message}`);
     };
 
+    const MAX_CONCURRENT = 5;
     let activeProcesses = [];
+    let pendingTasks = [...tasks];
+    let runningCount = 0;
+    let batchResults = []; // Almacenar resultados para reporte global
+
     req.on('close', () => {
         activeProcesses.forEach(p => p.kill());
     });
@@ -262,6 +267,7 @@ app.post('/api/run-batch', async (req, res) => {
     try {
         const runTask = (task) => {
             return new Promise(async (resolve) => {
+                runningCount++;
                 const { taskId, config, file } = task;
                 const isHeadless = config.headless !== false;
                 
@@ -331,24 +337,106 @@ app.post('/api/run-batch', async (req, res) => {
                     sendLog(taskId, 'log', `[ERROR] ` + stripAnsi(data.toString()));
                 });
                 workerProcess.on('close', (code) => {
+                    runningCount--;
                     const isSuccess = code === 0;
-                    sendLog(taskId, isSuccess ? 'done' : 'error', `Finalizado con código ${code}`);
+                    const resultMsg = isSuccess ? 'Finalizado con éxito' : `Finalizado con código ${code}`;
+                    sendLog(taskId, isSuccess ? 'done' : 'error', resultMsg);
+                    
+                    // Guardar para el reporte global
+                    batchResults.push({
+                        taskId,
+                        config,
+                        status: isSuccess ? 'EXITO' : 'FALLIDO',
+                        result: resultMsg,
+                        timestamp: new Date().toLocaleString()
+                    });
+
+                    activeProcesses = activeProcesses.filter(p => p !== workerProcess);
                     resolve();
+                    processNext(); // Intentar lanzar la siguiente tarea en cola
                 });
             });
         };
 
-        if (parallel) {
-            await Promise.all(tasks.map(t => runTask(t)));
-        } else {
-            for (const task of tasks) {
-                await runTask(task);
+        const processNext = () => {
+            while (runningCount < MAX_CONCURRENT && pendingTasks.length > 0) {
+                const task = pendingTasks.shift();
+                runTask(task); // runTask returns a Promise, but we don't await it here to allow concurrency
             }
-        }
+            if (runningCount === 0 && pendingTasks.length === 0) {
+                // Todas las tareas terminaron -> Generar Reporte Global
+                generateGlobalReport(batchResults).then(globalPdfPath => {
+                    const relativeUrl = globalPdfPath.replace(rootDir, '').replace(/\\/g, '/');
+                    sendLog('orchestrator', 'pdf_global', 'Reporte Global de Lote Listo', relativeUrl);
+                    sendLog('orchestrator', 'done', 'Todas las tareas del lote han finalizado.');
+                    res.end();
+                }).catch(err => {
+                    console.error("Error generando reporte global:", err);
+                    sendLog('orchestrator', 'done', 'Finalizado (con error en reporte global).');
+                    res.end();
+                });
+            }
+        };
 
-        res.end();
+        const generateGlobalReport = async (results) => {
+            const { chromium } = require('playwright');
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage();
+            
+            const timestamp = new Date().getTime();
+            const globalPdfName = `Reporte_Global_Batch_${timestamp}.pdf`;
+            const globalPdfPath = path.join(rootDir, 'evidence', globalPdfName);
+
+            let html = `
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; }
+                    h1 { color: #0f172a; border-bottom: 2px solid #0f172a; padding-bottom: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; font-size: 13px; }
+                    th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 11px; }
+                    .status { font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+                    .status-success { background: #dcfce7; color: #166534; }
+                    .status-failed { background: #fee2e2; color: #991b1b; }
+                </style>
+            </head>
+            <body>
+                <h1>Resumen Global de Ejecución de Lote</h1>
+                <p>Fecha: ${new Date().toLocaleString()}</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Tarea / Configuración</th>
+                            <th>Estado</th>
+                            <th>Resultado / Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${results.map((r, i) => `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${r.config.tipoComprobante} - ${r.taskId}</td>
+                            <td><span class="status ${r.status === 'EXITO' ? 'status-success' : 'status-failed'}">${r.status}</span></td>
+                            <td>${r.result}</td>
+                        </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </body>
+            </html>`;
+
+            await page.setContent(html);
+            await page.pdf({ path: globalPdfPath, format: 'A4', printBackground: true });
+            await browser.close();
+            return globalPdfPath;
+        };
+
+        processNext(); // Iniciar la primera tanda de tareas en cola
     } catch(error) {
         console.error(error);
+        sendLog('orchestrator', 'error', `Error crítico en el orquestador: ${error.message}`);
         res.end();
     }
 });
