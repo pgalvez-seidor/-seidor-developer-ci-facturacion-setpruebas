@@ -1,0 +1,152 @@
+[
+  {
+    "tag": "INPUT",
+    "id": "idFiltroUsuario-I",
+    "className": "sapMSFI",
+    "placeholder": "Supervisor",
+    "title": "",
+    "text": "",
+    "ariaLabel": "Supervisor",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "__toolbar1-overflowButtonClone",
+    "className": "sapMBtnBase sapMBtn sapMTBHiddenElement sapMBarChild",
+    "placeholder": "",
+    "title": "",
+    "text": "",
+    "ariaLabel": "",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "__button5",
+    "className": "sapMBtnBase sapMBtn sapMBtnInverted sapMDialogEndButton sapMBarChild",
+    "placeholder": "",
+    "title": "",
+    "text": "Cerrar",
+    "ariaLabel": "",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "dlg_dialogSupervisorMaster-footer-overflowButtonClone",
+    "className": "sapMBtnBase sapMBtn sapMTBHiddenElement sapMBarChild",
+    "placeholder": "",
+    "title": "",
+    "text": "",
+    "ariaLabel": "",
+    "iconContent": ""
+  },
+  {
+    "tag": "INPUT",
+    "id": "__select0-hiddenInput",
+    "className": "sapUiPseudoInvisibleText",
+    "placeholder": "",
+    "title": "",
+    "text": "",
+    "ariaLabel": "",
+    "iconContent": ""
+  },
+  {
+    "tag": "INPUT",
+    "id": "__select1-hiddenInput",
+    "className": "sapUiPseudoInvisibleText",
+    "placeholder": "",
+    "title": "",
+    "text": "",
+    "ariaLabel": "",
+    "iconContent": ""
+  },
+  {
+    "tag": "INPUT",
+    "id": "__select2-hiddenInput",
+    "className": "sapUiPseudoInvisibleText",
+    "placeholder": "",
+    "title": "",
+    "text": "",
+    "ariaLabel": "",
+    "iconContent": ""
+  },
+  {
+    "tag": "INPUT",
+    "id": "__picker0-inner",
+    "className": "sapMInputBaseInner",
+    "placeholder": "Seleccione Período",
+    "title": "",
+    "text": "",
+    "ariaLabel": "",
+    "iconContent": ""
+  },
+  {
+    "tag": "INPUT",
+    "id": "__input0-inner",
+    "className": "sapMInputBaseInner",
+    "placeholder": "Ingrese Supervisor",
+    "title": "",
+    "text": "",
+    "ariaLabel": "",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "__button0",
+    "className": "sapMBtnBase sapMBtn sapMBarChild",
+    "placeholder": "",
+    "title": "Search",
+    "text": "",
+    "ariaLabel": "Search",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "__button1",
+    "className": "sapMBtnBase sapMBtn sapMBtnInverted sapMBarChild",
+    "placeholder": "",
+    "title": "Limpiar filtros",
+    "text": "",
+    "ariaLabel": "Limpiar filtros",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "__button2",
+    "className": "sapMBtnBase sapMBtn sapMBarChild",
+    "placeholder": "",
+    "title": "Eliminar Supervisor",
+    "text": "",
+    "ariaLabel": "Eliminar Supervisor",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "__button3",
+    "className": "sapMBtnBase sapMBtn sapMBarChild",
+    "placeholder": "",
+    "title": "Agregar Supervisor",
+    "text": "",
+    "ariaLabel": "Agregar Supervisor",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "__button4",
+    "className": "sapMBtnBase sapMBtn sapMBarChild",
+    "placeholder": "",
+    "title": "Exportar Excel",
+    "text": "",
+    "ariaLabel": "Exportar Excel",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "__toolbar0-overflowButtonClone",
+    "className": "sapMBtnBase sapMBtn sapMTBHiddenElement sapMBarChild",
+    "placeholder": "",
+    "title": "",
+    "text": "",
+    "ariaLabel": "",
+    "iconContent": ""
+  }
+]

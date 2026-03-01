@@ -1,0 +1,32 @@
+[
+  {
+    "tag": "BUTTON",
+    "id": "__button0",
+    "className": "sapMBtnBase sapMBtn sapUshellShellHidden",
+    "placeholder": "",
+    "title": "Scroll to start",
+    "text": "Scroll to start",
+    "ariaLabel": "Scroll to start",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "__button1",
+    "className": "sapMBtnBase sapMBtn",
+    "placeholder": "",
+    "title": "Scroll to end",
+    "text": "Scroll to end",
+    "ariaLabel": "Scroll to end",
+    "iconContent": ""
+  },
+  {
+    "tag": "BUTTON",
+    "id": "sapUshellAnchorBarOverflowButton",
+    "className": "sapMBtnBase sapMBtn",
+    "placeholder": "",
+    "title": "More groups",
+    "text": "More groups",
+    "ariaLabel": "More groups",
+    "iconContent": ""
+  }
+]

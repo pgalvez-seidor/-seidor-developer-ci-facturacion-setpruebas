@@ -380,8 +380,8 @@ export default function App() {
                     const cleanError = msg.split('\n')[0].replace(/\[Worker \d+\]\s*/, '').replace('Error:', '').trim();
                     newRes = cleanError || "Error desconocido";
                 } else if (type === 'pdf') {
-                    // msg contiene la URL relativa de descarga
-                    newPdfUrl = msg;
+                    // docData contiene la ruta del PDF
+                    newPdfUrl = docData || msg;
                 }
 
                 return { ...t, progress: newProg, status: newSt, result: newRes, currentLog: newLog, pdfUrl: newPdfUrl };

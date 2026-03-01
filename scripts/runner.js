@@ -201,10 +201,26 @@ function saveResult(runDir, result, startTime) {
 async function main() {
   const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
 
+  // Extraer escenarios (casos) de la estructura anidada: [ { procesos: [ { escenarios: [] } ] } ]
+  let allCasos = [];
+  if (Array.isArray(registry)) {
+    registry.forEach(cliente => {
+      if (cliente.procesos) {
+         cliente.procesos.forEach(proceso => {
+            if (proceso.escenarios) {
+               allCasos = allCasos.concat(proceso.escenarios.map(esc => ({ ...esc, _proceso: proceso.id })));
+            }
+         });
+      }
+    });
+  } else if (registry.casos) {
+    allCasos = registry.casos; // fallback legacy
+  }
+
   if (runAll) {
-    console.log(`\n🏁 Ejecutando TODOS los casos (${registry.casos.length})\n`);
+    console.log(`\n🏁 Ejecutando TODOS los casos (${allCasos.length})\n`);
     const results = [];
-    for (const caso of registry.casos) {
+    for (const caso of allCasos) {
       const res = await runCaso(caso);
       results.push(res);
     }
@@ -223,18 +239,18 @@ async function main() {
   if (!casoId) {
     console.error("❌ Debes especificar --caso <id> o --all");
     console.log("\nCasos disponibles:");
-    for (const c of registry.casos) {
-      console.log(`  - ${c.id}: ${c.nombre}`);
+    for (const c of allCasos) {
+      console.log(`  - ${c.id}: ${c.name}`);
     }
     process.exit(1);
   }
 
-  const caso = registry.casos.find((c) => c.id === casoId);
+  const caso = allCasos.find((c) => c.id === casoId);
   if (!caso) {
     console.error(`❌ Caso '${casoId}' no encontrado en test-registry.json`);
     console.log("\nCasos disponibles:");
-    for (const c of registry.casos) {
-      console.log(`  - ${c.id}: ${c.nombre}`);
+    for (const c of allCasos) {
+      console.log(`  - ${c.id}: ${c.name}`);
     }
     process.exit(1);
   }

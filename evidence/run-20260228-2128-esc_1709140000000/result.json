@@ -1,0 +1,22 @@
+{
+  "status": "error",
+  "caso": "esc_1709140000000",
+  "prefacturaId": "1393494073",
+  "tester": "unknown",
+  "env": "QAS",
+  "duration": "4.28s",
+  "timestamp": "2026-03-01T02:28:37.599Z",
+  "screenshots": {},
+  "steps": [
+    {
+      "step": "api-create-prefactura",
+      "status": "ok"
+    },
+    {
+      "step": "playwright-execution",
+      "status": "error"
+    }
+  ],
+  "error": "Playwright falló con exit code: 1",
+  "domSnapshot": null
+}
