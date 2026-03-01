@@ -104,57 +104,64 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
 
         // 3. FILTRAR EN PANEL IZQUIERDO
         logStep('filtrar-lista', 'running');
-        console.log(`🔍 Secuencia: Área -> Periodo -> Supervisor -> LUPA (x2)`);
+        console.log(`🔍 Filtrando: Área -> ${testConfig.periodo} -> ${env.user.toUpperCase()} -> Buscar`);
         
         // Área
-        const areaDropdown = await find('input[placeholder*="rea"], div[title*="Área"], span:has-text("Seleccione Área"), .sapMSlt, .sapMComboBox', 5000);
-        await areaDropdown.click({ force: true });
-        await page.waitForTimeout(500);
-        await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}"), div:has-text("${testConfig.area}")`, 3000);
-        
-        // EsperarBusy
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'visible', timeout: 3000 }).catch(() => {});
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 15000 }).catch(() => {});
-        await page.waitForTimeout(1000);
+        const areaField = await find('span:has-text("Seleccione Área"), [title*="Área"], .sapMComboBox input', 5000);
+        await areaField.click({ force: true });
+        await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}")`, 3000);
+        await page.waitForTimeout(2000);
 
-        // Período: 02-2026
-        console.log(`📅 Periodo: ${testConfig.periodo}`);
-        const periodoInput = await find('input[placeholder*="eríodo"], input[placeholder*="eriod"], input.sapMInputBaseInner:not([readonly])', 3000);
+        // Período
+        const periodoInput = await find('input[placeholder*="eríodo"], input[placeholder*="eriod"]', 3000);
         await periodoInput.click({ force: true });
         await periodoInput.fill(testConfig.periodo);
-        await page.keyboard.press('Tab');
-        await page.waitForTimeout(800);
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(2000);
         
-        // Supervisor: PGALVEZ3 (SIN ENTER para no abrir popup)
-        logStep('filtrar-supervisor', 'running');
+        // Supervisor (Simulación Humana Completa)
+        console.log("👤 Ingresando Supervisor lentamente para validación Fiori...");
         const supervisorInput = await find('input[placeholder*="upervisor" i]', 3000);
         await supervisorInput.click({ force: true });
         await supervisorInput.fill("");
-        await supervisorInput.fill(env.user.toUpperCase());
+        await page.keyboard.type(env.user.toUpperCase(), { delay: 150 });
+        await page.waitForTimeout(1000);
+        // Validar token en Fiori (Sugerencia)
+        await page.keyboard.press('ArrowDown');
         await page.waitForTimeout(500);
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(1000);
         
-        // Clic en Buscar (Lupa de la derecha)
-        const selectorLupa = 'button[id$="search"], button[title*="Buscar"], .sapMSearchFieldSearch';
-        console.log("🔍 Clic en Lupa...");
-        await tap(selectorLupa, 5000);
+        // LUPA DE BÚSQUEDA PRINCIPAL
+        console.log("🔍 Clic en Lupa de búsqueda...");
+        // Excluimos las lupas que estén dentro de un diálogo (para evitar popups)
+        const btnLupa = page.locator('button:has(.sapUiIcon[data-sap-ui-icon-content=""]), button[id$="-search"]').filter({
+            hasNot: page.locator('ancestor::div[contains(@class, "sapMDialog")]') // no funciona bien en playwright css
+        });
+        
+        // Método seguro: de todos los search buttons, es el que está en la barra superior o fuera de popovers
+        const btnSafeLupa = page.locator('.sapMPageHeader button, .sapMBarRight button, .sapDynamicPageTitle button, aside button').locator('.sapUiIcon[data-sap-ui-icon-content=""]').first();
+        
+        await btnSafeLupa.click({ force: true }).catch(async () => {
+             // Fallback
+             await page.locator('button[title="Buscar"]').first().click({ force: true });
+        });
         await page.waitForTimeout(1500);
 
-        // "Siempre vuelve a presionar la lupa"
-        console.log("🔍 Re-presionando Lupa para asegurar...");
-        await tap(selectorLupa, 3000).catch(() => {});
+        console.log("🔍 Re-presionando Lupa...");
+        await btnSafeLupa.click({ force: true }).catch(() => {});
         
-        // Esperar resultados
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'visible', timeout: 3000 }).catch(() => {});
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 15000 }).catch(() => {});
+        // Espera Busy Final
+        await page.waitForSelector('.sapMBusyIndicator', { state: 'hidden', timeout: 10000 }).catch(() => {});
         await page.waitForTimeout(2000); 
         await shot('hs_02_lista_filtrada');
         logStep('filtrar-lista', 'ok');
 
         // 4. VERIFICAR EXISTENCIA DEL SUPERVISOR EN LA LISTA
         logStep('seleccionar-supervisor', 'running');
-        // Quitamos el filtro de periodo porque el panel izquierdo ya fue filtrado y a veces la estructura del texto en Fiori cambia
         const userPeriodoTexto = `${env.user.toUpperCase()}`;
-        let frameInputs = activeFrame ? activeFrame : page;
+        // Re-declaramos por seguridad o reutilizamos
+        frameInputs = activeFrame ? activeFrame : page;
         
         const listItem = frameInputs.locator(`.sapMList .sapMLIBContent, .sapMList [role="listitem"]`)
                              .filter({ hasText: userPeriodoTexto })
