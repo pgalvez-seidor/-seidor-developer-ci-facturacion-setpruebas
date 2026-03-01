@@ -163,25 +163,21 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             
             // ESPERAR A QUE CARGUE EL DETALLE (Panel derecho con título "Horario")
             console.log("⏳ Esperando que cargue el panel de Horario...");
-            await frameInputs.locator('.sapMTitle:has-text("Horario"), .sapMPageTitle:has-text("Horario")').waitFor({ state: 'visible', timeout: 10000 })
-                .catch(() => console.log("⚠️ Timeout esperando título 'Horario', procediendo..."));
+            const detalleCargado = await frameInputs.locator('.sapMTitle:has-text("Horario"), .sapMPageTitle:has-text("Horario"), .sapMTable').first().waitFor({ state: 'visible', timeout: 10000 })
+                .then(()=>true).catch(() => false);
+            
+            if (!detalleCargado) {
+                 console.log("⚠️ El detalle parece estar vacío o no cargó la tabla. Intentando forzar creación...");
+            }
             
             await page.waitForTimeout(1000);
             await shot('hs_03_detalle_abierto');
             
             // VALIDAR ÚLTIMA FILA (FECHA DE HOY)
             console.log("📝 Haciendo scroll hasta el final de la lista de horarios por semana...");
-            try {
-                const tableElement = frameInputs.locator('.sapMTable, table').last();
-                await tableElement.scrollIntoViewIfNeeded({ timeout: 3000 });
-            } catch (e) { console.log('⚠️ No se pudo hacer auto-scroll a la tabla, forzando por evaluate...'); }
-            
             await page.evaluate(() => {
-                const scrollContainers = document.querySelectorAll('.sapMScrollCont');
-                if (scrollContainers.length > 0) {
-                     const lastContainer = scrollContainers[scrollContainers.length - 1];
-                     lastContainer.scrollTop = lastContainer.scrollHeight;
-                }
+                const scrollable = document.querySelector('[id$="--table-scroll"], .sapUiTableCtrlScr, .sapMScrollCont:last-child');
+                if (scrollable) scrollable.scrollTop = scrollable.scrollHeight;
             }).catch(() => {});
             await page.waitForTimeout(500);
 
@@ -210,7 +206,6 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             await page.keyboard.press('Enter');
             
             // Seleccionar el item de la lista en el popup
-            // Al presionar Enter, Fiori filtra la lista. Usaremos el selector de usuario directamente y removeremos esperas innecesarias para no quedarse 'un buen rato'.
             const userTextToFind = `Usuario: ${env.user.toUpperCase()}`;
             const popItem = frameInputs.locator('.sapMDialog, [role="dialog"]').getByText(userTextToFind, { exact: false }).first();
             await popItem.click({ timeout: 5000, force: true });
@@ -222,17 +217,15 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
 
         // 6. AGREGAR DETALLE (+) DE UN DÍA
         logStep('agregar-dia', 'running');
-        // El icono de SAP para "Agregar" es el código  (e105)
+        // Usamos el icono universal de Fiori para agregar si el title falla
         const selectorIconoMas = '[data-sap-ui-icon-content=""]';
-        
         let btnMas;
         try {
-            // Buscamos cualquier botón que contenga el icono de '+' en el panel de detalle
-            btnMas = frameInputs.locator(`button:has(${selectorIconoMas}), .sapMTableToolbar button, .sapMTB button`).last();
+            btnMas = frameInputs.locator(`button:has(${selectorIconoMas}), .sapMTableToolbar button:has(${selectorIconoMas}), .sapMTB button:has(${selectorIconoMas})`).last();
             await btnMas.click({ timeout: 5000, force: true });
         } catch {
-            console.log("⚠️ No se encontró por icono, intentando por título o clases de toolbar...");
-            btnMas = await find('button[title*="Agregar"], button[title*="agregar"], .sapMTableToolbar button:last-child', 5000);
+            console.log("⚠️ No se encontró por icono, intentando por ID parcial o título...");
+            btnMas = frameInputs.locator('button[id$="add-btn"], button[id$="addRow-btn"], button[title*="Agregar"]').last();
             await btnMas.click({ timeout: 5000, force: true });
         }
         await page.waitForTimeout(500);
