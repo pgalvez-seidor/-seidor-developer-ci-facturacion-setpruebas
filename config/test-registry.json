@@ -22,7 +22,8 @@
                   "monto": ""
                 }
               ]
-            }
+            },
+            "script": "scripts/caso1-boleta.spec.js"
           },
           {
             "id": "esc_1709140000001",
@@ -45,7 +46,8 @@
                   "monto": ""
                 }
               ]
-            }
+            },
+            "script": "scripts/caso1-boleta.spec.js"
           }
         ]
       },

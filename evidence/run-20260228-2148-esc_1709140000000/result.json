@@ -1,0 +1,24 @@
+{
+  "status": "error",
+  "caso": "esc_1709140000000",
+  "prefacturaId": "1393494078",
+  "tester": "unknown",
+  "env": "QAS",
+  "duration": "33.67s",
+  "timestamp": "2026-03-01T02:48:58.221Z",
+  "screenshots": {
+    "error_flujo": "/Users/ender/Desktop/Apps/Testing/-seidor-developer-ci-facturacion-setpruebas/evidence/run-20260228-2148-esc_1709140000000/error_flujo.png"
+  },
+  "steps": [
+    {
+      "step": "api-create-prefactura",
+      "status": "ok"
+    },
+    {
+      "step": "playwright-execution",
+      "status": "error"
+    }
+  ],
+  "error": "Playwright falló con exit code: 1",
+  "domSnapshot": null
+}

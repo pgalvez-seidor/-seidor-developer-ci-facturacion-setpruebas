@@ -1,0 +1,33 @@
+{
+  "prefacturaId": "1393494077",
+  "steps": [
+    {
+      "step": "login",
+      "status": "running",
+      "timestamp": "2026-03-01T02:44:59.872Z"
+    },
+    {
+      "step": "login",
+      "status": "ok",
+      "timestamp": "2026-03-01T02:45:04.438Z"
+    },
+    {
+      "step": "abrir-facturacion",
+      "status": "running",
+      "timestamp": "2026-03-01T02:45:04.438Z"
+    },
+    {
+      "step": "abrir-facturacion",
+      "status": "ok",
+      "timestamp": "2026-03-01T02:45:10.438Z"
+    },
+    {
+      "step": "buscar-prefactura",
+      "status": "running",
+      "timestamp": "2026-03-01T02:45:10.438Z"
+    }
+  ],
+  "duration": "27.25s",
+  "status": "❌ FALLIDO",
+  "error": "[find] Timeout 15000ms: 'text=\"PRE\"'"
+}
