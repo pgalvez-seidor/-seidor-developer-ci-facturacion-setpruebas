@@ -428,13 +428,13 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     // Asegurarse de cerrar diálogos de SAP antes de ir a documentos
     console.log("🧹 Limpiando overlays finales...");
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(300);
     const closeBtn = page.locator('button:has-text("Cerrar"), button:has-text("OK")').first();
     if (await closeBtn.isVisible({ timeout: 500 }).catch(()=>false)) await closeBtn.click().catch(()=>{});
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(500);
 
     // Dar un tiempo extra y asegurarse que desaparezca la caparazón de overlays
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(800);
 
     logStep('generar-comprobante', 'ok');
 
@@ -449,13 +449,13 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     activeFrame = null;
 
     await (await find('[role="tab"]:has-text("DOCUMENTOS"), [id*="DOCUMENTOS"]', 10000)).click({ force: true });
-    await page.waitForTimeout(2500); // Esperar renderizado de lista
+    await page.waitForTimeout(1200); // Esperar renderizado de lista (Reducido)
 
     // Seleccionar primer doc emitido y tomar la captura final
     const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 8000).catch(() => null);
     if (firstDoc) {
         await firstDoc.click({ force: true });
-        await page.waitForTimeout(1500); // Esperar carga de detalle a la derecha
+        await page.waitForTimeout(800); // Esperar carga de detalle (Reducido)
         const text = await firstDoc.textContent() || "";
         const docMatch = text.match(/[BF]\d{3}-\d+/);
         if (docMatch) docExtracted = docMatch[0];
