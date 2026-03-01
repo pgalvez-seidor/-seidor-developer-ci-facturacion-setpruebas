@@ -169,13 +169,24 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             const esVacio = await frameInputs.locator('.sapMTitle:has-text("Asignación Supervisor")').isVisible().catch(()=>false);
             
             if (!detalleCargado || esVacio) {
-                 console.log("⚠️ El detalle está vacío. Creando nueva asignación desde el pie de lista...");
+                 console.log("⚠️ El detalle está vacío. Iniciando flujo de creación de asignación...");
                  const btnFooterAdd = frameInputs.locator('.sapMPageFooter button, .sapMTB button').filter({ has: frameInputs.locator('[data-sap-ui-icon-content=""]') }).first();
                  await btnFooterAdd.click({ force: true });
-                 await page.waitForTimeout(1500);
+                 await page.waitForTimeout(2000);
+                 
+                 // Flujo Popup Buscar Supervisor (común para ambos casos de creación)
+                 console.log("📝 Buscando supervisor en el popup...");
+                 const popInput = await find('[role="dialog"] input[type="search"], .sapMDialog input', 5000);
+                 await popInput.fill(env.user.toUpperCase());
+                 await page.keyboard.press('Enter');
+                 await page.waitForTimeout(1000);
+                 
+                 const userText = `Usuario: ${env.user.toUpperCase()}`;
+                 const popItem = frameInputs.locator('.sapMDialog, [role="dialog"]').getByText(userText, { exact: false }).first();
+                 await popItem.click({ timeout: 5000, force: true });
+                 await page.waitForTimeout(2000);
             }
             
-            await page.waitForTimeout(500);
             await shot('hs_03_detalle_abierto');
             
             // VALIDAR ÚLTIMA FILA (FECHA DE HOY)
@@ -189,32 +200,25 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             // Obtener el contenido de la última fila visible
             const lastRowContent = await frameInputs.locator('.sapMTable tbody tr, [role="row"]').last().textContent({ timeout: 3000 }).catch(() => "");
             if (lastRowContent.includes(testConfig.fechaHoy)) {
-                console.log(`✅ ¡Ya existe un horario activo para hoy (${testConfig.fechaHoy}) al final de la lista! Ya se puede operar.`);
-                await shot('hs_04_evaluacion_existente');
-                logStep('seleccionar-supervisor', 'ok');
-                testStatus = '✅ EXITOSO (Horario Hoy Ya Existía)';
-                return; // TERMINAR PRUEBA
+                console.log(`✅ ¡Ya existe un horario activo para hoy (${testConfig.fechaHoy})!`);
+                testStatus = '✅ EXITOSO (Ya existía)';
+                return;
             }
-            console.log(`📝 El último horario activo es de días antes. Procediendo a crear el horario para HOY (${testConfig.fechaHoy})...`);
+            console.log(`📝 Procediendo a crear el horario para HOY (${testConfig.fechaHoy})...`);
         } else {
-            console.log("⚠️ El supervisor NO SE ENCONTRÓ en la lista para este período. CREANDO NUEVA ASIGNACIÓN...");
-            
-            // Buscar en el footer el botón Agregar Supervisor (+)
+            console.log("⚠️ El supervisor NO SE ENCONTRÓ en la lista. CREANDO NUEVA ASIGNACIÓN...");
             const btnAgregarSup = await find('button[title*="Agregar"], button .sapUiIcon[data-sap-ui-icon-content=""]', 5000);
             await btnAgregarSup.click({ timeout: 5000, force: true });
             await page.waitForTimeout(2000);
             
-            // Llenar el popup "Buscar Supervisor"
-            console.log("📝 Buscando supervisor en el popup y seleccionando el único que sale...");
             const popInput = await find('[role="dialog"] input[type="search"], .sapMDialog input', 5000);
             await popInput.fill(env.user.toUpperCase());
             await page.keyboard.press('Enter');
-            
-            // Seleccionar el item de la lista en el popup
-            const userTextToFind = `Usuario: ${env.user.toUpperCase()}`;
-            const popItem = frameInputs.locator('.sapMDialog, [role="dialog"]').getByText(userTextToFind, { exact: false }).first();
+            await page.waitForTimeout(1000);
+
+            const userText = `Usuario: ${env.user.toUpperCase()}`;
+            const popItem = frameInputs.locator('.sapMDialog, [role="dialog"]').getByText(userText, { exact: false }).first();
             await popItem.click({ timeout: 5000, force: true });
-            
             await shot('hs_03_form_nuevo');
         }
         
@@ -222,15 +226,13 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
 
         // 6. AGREGAR DETALLE (+) DE UN DÍA
         logStep('agregar-dia', 'running');
-        // Usamos el icono universal de Fiori para agregar si el title falla
         const selectorIconoMas = '[data-sap-ui-icon-content=""]';
         let btnMas;
         try {
-            btnMas = frameInputs.locator(`button:has(${selectorIconoMas}), .sapMTableToolbar button:has(${selectorIconoMas}), .sapMTB button:has(${selectorIconoMas})`).last();
+            btnMas = frameInputs.locator(`button:has(${selectorIconoMas}), .sapMTableToolbar button, .sapMTB button`).last();
             await btnMas.click({ timeout: 5000, force: true });
         } catch {
-            console.log("⚠️ No se encontró por icono, intentando por ID parcial o título...");
-            btnMas = frameInputs.locator('button[id$="add-btn"], button[id$="addRow-btn"], button[title*="Agregar"]').last();
+            btnMas = frameInputs.locator('button[id$="add-btn"], button[id$="addRow-btn"]').last();
             await btnMas.click({ timeout: 5000, force: true });
         }
         await page.waitForTimeout(500);
