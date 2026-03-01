@@ -97,6 +97,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     });
     let testStatus = "✅ EXITOSO";
     let testError = "";
+    let docExtracted = "Desconocido";
 
     try {
         // =======================
@@ -127,6 +128,22 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     // PASO 3: TAB PRE
     // =======================
     logStep('buscar-prefactura', 'running');
+    
+    // VALIDACIÓN PROACTIVA DE ACCESO (REGLA DE NEGOCIO: FUERA DE HORARIO)
+    try {
+        const errorSel = '.sapMMessageBox, [role="alertdialog"], .sapMMessageToast, .sapMDialog:has(.sapUiIcon[data-sap-ui-icon-content=""])';
+        const dialogFastCheck = await find(errorSel, 50).catch(() => null);
+        if (dialogFastCheck) {
+            const txt = await dialogFastCheck.innerText();
+            if (txt && txt.toLowerCase().includes("fuera de horario")) {
+                throw new Error("UI Bloqueada: No se pudo completar la facturación porque el usuario no tiene horario.");
+            }
+        }
+    } catch(e) {
+        // Si el throw inicial es nuestro string custom, re-lanzarlo
+        if (e.message.includes("No se pudo completar la facturación")) throw e;
+    }
+
     await (await find('text="PRE"', 15000)).click({ force: true });
     await page.waitForTimeout(800);
 
@@ -431,7 +448,6 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     await page.waitForTimeout(600);
 
     // Seleccionar primer doc emitido y tomar la captura final
-    let docExtracted = "Desconocido";
     const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 5000).catch(() => null);
     if (firstDoc) {
         await firstDoc.click({ force: true });
@@ -452,9 +468,35 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     // =======================
     } catch (error) {
         testStatus = "❌ FALLIDO";
-        testError = error.message;
+        
+        // Intentar extraer el error de negocio real de la UI cruzando iframes
+        let uiErrorText = "";
+        try {
+            const errorSel = '.sapMMessageBox, [role="alertdialog"], .sapMMessageToast, .sapMDialog:has(.sapUiIcon[data-sap-ui-icon-content=""])';
+            const errorDialog = await find(errorSel, 1500).catch(() => null);
+            if (errorDialog) {
+                uiErrorText = await errorDialog.innerText();
+                uiErrorText = uiErrorText.replace(/\\nOK/g, '').replace(/\\nAceptar/g, '').replace(/\\nCerrar/g, '').trim();
+                // Si el mensaje es multilínea, toma solo las dos primeras (título y detalle)
+                uiErrorText = uiErrorText.split('\\n').slice(0,2).join(": ");
+                
+                // --- MAPEO DE ERRORES DE NEGOCIO ---
+                if (uiErrorText.toLowerCase().includes("fuera de horario")) {
+                    uiErrorText = "No se pudo completar la facturación porque el usuario no tiene horario.";
+                }
+            }
+        } catch(e) {}
+
+        if (uiErrorText) {
+            testError = `UI Bloqueada: ${uiErrorText}`;
+            console.error(`❌ Error de Negocio Detectado: ${uiErrorText}`);
+        } else {
+            testError = error.message;
+        }
+
         await shot('error_flujo');
-        console.error(`❌ Error Crítico: ${testError}`);
+        if (!uiErrorText) console.error(`❌ Error Crítico: ${testError}`);
+        
     } finally {
         const dur = ((Date.now() - startTime) / 1000).toFixed(2);
 

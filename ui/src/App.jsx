@@ -138,6 +138,27 @@ export default function App() {
   const [isBatchRunning, setIsBatchRunning] = useState(false);
   const [batchParallel, setBatchParallel] = useState(true);
 
+  // Floating Balloons (Toasts)
+  const [toasts, setToasts] = useState([]);
+  const addToast = (msg, type = 'error') => {
+      const id = Date.now() + Math.random();
+      setToasts(prev => [...prev, { id, msg, type }]);
+      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 7000);
+  };
+
+  const handleOpenPdf = async (pdfUrl) => {
+    try {
+      await fetch(`${API_BASE}/open-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfUrl })
+      });
+    } catch(err) {
+      console.error(err);
+      addToast("Hubo un error contactando al servidor local para abrir el PDF nativo.", "error");
+    }
+  };
+
   const fetchRegistry = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/registry`);
@@ -324,6 +345,12 @@ export default function App() {
             try {
               const d = JSON.parse(chunk.substring(6));
               const { taskId, type, docData } = d;
+              const msg = d.message || "";
+
+              // Mostrar globo flotante si hay un error de negocio
+              if (type === 'business_error') {
+                  addToast(msg, 'error');
+              }
 
               setQueue(q => q.map(t => {
                 if (t.taskId !== taskId) return t;
@@ -538,7 +565,7 @@ export default function App() {
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                       <span className="final-result">{qItem.result}</span>
                                       {qItem.pdfUrl && (
-                                          <a href={`http://localhost:3001${qItem.pdfUrl}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '4px', background: '#e2e8f0', color: '#005587', textDecoration: 'none', border: '1px solid #cbd5e1' }}>📄 Ver PDF</a>
+                                          <a href="#" onClick={(e) => { e.preventDefault(); handleOpenPdf(qItem.pdfUrl); }} style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '4px', background: '#e2e8f0', color: '#005587', textDecoration: 'none', border: '1px solid #cbd5e1' }}>📄 Ver PDF Nativ</a>
                                       )}
                                   </div>
                               ) : qItem.status === 'error' ? (
@@ -546,7 +573,7 @@ export default function App() {
                                      <span className="error-title">Fallo Crítico:</span>
                                      <div className="error-text" title={qItem.result}>{qItem.result}</div>
                                      {qItem.pdfUrl && (
-                                          <a href={`http://localhost:3001${qItem.pdfUrl}`} target="_blank" rel="noreferrer" style={{ alignSelf: 'flex-start', fontSize: '0.8rem', marginTop: '4px', padding: '2px 8px', borderRadius: '4px', background: '#fee2e2', color: '#b91c1c', textDecoration: 'none', border: '1px solid #fca5a5' }}>📄 Ver PDF (Fallo)</a>
+                                          <a href="#" onClick={(e) => { e.preventDefault(); handleOpenPdf(qItem.pdfUrl); }} style={{ alignSelf: 'flex-start', fontSize: '0.8rem', marginTop: '4px', padding: '2px 8px', borderRadius: '4px', background: '#fee2e2', color: '#b91c1c', textDecoration: 'none', border: '1px solid #fca5a5' }}>📄 Ver PDF Nativ (Fallo)</a>
                                       )}
                                   </div>
                               ) : (
@@ -584,6 +611,27 @@ export default function App() {
           </div>
 
         </main>
+      </div>
+
+      {/* FLOATING BALLOONS (TOASTS) */}
+      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {toasts.map(t => (
+          <div key={t.id} style={{
+              background: t.type === 'error' ? '#fee2e2' : '#dcfce7',
+              color: t.type === 'error' ? '#b91c1c' : '#166534',
+              padding: '12px 20px',
+              borderRadius: '8px',
+              borderLeft: `4px solid ${t.type === 'error' ? '#ef4444' : '#22c55e'}`,
+              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+              display: 'flex', alignItems: 'center', gap: '10px',
+              maxWidth: '400px', wordBreak: 'break-word',
+              fontSize: '0.9rem',
+              transition: 'opacity 0.3s'
+          }}>
+              <span style={{fontSize:'1.2rem'}}>{t.type === 'error' ? '🚫' : '✅'}</span>
+              <span>{t.msg}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
