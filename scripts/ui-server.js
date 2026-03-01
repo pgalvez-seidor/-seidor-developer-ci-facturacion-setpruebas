@@ -342,10 +342,11 @@ app.post('/api/run-batch', async (req, res) => {
                     const resultMsg = isSuccess ? 'Finalizado con éxito' : `Finalizado con código ${code}`;
                     sendLog(taskId, isSuccess ? 'done' : 'error', resultMsg);
                     
-                    // Guardar para el reporte global
+                    // Guardar para el reporte global (incluyendo ruta de evidencias para consolidar)
                     batchResults.push({
                         taskId,
                         config,
+                        runDir, // Importante para recuperar fotos
                         status: isSuccess ? 'EXITO' : 'FALLIDO',
                         result: resultMsg,
                         timestamp: new Date().toLocaleString()
@@ -384,51 +385,107 @@ app.post('/api/run-batch', async (req, res) => {
             const page = await browser.newPage();
             
             const timestamp = new Date().getTime();
-            const globalPdfName = `Reporte_Global_Batch_${timestamp}.pdf`;
+            const globalPdfName = `Reporte_Final_Certificacion_${timestamp}.pdf`;
             const globalPdfPath = path.join(rootDir, 'evidence', globalPdfName);
 
             let html = `
-            <html>
+            <!DOCTYPE html>
+            <html lang="es">
             <head>
+                <meta charset="UTF-8">
                 <style>
-                    body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; }
-                    h1 { color: #0f172a; border-bottom: 2px solid #0f172a; padding-bottom: 10px; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; font-size: 13px; }
-                    th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 11px; }
-                    .status { font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
-                    .status-success { background: #dcfce7; color: #166534; }
-                    .status-failed { background: #fee2e2; color: #991b1b; }
+                    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+                    body { font-family: 'Plus Jakarta Sans', sans-serif; padding: 40px; color: #1e293b; background: #fff; line-height: 1.6; }
+                    .cover { height: 90vh; display: flex; flex-direction: column; justify-content: center; border-left: 10px solid #0f172a; padding-left: 50px; margin-bottom: 100px; }
+                    .cover h1 { font-size: 56px; font-weight: 800; margin: 0; color: #0f172a; line-height: 1.1; }
+                    .cover p { font-size: 20px; color: #64748b; margin: 20px 0; }
+                    
+                    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 50px 0; }
+                    .summary-card { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+                    .summary-card label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 5px; }
+                    .summary-card span { font-size: 24px; font-weight: 700; color: #0f172a; }
+
+                    .page-break { page-break-before: always; }
+                    .test-header { background: #0f172a; color: #fff; padding: 25px 40px; margin: 40px -40px 30px -40px; display: flex; justify-content: space-between; align-items: center; }
+                    .test-header h2 { margin: 0; font-size: 20px; font-weight: 700; }
+                    .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; background: #fff; }
+                    
+                    .evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+                    .evidence-item { break-inside: avoid; margin-bottom: 30px; }
+                    .evidence-item h4 { font-size: 12px; color: #64748b; margin-bottom: 10px; text-transform: uppercase; }
+                    .img-wrap { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #f1f5f9; padding: 5px; }
+                    img { width: 100%; display: block; border-radius: 4px; }
+                    
+                    .footer { text-align: center; margin-top: 100px; padding-top: 20px; border-top: 1px solid #f1f5f9; color: #94a3b8; font-size: 11px; }
                 </style>
             </head>
             <body>
-                <h1>Resumen Global de Ejecución de Lote</h1>
-                <p>Fecha: ${new Date().toLocaleString()}</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Tarea / Configuración</th>
-                            <th>Estado</th>
-                            <th>Resultado / Error</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${results.map((r, i) => `
-                        <tr>
-                            <td>${i + 1}</td>
-                            <td>${r.config.tipoComprobante} - ${r.taskId}</td>
-                            <td><span class="status ${r.status === 'EXITO' ? 'status-success' : 'status-failed'}">${r.status}</span></td>
-                            <td>${r.result}</td>
-                        </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                <div class="cover">
+                    <p>INFORME EJECUTIVO</p>
+                    <h1>Evidencia de Certificación Automatizada</h1>
+                    <p>Cliente: Clínica Internacional | Proyecto: Facturación CI</p>
+                    <div style="margin-top: 40px; font-size: 14px; font-weight: 600;">
+                        Fecha de Ejecución: ${new Date().toLocaleString('es-PE')}
+                    </div>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card"><label>Total Pruebas</label><span>${results.length}</span></div>
+                    <div class="summary-card"><label>Exitosas</label><span style="color:#16a34a">${results.filter(r=>r.status==='EXITO').length}</span></div>
+                    <div class="summary-card"><label>Fallidas</label><span style="color:#dc2626">${results.filter(r=>r.status==='FALLIDO').length}</span></div>
+                </div>
+
+                ${results.map((r, index) => {
+                    const pics = [
+                        { id: 'antes_de_cobrar', title: 'Carga de Pre-Factura' },
+                        { id: 'modal_efectivo', title: 'Ingreso de Pago' },
+                        { id: 'post_pago', title: 'Transacción Registrada' },
+                        { id: 'comprobante_emitido', title: 'Voucher en Documentos' },
+                        { id: 'error_flujo', title: 'Evidencia de Error' }
+                    ];
+
+                    let evidenceHtml = '';
+                    pics.forEach(p => {
+                        const imgPath = path.join(r.runDir, p.id + '.png');
+                        if (fs.existsSync(imgPath)) {
+                            const b64 = fs.readFileSync(imgPath).toString('base64');
+                            evidenceHtml += `
+                            <div class="evidence-item">
+                                <h4>${p.title}</h4>
+                                <div class="img-wrap"><img src="data:image/png;base64,${b64}" /></div>
+                            </div>`;
+                        }
+                    });
+
+                    return `
+                    <div class="page-break">
+                        <div class="test-header">
+                            <div>
+                                <span style="font-size: 12px; opacity: 0.7; display: block;">PRUEBA #0${index + 1}</span>
+                                <h2>${r.config.tipoComprobante} - ${r.taskId}</h2>
+                            </div>
+                            <div class="status-pill" style="color: ${r.status==='EXITO'?'#16a34a':'#dc2626'}">
+                                ${r.status}
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 20px; font-size: 13px; color: #475569;">
+                            <b>Configuración:</b> ${JSON.stringify(r.config.pagos)} | <b>Resultado:</b> ${r.result}
+                        </div>
+                        <div class="evidence-grid">
+                            ${evidenceHtml}
+                        </div>
+                    </div>`;
+                }).join('')}
+
+                <div class="footer">
+                    Este reporte ha sido generado automáticamente por el motor de certificación Seidor.<br>
+                    © 2026 Seidor Chile - Todos los derechos reservados.
+                </div>
             </body>
             </html>`;
 
             await page.setContent(html);
-            await page.pdf({ path: globalPdfPath, format: 'A4', printBackground: true });
+            await page.pdf({ path: globalPdfPath, format: 'A4', printBackground: true, margin: { top: '0', bottom: '0' } });
             await browser.close();
             return globalPdfPath;
         };
