@@ -27,62 +27,1156 @@
       - main "Content" [ref=e35]:
         - text:                              
         - iframe [active] [ref=e36]:
-          - generic [ref=f1e1]:
+          - generic [active] [ref=f1e1]:
             - generic:
               - status
               - status
-              - dialog "Buscar Supervisor" [ref=f1e3]:
-                - banner:
-                  - generic [ref=f1e6]:
-                    - generic [ref=f1e7]: 
-                    - heading "Buscar Supervisor" [level=1] [ref=f1e8]
-                - generic [ref=f1e12]:
-                  - generic [ref=f1e15]:
-                    - searchbox "Supervisor" [active] [ref=f1e16]: PGALVEZ3
-                    - generic [ref=f1e17] [cursor=pointer]: 
-                    - generic [ref=f1e18] [cursor=pointer]: 
-                  - list [ref=f1e19]:
-                    - listitem [ref=f1e20]:
-                      - generic [ref=f1e21]: No data
-                - contentinfo [ref=f1e23]:
-                  - button "Cerrar" [ref=f1e26] [cursor=pointer]:
-                    - generic [ref=f1e28]: Cerrar
-            - generic [ref=f1e32]:
-              - generic [ref=f1e36]:
-                - banner [ref=f1e37]:
-                  - generic [ref=f1e40] [cursor=pointer]:
-                    - combobox [ref=f1e41]
-                    - textbox [ref=f1e42]
+            - generic [ref=f1e5]:
+              - generic [ref=f1e9]:
+                - banner [ref=f1e10]:
+                  - generic [ref=f1e13] [cursor=pointer]:
+                    - combobox [ref=f1e14]: CLINICA INTERNACIONAL S.A.C.
+                    - textbox [ref=f1e15]: "166"
+                    - generic [ref=f1e16]: CLINICA INTERNACIONAL S.A.C.
                     - text: 
-                - generic [ref=f1e45]:
-                  - generic [ref=f1e49] [cursor=pointer]:
-                    - combobox [ref=f1e50]
-                    - textbox [ref=f1e51]
+                - generic [ref=f1e18]:
+                  - generic [ref=f1e22] [cursor=pointer]:
+                    - combobox [ref=f1e23]: SAN ISIDRO
+                    - textbox [ref=f1e24]: "246"
+                    - generic [ref=f1e25]: SAN ISIDRO
                     - text: 
-                  - generic [ref=f1e54]:
-                    - generic [ref=f1e58] [cursor=pointer]:
-                      - combobox [ref=f1e59]
-                      - textbox [ref=f1e60]
-                      - generic [ref=f1e62]: 
-                    - generic [ref=f1e64]:
-                      - generic [ref=f1e69]:
+                  - generic [ref=f1e27]:
+                    - generic [ref=f1e31] [cursor=pointer]:
+                      - combobox [ref=f1e32]: Seleccione Área
+                      - textbox [ref=f1e33]
+                      - generic [ref=f1e34]: Seleccione Área
+                      - generic [ref=f1e35]: 
+                    - generic [ref=f1e37]:
+                      - generic [ref=f1e42]:
                         - textbox "Seleccione Período": 02-2026
-                        - generic [ref=f1e71] [cursor=pointer]: 
-                      - toolbar [ref=f1e76]:
-                        - generic [ref=f1e77]:
-                          - generic [ref=f1e79]:
-                            - textbox "Ingrese Supervisor" [ref=f1e80]
-                            - button "Show Value Help" [ref=f1e82] [cursor=pointer]: 
-                          - button "Search" [ref=f1e83] [cursor=pointer]:
-                            - generic [ref=f1e85]: 
-                          - button "Limpiar filtros" [ref=f1e86] [cursor=pointer]:
-                            - generic [ref=f1e88]: 
-                - contentinfo [ref=f1e92]:
-                  - button "Exportar Excel" [ref=f1e95] [cursor=pointer]:
-                    - generic [ref=f1e97]: 
-              - generic [ref=f1e105]:
-                - generic [ref=f1e106]: 
-                - generic [ref=f1e107]: Horario
-                - generic [ref=f1e108]: Asignación Supervisor
+                        - generic [ref=f1e44] [cursor=pointer]: 
+                      - generic [ref=f1e47]:
+                        - toolbar [ref=f1e49]:
+                          - generic [ref=f1e50]:
+                            - generic [ref=f1e52]:
+                              - textbox "Ingrese Supervisor" [ref=f1e53]: PGALVEZ3
+                              - button "Show Value Help" [ref=f1e55] [cursor=pointer]: 
+                            - button "Search" [ref=f1e56] [cursor=pointer]:
+                              - generic [ref=f1e58]: 
+                            - button "Limpiar filtros" [ref=f1e59] [cursor=pointer]:
+                              - generic [ref=f1e61]: 
+                        - list [ref=f1e68]:
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2026 Object Status Entry successfully validated" [ref=f1e69] [cursor=pointer]:
+                            - generic [ref=f1e70]:
+                              - generic [ref=f1e74]: Pierre Galvez
+                              - generic [ref=f1e75]:
+                                - generic [ref=f1e76]:
+                                  - generic [ref=f1e78]: PGALVEZ3
+                                  - generic [ref=f1e80]:
+                                    - generic [ref=f1e82]: 01-2026
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e85]: AMBULATORIA-ADMISION
+                          - listitem "USUARIO REAPERTURA SEDE REAPERTURA_SEDE AMBULATORIA-ADMISION 01-2026 Object Status Entry successfully validated" [ref=f1e86] [cursor=pointer]:
+                            - generic [ref=f1e87]:
+                              - generic [ref=f1e91]: USUARIO REAPERTURA SEDE
+                              - generic [ref=f1e92]:
+                                - generic [ref=f1e93]:
+                                  - generic [ref=f1e95]: REAPERTURA_SEDE
+                                  - generic [ref=f1e97]:
+                                    - generic [ref=f1e99]: 01-2026
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e102]: AMBULATORIA-ADMISION
+                          - listitem "USUARIO REAPERTURA SEDE REAPERTURA_SEDE AMBULATORIA-ADMISION 01-2026 Object Status Entry successfully validated" [ref=f1e103] [cursor=pointer]:
+                            - generic [ref=f1e104]:
+                              - generic [ref=f1e108]: USUARIO REAPERTURA SEDE
+                              - generic [ref=f1e109]:
+                                - generic [ref=f1e110]:
+                                  - generic [ref=f1e112]: REAPERTURA_SEDE
+                                  - generic [ref=f1e114]:
+                                    - generic [ref=f1e116]: 01-2026
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e119]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2026 Object Status Entry successfully validated" [ref=f1e120] [cursor=pointer]:
+                            - generic [ref=f1e121]:
+                              - generic [ref=f1e125]: Pierre Galvez
+                              - generic [ref=f1e126]:
+                                - generic [ref=f1e127]:
+                                  - generic [ref=f1e129]: PGALVEZ3
+                                  - generic [ref=f1e131]:
+                                    - generic [ref=f1e133]: 01-2026
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e136]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2026 Object Status Entry successfully validated" [ref=f1e137] [cursor=pointer]:
+                            - generic [ref=f1e138]:
+                              - generic [ref=f1e142]: Pierre Galvez
+                              - generic [ref=f1e143]:
+                                - generic [ref=f1e144]:
+                                  - generic [ref=f1e146]: PGALVEZ3
+                                  - generic [ref=f1e148]:
+                                    - generic [ref=f1e150]: 01-2026
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e153]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e154] [cursor=pointer]:
+                            - generic [ref=f1e155]:
+                              - generic [ref=f1e159]: Pierre Galvez
+                              - generic [ref=f1e160]:
+                                - generic [ref=f1e161]:
+                                  - generic [ref=f1e163]: PGALVEZ3
+                                  - generic [ref=f1e165]:
+                                    - generic [ref=f1e167]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e170]: AMBULATORIA-ADMISION
+                          - listitem "Israel Flores IFLORES AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e171] [cursor=pointer]:
+                            - generic [ref=f1e172]:
+                              - generic [ref=f1e176]: Israel Flores
+                              - generic [ref=f1e177]:
+                                - generic [ref=f1e178]:
+                                  - generic [ref=f1e180]: IFLORES
+                                  - generic [ref=f1e182]:
+                                    - generic [ref=f1e184]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e187]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e188] [cursor=pointer]:
+                            - generic [ref=f1e189]:
+                              - generic [ref=f1e193]: Pierre Galvez
+                              - generic [ref=f1e194]:
+                                - generic [ref=f1e195]:
+                                  - generic [ref=f1e197]: PGALVEZ3
+                                  - generic [ref=f1e199]:
+                                    - generic [ref=f1e201]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e204]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e205] [cursor=pointer]:
+                            - generic [ref=f1e206]:
+                              - generic [ref=f1e210]: Pierre Galvez
+                              - generic [ref=f1e211]:
+                                - generic [ref=f1e212]:
+                                  - generic [ref=f1e214]: PGALVEZ3
+                                  - generic [ref=f1e216]:
+                                    - generic [ref=f1e218]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e221]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e222] [cursor=pointer]:
+                            - generic [ref=f1e223]:
+                              - generic [ref=f1e227]: Pierre Galvez
+                              - generic [ref=f1e228]:
+                                - generic [ref=f1e229]:
+                                  - generic [ref=f1e231]: PGALVEZ3
+                                  - generic [ref=f1e233]:
+                                    - generic [ref=f1e235]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e238]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Gálvez PGALVEZ8 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e239] [cursor=pointer]:
+                            - generic [ref=f1e240]:
+                              - generic [ref=f1e244]: Pierre Gálvez
+                              - generic [ref=f1e245]:
+                                - generic [ref=f1e246]:
+                                  - generic [ref=f1e248]: PGALVEZ8
+                                  - generic [ref=f1e250]:
+                                    - generic [ref=f1e252]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e255]: AMBULATORIA-ADMISION
+                          - listitem "USUARIO REAPERTURA SEDE REAPERTURA_SEDE AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e256] [cursor=pointer]:
+                            - generic [ref=f1e257]:
+                              - generic [ref=f1e261]: USUARIO REAPERTURA SEDE
+                              - generic [ref=f1e262]:
+                                - generic [ref=f1e263]:
+                                  - generic [ref=f1e265]: REAPERTURA_SEDE
+                                  - generic [ref=f1e267]:
+                                    - generic [ref=f1e269]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e272]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e273] [cursor=pointer]:
+                            - generic [ref=f1e274]:
+                              - generic [ref=f1e278]: Pierre Galvez
+                              - generic [ref=f1e279]:
+                                - generic [ref=f1e280]:
+                                  - generic [ref=f1e282]: PGALVEZ3
+                                  - generic [ref=f1e284]:
+                                    - generic [ref=f1e286]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e289]: AMBULATORIA-ADMISION
+                          - listitem "Iris Rodriguez IRODRIGUEZ AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e290] [cursor=pointer]:
+                            - generic [ref=f1e291]:
+                              - generic [ref=f1e295]: Iris Rodriguez
+                              - generic [ref=f1e296]:
+                                - generic [ref=f1e297]:
+                                  - generic [ref=f1e299]: IRODRIGUEZ
+                                  - generic [ref=f1e301]:
+                                    - generic [ref=f1e303]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e306]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e307] [cursor=pointer]:
+                            - generic [ref=f1e308]:
+                              - generic [ref=f1e312]: Pierre Galvez
+                              - generic [ref=f1e313]:
+                                - generic [ref=f1e314]:
+                                  - generic [ref=f1e316]: PGALVEZ3
+                                  - generic [ref=f1e318]:
+                                    - generic [ref=f1e320]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e323]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e324] [cursor=pointer]:
+                            - generic [ref=f1e325]:
+                              - generic [ref=f1e329]: Pierre Galvez
+                              - generic [ref=f1e330]:
+                                - generic [ref=f1e331]:
+                                  - generic [ref=f1e333]: PGALVEZ3
+                                  - generic [ref=f1e335]:
+                                    - generic [ref=f1e337]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e340]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e341] [cursor=pointer]:
+                            - generic [ref=f1e342]:
+                              - generic [ref=f1e346]: Pierre Galvez
+                              - generic [ref=f1e347]:
+                                - generic [ref=f1e348]:
+                                  - generic [ref=f1e350]: PGALVEZ3
+                                  - generic [ref=f1e352]:
+                                    - generic [ref=f1e354]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e357]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e358] [cursor=pointer]:
+                            - generic [ref=f1e359]:
+                              - generic [ref=f1e363]: Pierre Galvez
+                              - generic [ref=f1e364]:
+                                - generic [ref=f1e365]:
+                                  - generic [ref=f1e367]: PGALVEZ3
+                                  - generic [ref=f1e369]:
+                                    - generic [ref=f1e371]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e374]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ5 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e375] [cursor=pointer]:
+                            - generic [ref=f1e376]:
+                              - generic [ref=f1e380]: Pierre Galvez
+                              - generic [ref=f1e381]:
+                                - generic [ref=f1e382]:
+                                  - generic [ref=f1e384]: PGALVEZ5
+                                  - generic [ref=f1e386]:
+                                    - generic [ref=f1e388]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e391]: AMBULATORIA-ADMISION
+                          - listitem "Iris Rodriguez IRODRIGUEZ AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e392] [cursor=pointer]:
+                            - generic [ref=f1e393]:
+                              - generic [ref=f1e397]: Iris Rodriguez
+                              - generic [ref=f1e398]:
+                                - generic [ref=f1e399]:
+                                  - generic [ref=f1e401]: IRODRIGUEZ
+                                  - generic [ref=f1e403]:
+                                    - generic [ref=f1e405]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e408]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e409] [cursor=pointer]:
+                            - generic [ref=f1e410]:
+                              - generic [ref=f1e414]: Pierre Galvez
+                              - generic [ref=f1e415]:
+                                - generic [ref=f1e416]:
+                                  - generic [ref=f1e418]: PGALVEZ3
+                                  - generic [ref=f1e420]:
+                                    - generic [ref=f1e422]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e425]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ5 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e426] [cursor=pointer]:
+                            - generic [ref=f1e427]:
+                              - generic [ref=f1e431]: Pierre Galvez
+                              - generic [ref=f1e432]:
+                                - generic [ref=f1e433]:
+                                  - generic [ref=f1e435]: PGALVEZ5
+                                  - generic [ref=f1e437]:
+                                    - generic [ref=f1e439]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e442]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ3 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e443] [cursor=pointer]:
+                            - generic [ref=f1e444]:
+                              - generic [ref=f1e448]: Pierre Galvez
+                              - generic [ref=f1e449]:
+                                - generic [ref=f1e450]:
+                                  - generic [ref=f1e452]: PGALVEZ3
+                                  - generic [ref=f1e454]:
+                                    - generic [ref=f1e456]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e459]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ7 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e460] [cursor=pointer]:
+                            - generic [ref=f1e461]:
+                              - generic [ref=f1e465]: Pierre Galvez
+                              - generic [ref=f1e466]:
+                                - generic [ref=f1e467]:
+                                  - generic [ref=f1e469]: PGALVEZ7
+                                  - generic [ref=f1e471]:
+                                    - generic [ref=f1e473]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e476]: AMBULATORIA-ADMISION
+                          - listitem "Pierre Galvez PGALVEZ7 AMBULATORIA-ADMISION 01-2025 Object Status Entry successfully validated" [ref=f1e477] [cursor=pointer]:
+                            - generic [ref=f1e478]:
+                              - generic [ref=f1e482]: Pierre Galvez
+                              - generic [ref=f1e483]:
+                                - generic [ref=f1e484]:
+                                  - generic [ref=f1e486]: PGALVEZ7
+                                  - generic [ref=f1e488]:
+                                    - generic [ref=f1e490]: 01-2025
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e493]: AMBULATORIA-ADMISION
+                          - listitem "OSCAR IRIARTE OIRIARTE_2 AMBULATORIA-ADMISION 01-2024 Object Status Entry successfully validated" [ref=f1e494] [cursor=pointer]:
+                            - generic [ref=f1e495]:
+                              - generic [ref=f1e499]: OSCAR IRIARTE
+                              - generic [ref=f1e500]:
+                                - generic [ref=f1e501]:
+                                  - generic [ref=f1e503]: OIRIARTE_2
+                                  - generic [ref=f1e505]:
+                                    - generic [ref=f1e507]: 01-2024
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e510]: AMBULATORIA-ADMISION
+                          - listitem "JOANNA GRACIELA AGUIRRE AYALA JAGUIRREA AMBULATORIA-ADMISION 01-2023 Object Status Entry successfully validated" [ref=f1e511] [cursor=pointer]:
+                            - generic [ref=f1e512]:
+                              - generic [ref=f1e516]: JOANNA GRACIELA AGUIRRE AYALA
+                              - generic [ref=f1e517]:
+                                - generic [ref=f1e518]:
+                                  - generic [ref=f1e520]: JAGUIRREA
+                                  - generic [ref=f1e522]:
+                                    - generic [ref=f1e524]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e527]: AMBULATORIA-ADMISION
+                          - listitem "WAGNER SINTI WSINTIG AMBULATORIA-ADMISION 01-2023 Object Status Entry successfully validated" [ref=f1e528] [cursor=pointer]:
+                            - generic [ref=f1e529]:
+                              - generic [ref=f1e533]: WAGNER SINTI
+                              - generic [ref=f1e534]:
+                                - generic [ref=f1e535]:
+                                  - generic [ref=f1e537]: WSINTIG
+                                  - generic [ref=f1e539]:
+                                    - generic [ref=f1e541]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e544]: AMBULATORIA-ADMISION
+                          - listitem "Iris Rodriguez IRODRIGUEZ AMBULATORIA-IMÁGENES 01-2023 Object Status Entry successfully validated" [ref=f1e545] [cursor=pointer]:
+                            - generic [ref=f1e546]:
+                              - generic [ref=f1e550]: Iris Rodriguez
+                              - generic [ref=f1e551]:
+                                - generic [ref=f1e552]:
+                                  - generic [ref=f1e554]: IRODRIGUEZ
+                                  - generic [ref=f1e556]:
+                                    - generic [ref=f1e558]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e561]: AMBULATORIA-IMÁGENES
+                          - listitem "WAGNER SINTI WSINTIG AMBULATORIA-ADMISION 01-2023 Object Status Entry successfully validated" [ref=f1e562] [cursor=pointer]:
+                            - generic [ref=f1e563]:
+                              - generic [ref=f1e567]: WAGNER SINTI
+                              - generic [ref=f1e568]:
+                                - generic [ref=f1e569]:
+                                  - generic [ref=f1e571]: WSINTIG
+                                  - generic [ref=f1e573]:
+                                    - generic [ref=f1e575]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e578]: AMBULATORIA-ADMISION
+                          - listitem "Heber Gonzalo Narro HNARRO AREA 1 01-2023 Object Status Entry successfully validated" [ref=f1e579] [cursor=pointer]:
+                            - generic [ref=f1e580]:
+                              - generic [ref=f1e584]: Heber Gonzalo Narro
+                              - generic [ref=f1e585]:
+                                - generic [ref=f1e586]:
+                                  - generic [ref=f1e588]: HNARRO
+                                  - generic [ref=f1e590]:
+                                    - generic [ref=f1e592]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e595]: AREA 1
+                          - listitem "WAGNER SINTI WSINTIG AMBULATORIA-ADMISION 01-2023 Object Status Entry successfully validated" [ref=f1e596] [cursor=pointer]:
+                            - generic [ref=f1e597]:
+                              - generic [ref=f1e601]: WAGNER SINTI
+                              - generic [ref=f1e602]:
+                                - generic [ref=f1e603]:
+                                  - generic [ref=f1e605]: WSINTIG
+                                  - generic [ref=f1e607]:
+                                    - generic [ref=f1e609]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e612]: AMBULATORIA-ADMISION
+                          - listitem "SONIA HUAMAN DIAZ SHUAMAND AMBULATORIA-FARMACIA 01-2023 Object Status Entry successfully validated" [ref=f1e613] [cursor=pointer]:
+                            - generic [ref=f1e614]:
+                              - generic [ref=f1e618]: SONIA HUAMAN DIAZ
+                              - generic [ref=f1e619]:
+                                - generic [ref=f1e620]:
+                                  - generic [ref=f1e622]: SHUAMAND
+                                  - generic [ref=f1e624]:
+                                    - generic [ref=f1e626]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e629]: AMBULATORIA-FARMACIA
+                          - listitem "Oscar Gonzalo Iriarte Palacios OIRIARTE AMBULATORIA-ADMISION 01-2023 Object Status Entry successfully validated" [ref=f1e630] [cursor=pointer]:
+                            - generic [ref=f1e631]:
+                              - generic [ref=f1e635]: Oscar Gonzalo Iriarte Palacios
+                              - generic [ref=f1e636]:
+                                - generic [ref=f1e637]:
+                                  - generic [ref=f1e639]: OIRIARTE
+                                  - generic [ref=f1e641]:
+                                    - generic [ref=f1e643]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e646]: AMBULATORIA-ADMISION
+                          - listitem "SONIA HUAMAN DIAZ SHUAMAND AMBULATORIA-FARMACIA 01-2023 Object Status Entry successfully validated" [ref=f1e647] [cursor=pointer]:
+                            - generic [ref=f1e648]:
+                              - generic [ref=f1e652]: SONIA HUAMAN DIAZ
+                              - generic [ref=f1e653]:
+                                - generic [ref=f1e654]:
+                                  - generic [ref=f1e656]: SHUAMAND
+                                  - generic [ref=f1e658]:
+                                    - generic [ref=f1e660]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e663]: AMBULATORIA-FARMACIA
+                          - listitem "CINTHYA ZAPATA GÓMEZ CZAPATAG AMBULATORIA-FARMACIA 01-2023 Object Status Entry successfully validated" [ref=f1e664] [cursor=pointer]:
+                            - generic [ref=f1e665]:
+                              - generic [ref=f1e669]: CINTHYA ZAPATA GÓMEZ
+                              - generic [ref=f1e670]:
+                                - generic [ref=f1e671]:
+                                  - generic [ref=f1e673]: CZAPATAG
+                                  - generic [ref=f1e675]:
+                                    - generic [ref=f1e677]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e680]: AMBULATORIA-FARMACIA
+                          - listitem "Yudy Stephanie Diaz Salas YDIAZS AMBULATORIA-ADMISION 01-2023 Object Status Entry successfully validated" [ref=f1e681] [cursor=pointer]:
+                            - generic [ref=f1e682]:
+                              - generic [ref=f1e686]: Yudy Stephanie Diaz Salas
+                              - generic [ref=f1e687]:
+                                - generic [ref=f1e688]:
+                                  - generic [ref=f1e690]: YDIAZS
+                                  - generic [ref=f1e692]:
+                                    - generic [ref=f1e694]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e697]: AMBULATORIA-ADMISION
+                          - listitem "Yudy Stephanie Diaz Salas YDIAZS AMBULATORIA-ADMISION 01-2023 Object Status Entry successfully validated" [ref=f1e698] [cursor=pointer]:
+                            - generic [ref=f1e699]:
+                              - generic [ref=f1e703]: Yudy Stephanie Diaz Salas
+                              - generic [ref=f1e704]:
+                                - generic [ref=f1e705]:
+                                  - generic [ref=f1e707]: YDIAZS
+                                  - generic [ref=f1e709]:
+                                    - generic [ref=f1e711]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e714]: AMBULATORIA-ADMISION
+                          - listitem "JOANNA GRACIELA AGUIRRE AYALA JAGUIRREA AMBULATORIA-ADMISION 01-2023 Object Status Entry successfully validated" [ref=f1e715] [cursor=pointer]:
+                            - generic [ref=f1e716]:
+                              - generic [ref=f1e720]: JOANNA GRACIELA AGUIRRE AYALA
+                              - generic [ref=f1e721]:
+                                - generic [ref=f1e722]:
+                                  - generic [ref=f1e724]: JAGUIRREA
+                                  - generic [ref=f1e726]:
+                                    - generic [ref=f1e728]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e731]: AMBULATORIA-ADMISION
+                          - listitem "JOANNA GRACIELA AGUIRRE AYALA JAGUIRREA AMBULATORIA-ADMISION 01-2023 Object Status Entry successfully validated" [ref=f1e732] [cursor=pointer]:
+                            - generic [ref=f1e733]:
+                              - generic [ref=f1e737]: JOANNA GRACIELA AGUIRRE AYALA
+                              - generic [ref=f1e738]:
+                                - generic [ref=f1e739]:
+                                  - generic [ref=f1e741]: JAGUIRREA
+                                  - generic [ref=f1e743]:
+                                    - generic [ref=f1e745]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e748]: AMBULATORIA-ADMISION
+                          - listitem "Nathaly Cruz NATHALYMC AREA 1 01-2023 Object Status Entry successfully validated" [ref=f1e749] [cursor=pointer]:
+                            - generic [ref=f1e750]:
+                              - generic [ref=f1e754]: Nathaly Cruz
+                              - generic [ref=f1e755]:
+                                - generic [ref=f1e756]:
+                                  - generic [ref=f1e758]: NATHALYMC
+                                  - generic [ref=f1e760]:
+                                    - generic [ref=f1e762]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e765]: AREA 1
+                          - listitem "NATHALY CRUZ NCRUZ AREA 1 01-2023 Object Status Entry successfully validated" [ref=f1e766] [cursor=pointer]:
+                            - generic [ref=f1e767]:
+                              - generic [ref=f1e771]: NATHALY CRUZ
+                              - generic [ref=f1e772]:
+                                - generic [ref=f1e773]:
+                                  - generic [ref=f1e775]: NCRUZ
+                                  - generic [ref=f1e777]:
+                                    - generic [ref=f1e779]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e782]: AREA 1
+                          - listitem "Helen Geraldine Salas Galvez HSALAS AREA 1 01-2023 Object Status Entry successfully validated" [ref=f1e783] [cursor=pointer]:
+                            - generic [ref=f1e784]:
+                              - generic [ref=f1e788]: Helen Geraldine Salas Galvez
+                              - generic [ref=f1e789]:
+                                - generic [ref=f1e790]:
+                                  - generic [ref=f1e792]: HSALAS
+                                  - generic [ref=f1e794]:
+                                    - generic [ref=f1e796]: 01-2023
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e799]: AREA 1
+                          - listitem "CINTHIA CAROL CUYA TAFUR CCUYAT AMBULATORIA-ADMISION 01-2022 Object Status Entry successfully validated" [ref=f1e800] [cursor=pointer]:
+                            - generic [ref=f1e801]:
+                              - generic [ref=f1e805]: CINTHIA CAROL CUYA TAFUR
+                              - generic [ref=f1e806]:
+                                - generic [ref=f1e807]:
+                                  - generic [ref=f1e809]: CCUYAT
+                                  - generic [ref=f1e811]:
+                                    - generic [ref=f1e813]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e816]: AMBULATORIA-ADMISION
+                          - listitem "Helen Geraldine Salas Galvez HSALAS AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e817] [cursor=pointer]:
+                            - generic [ref=f1e818]:
+                              - generic [ref=f1e822]: Helen Geraldine Salas Galvez
+                              - generic [ref=f1e823]:
+                                - generic [ref=f1e824]:
+                                  - generic [ref=f1e826]: HSALAS
+                                  - generic [ref=f1e828]:
+                                    - generic [ref=f1e830]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e833]: AREA 1
+                          - listitem "Helen Geraldine Salas Galvez HSALAS AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e834] [cursor=pointer]:
+                            - generic [ref=f1e835]:
+                              - generic [ref=f1e839]: Helen Geraldine Salas Galvez
+                              - generic [ref=f1e840]:
+                                - generic [ref=f1e841]:
+                                  - generic [ref=f1e843]: HSALAS
+                                  - generic [ref=f1e845]:
+                                    - generic [ref=f1e847]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e850]: AREA 1
+                          - listitem "Helen Geraldine Salas Galvez HSALAS AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e851] [cursor=pointer]:
+                            - generic [ref=f1e852]:
+                              - generic [ref=f1e856]: Helen Geraldine Salas Galvez
+                              - generic [ref=f1e857]:
+                                - generic [ref=f1e858]:
+                                  - generic [ref=f1e860]: HSALAS
+                                  - generic [ref=f1e862]:
+                                    - generic [ref=f1e864]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e867]: AREA 1
+                          - listitem "Helen Geraldine Salas Galvez HSALAS AMBULATORIA-ADMISION 01-2022 Object Status Entry successfully validated" [ref=f1e868] [cursor=pointer]:
+                            - generic [ref=f1e869]:
+                              - generic [ref=f1e873]: Helen Geraldine Salas Galvez
+                              - generic [ref=f1e874]:
+                                - generic [ref=f1e875]:
+                                  - generic [ref=f1e877]: HSALAS
+                                  - generic [ref=f1e879]:
+                                    - generic [ref=f1e881]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e884]: AMBULATORIA-ADMISION
+                          - listitem "OSCAR IRIARTE V_OIRIARTE AMBULATORIA-ADMISION 01-2022 Object Status Entry successfully validated" [ref=f1e885] [cursor=pointer]:
+                            - generic [ref=f1e886]:
+                              - generic [ref=f1e890]: OSCAR IRIARTE
+                              - generic [ref=f1e891]:
+                                - generic [ref=f1e892]:
+                                  - generic [ref=f1e894]: V_OIRIARTE
+                                  - generic [ref=f1e896]:
+                                    - generic [ref=f1e898]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e901]: AMBULATORIA-ADMISION
+                          - listitem "JACQUELINE ZARABIA JZARABIA AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e902] [cursor=pointer]:
+                            - generic [ref=f1e903]:
+                              - generic [ref=f1e907]: JACQUELINE ZARABIA
+                              - generic [ref=f1e908]:
+                                - generic [ref=f1e909]:
+                                  - generic [ref=f1e911]: JZARABIA
+                                  - generic [ref=f1e913]:
+                                    - generic [ref=f1e915]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e918]: AREA 1
+                          - listitem "Iris Rodriguez IRODRIGUEZ AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e919] [cursor=pointer]:
+                            - generic [ref=f1e920]:
+                              - generic [ref=f1e924]: Iris Rodriguez
+                              - generic [ref=f1e925]:
+                                - generic [ref=f1e926]:
+                                  - generic [ref=f1e928]: IRODRIGUEZ
+                                  - generic [ref=f1e930]:
+                                    - generic [ref=f1e932]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e935]: AREA 1
+                          - listitem "Iris Rodriguez IRODRIGUEZ URGENCIAS-ADMISION 01-2022 Object Status Entry successfully validated" [ref=f1e936] [cursor=pointer]:
+                            - generic [ref=f1e937]:
+                              - generic [ref=f1e941]: Iris Rodriguez
+                              - generic [ref=f1e942]:
+                                - generic [ref=f1e943]:
+                                  - generic [ref=f1e945]: IRODRIGUEZ
+                                  - generic [ref=f1e947]:
+                                    - generic [ref=f1e949]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e952]: URGENCIAS-ADMISION
+                          - listitem "Iris Rodriguez IRODRIGUEZ AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e953] [cursor=pointer]:
+                            - generic [ref=f1e954]:
+                              - generic [ref=f1e958]: Iris Rodriguez
+                              - generic [ref=f1e959]:
+                                - generic [ref=f1e960]:
+                                  - generic [ref=f1e962]: IRODRIGUEZ
+                                  - generic [ref=f1e964]:
+                                    - generic [ref=f1e966]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e969]: AREA 1
+                          - listitem "OSCAR IRIARTE V_OIRIARTE AMBULATORIA-ADMISION 01-2022 Object Status Entry successfully validated" [ref=f1e970] [cursor=pointer]:
+                            - generic [ref=f1e971]:
+                              - generic [ref=f1e975]: OSCAR IRIARTE
+                              - generic [ref=f1e976]:
+                                - generic [ref=f1e977]:
+                                  - generic [ref=f1e979]: V_OIRIARTE
+                                  - generic [ref=f1e981]:
+                                    - generic [ref=f1e983]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e986]: AMBULATORIA-ADMISION
+                          - listitem "JACQUELINE ZARABIA JZARABIA AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e987] [cursor=pointer]:
+                            - generic [ref=f1e988]:
+                              - generic [ref=f1e992]: JACQUELINE ZARABIA
+                              - generic [ref=f1e993]:
+                                - generic [ref=f1e994]:
+                                  - generic [ref=f1e996]: JZARABIA
+                                  - generic [ref=f1e998]:
+                                    - generic [ref=f1e1000]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1003]: AREA 1
+                          - listitem "Iris Rodriguez IRODRIGUEZ AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e1004] [cursor=pointer]:
+                            - generic [ref=f1e1005]:
+                              - generic [ref=f1e1009]: Iris Rodriguez
+                              - generic [ref=f1e1010]:
+                                - generic [ref=f1e1011]:
+                                  - generic [ref=f1e1013]: IRODRIGUEZ
+                                  - generic [ref=f1e1015]:
+                                    - generic [ref=f1e1017]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1020]: AREA 1
+                          - listitem "Iris Rodriguez IRODRIGUEZ AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e1021] [cursor=pointer]:
+                            - generic [ref=f1e1022]:
+                              - generic [ref=f1e1026]: Iris Rodriguez
+                              - generic [ref=f1e1027]:
+                                - generic [ref=f1e1028]:
+                                  - generic [ref=f1e1030]: IRODRIGUEZ
+                                  - generic [ref=f1e1032]:
+                                    - generic [ref=f1e1034]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1037]: AREA 1
+                          - listitem "NATHALY CRUZ NCRUZ AMBULATORIA-FARMACIA 01-2022 Object Status Entry successfully validated" [ref=f1e1038] [cursor=pointer]:
+                            - generic [ref=f1e1039]:
+                              - generic [ref=f1e1043]: NATHALY CRUZ
+                              - generic [ref=f1e1044]:
+                                - generic [ref=f1e1045]:
+                                  - generic [ref=f1e1047]: NCRUZ
+                                  - generic [ref=f1e1049]:
+                                    - generic [ref=f1e1051]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1054]: AMBULATORIA-FARMACIA
+                          - listitem "OSCAR IRIARTE V_OIRIARTE AMBULATORIA-ADMISION 01-2022 Object Status Entry successfully validated" [ref=f1e1055] [cursor=pointer]:
+                            - generic [ref=f1e1056]:
+                              - generic [ref=f1e1060]: OSCAR IRIARTE
+                              - generic [ref=f1e1061]:
+                                - generic [ref=f1e1062]:
+                                  - generic [ref=f1e1064]: V_OIRIARTE
+                                  - generic [ref=f1e1066]:
+                                    - generic [ref=f1e1068]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1071]: AMBULATORIA-ADMISION
+                          - listitem "Heber Gonzalo Narro HNARRO AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e1072] [cursor=pointer]:
+                            - generic [ref=f1e1073]:
+                              - generic [ref=f1e1077]: Heber Gonzalo Narro
+                              - generic [ref=f1e1078]:
+                                - generic [ref=f1e1079]:
+                                  - generic [ref=f1e1081]: HNARRO
+                                  - generic [ref=f1e1083]:
+                                    - generic [ref=f1e1085]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1088]: AREA 1
+                          - listitem "Heber Gonzalo Narro HNARRO AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e1089] [cursor=pointer]:
+                            - generic [ref=f1e1090]:
+                              - generic [ref=f1e1094]: Heber Gonzalo Narro
+                              - generic [ref=f1e1095]:
+                                - generic [ref=f1e1096]:
+                                  - generic [ref=f1e1098]: HNARRO
+                                  - generic [ref=f1e1100]:
+                                    - generic [ref=f1e1102]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1105]: AREA 1
+                          - listitem "OSCAR IRIARTE V_OIRIARTE AMBULATORIA-ADMISION 01-2022 Object Status Entry successfully validated" [ref=f1e1106] [cursor=pointer]:
+                            - generic [ref=f1e1107]:
+                              - generic [ref=f1e1111]: OSCAR IRIARTE
+                              - generic [ref=f1e1112]:
+                                - generic [ref=f1e1113]:
+                                  - generic [ref=f1e1115]: V_OIRIARTE
+                                  - generic [ref=f1e1117]:
+                                    - generic [ref=f1e1119]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1122]: AMBULATORIA-ADMISION
+                          - listitem "JACQUELINE ZARABIA JZARABIA AREA 1 01-2022 Object Status Entry successfully validated" [ref=f1e1123] [cursor=pointer]:
+                            - generic [ref=f1e1124]:
+                              - generic [ref=f1e1128]: JACQUELINE ZARABIA
+                              - generic [ref=f1e1129]:
+                                - generic [ref=f1e1130]:
+                                  - generic [ref=f1e1132]: JZARABIA
+                                  - generic [ref=f1e1134]:
+                                    - generic [ref=f1e1136]: 01-2022
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1139]: AREA 1
+                          - listitem "Angélica María Ramirez Frias ARAMIREZ AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1140] [cursor=pointer]:
+                            - generic [ref=f1e1141]:
+                              - generic [ref=f1e1145]: Angélica María Ramirez Frias
+                              - generic [ref=f1e1146]:
+                                - generic [ref=f1e1147]:
+                                  - generic [ref=f1e1149]: ARAMIREZ
+                                  - generic [ref=f1e1151]:
+                                    - generic [ref=f1e1153]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1156]: AMBULATORIA-ADMISION
+                          - listitem "Francis Isabel Gutierrez Sanchez FGUTIERREZS AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1157] [cursor=pointer]:
+                            - generic [ref=f1e1158]:
+                              - generic [ref=f1e1162]: Francis Isabel Gutierrez Sanchez
+                              - generic [ref=f1e1163]:
+                                - generic [ref=f1e1164]:
+                                  - generic [ref=f1e1166]: FGUTIERREZS
+                                  - generic [ref=f1e1168]:
+                                    - generic [ref=f1e1170]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1173]: AMBULATORIA-ADMISION
+                          - listitem "CINTHIA CAROL CUYA TAFUR CCUYAT AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1174] [cursor=pointer]:
+                            - generic [ref=f1e1175]:
+                              - generic [ref=f1e1179]: CINTHIA CAROL CUYA TAFUR
+                              - generic [ref=f1e1180]:
+                                - generic [ref=f1e1181]:
+                                  - generic [ref=f1e1183]: CCUYAT
+                                  - generic [ref=f1e1185]:
+                                    - generic [ref=f1e1187]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1190]: AMBULATORIA-ADMISION
+                          - listitem "Francis Isabel Gutierrez Sanchez FGUTIERREZS AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1191] [cursor=pointer]:
+                            - generic [ref=f1e1192]:
+                              - generic [ref=f1e1196]: Francis Isabel Gutierrez Sanchez
+                              - generic [ref=f1e1197]:
+                                - generic [ref=f1e1198]:
+                                  - generic [ref=f1e1200]: FGUTIERREZS
+                                  - generic [ref=f1e1202]:
+                                    - generic [ref=f1e1204]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1207]: AMBULATORIA-ADMISION
+                          - listitem "CARLOS RAMOS CRAMOSE AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1208] [cursor=pointer]:
+                            - generic [ref=f1e1209]:
+                              - generic [ref=f1e1213]: CARLOS RAMOS
+                              - generic [ref=f1e1214]:
+                                - generic [ref=f1e1215]:
+                                  - generic [ref=f1e1217]: CRAMOSE
+                                  - generic [ref=f1e1219]:
+                                    - generic [ref=f1e1221]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1224]: AMBULATORIA-FARMACIA
+                          - listitem "CARLOS RAMOS CRAMOSE AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1225] [cursor=pointer]:
+                            - generic [ref=f1e1226]:
+                              - generic [ref=f1e1230]: CARLOS RAMOS
+                              - generic [ref=f1e1231]:
+                                - generic [ref=f1e1232]:
+                                  - generic [ref=f1e1234]: CRAMOSE
+                                  - generic [ref=f1e1236]:
+                                    - generic [ref=f1e1238]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1241]: AMBULATORIA-FARMACIA
+                          - listitem "Francis Isabel Gutierrez Sanchez FGUTIERREZS AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1242] [cursor=pointer]:
+                            - generic [ref=f1e1243]:
+                              - generic [ref=f1e1247]: Francis Isabel Gutierrez Sanchez
+                              - generic [ref=f1e1248]:
+                                - generic [ref=f1e1249]:
+                                  - generic [ref=f1e1251]: FGUTIERREZS
+                                  - generic [ref=f1e1253]:
+                                    - generic [ref=f1e1255]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1258]: AMBULATORIA-ADMISION
+                          - listitem "MARIAJULIA REATEGUI ROJAS MREATEGUIR AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1259] [cursor=pointer]:
+                            - generic [ref=f1e1260]:
+                              - generic [ref=f1e1264]: MARIAJULIA REATEGUI ROJAS
+                              - generic [ref=f1e1265]:
+                                - generic [ref=f1e1266]:
+                                  - generic [ref=f1e1268]: MREATEGUIR
+                                  - generic [ref=f1e1270]:
+                                    - generic [ref=f1e1272]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1275]: AMBULATORIA-ADMISION
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1276] [cursor=pointer]:
+                            - generic [ref=f1e1277]:
+                              - generic [ref=f1e1281]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1282]:
+                                - generic [ref=f1e1283]:
+                                  - generic [ref=f1e1285]: FRGUTIERRE
+                                  - generic [ref=f1e1287]:
+                                    - generic [ref=f1e1289]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1292]: AMBULATORIA-ADMISION
+                          - listitem "CARLOS RAMOS CRAMOSE AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1293] [cursor=pointer]:
+                            - generic [ref=f1e1294]:
+                              - generic [ref=f1e1298]: CARLOS RAMOS
+                              - generic [ref=f1e1299]:
+                                - generic [ref=f1e1300]:
+                                  - generic [ref=f1e1302]: CRAMOSE
+                                  - generic [ref=f1e1304]:
+                                    - generic [ref=f1e1306]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1309]: AMBULATORIA-FARMACIA
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1310] [cursor=pointer]:
+                            - generic [ref=f1e1311]:
+                              - generic [ref=f1e1315]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1316]:
+                                - generic [ref=f1e1317]:
+                                  - generic [ref=f1e1319]: FRGUTIERRE
+                                  - generic [ref=f1e1321]:
+                                    - generic [ref=f1e1323]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1326]: AMBULATORIA-ADMISION
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1327] [cursor=pointer]:
+                            - generic [ref=f1e1328]:
+                              - generic [ref=f1e1332]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1333]:
+                                - generic [ref=f1e1334]:
+                                  - generic [ref=f1e1336]: FRGUTIERRE
+                                  - generic [ref=f1e1338]:
+                                    - generic [ref=f1e1340]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1343]: AMBULATORIA-FARMACIA
+                          - listitem "Julio Barbaro ADMIN AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1344] [cursor=pointer]:
+                            - generic [ref=f1e1345]:
+                              - generic [ref=f1e1349]: Julio Barbaro
+                              - generic [ref=f1e1350]:
+                                - generic [ref=f1e1351]:
+                                  - generic [ref=f1e1353]: ADMIN
+                                  - generic [ref=f1e1355]:
+                                    - generic [ref=f1e1357]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1360]: AMBULATORIA-FARMACIA
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1361] [cursor=pointer]:
+                            - generic [ref=f1e1362]:
+                              - generic [ref=f1e1366]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1367]:
+                                - generic [ref=f1e1368]:
+                                  - generic [ref=f1e1370]: FRGUTIERRE
+                                  - generic [ref=f1e1372]:
+                                    - generic [ref=f1e1374]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1377]: AMBULATORIA-FARMACIA
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1378] [cursor=pointer]:
+                            - generic [ref=f1e1379]:
+                              - generic [ref=f1e1383]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1384]:
+                                - generic [ref=f1e1385]:
+                                  - generic [ref=f1e1387]: FRGUTIERRE
+                                  - generic [ref=f1e1389]:
+                                    - generic [ref=f1e1391]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1394]: AMBULATORIA-ADMISION
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1395] [cursor=pointer]:
+                            - generic [ref=f1e1396]:
+                              - generic [ref=f1e1400]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1401]:
+                                - generic [ref=f1e1402]:
+                                  - generic [ref=f1e1404]: FRGUTIERRE
+                                  - generic [ref=f1e1406]:
+                                    - generic [ref=f1e1408]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1411]: AMBULATORIA-FARMACIA
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1412] [cursor=pointer]:
+                            - generic [ref=f1e1413]:
+                              - generic [ref=f1e1417]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1418]:
+                                - generic [ref=f1e1419]:
+                                  - generic [ref=f1e1421]: FRGUTIERRE
+                                  - generic [ref=f1e1423]:
+                                    - generic [ref=f1e1425]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1428]: AMBULATORIA-ADMISION
+                          - listitem "Julio Barbaro ADMIN AMBULATORIA-IMÁGENES 01-2021 Object Status Entry successfully validated" [ref=f1e1429] [cursor=pointer]:
+                            - generic [ref=f1e1430]:
+                              - generic [ref=f1e1434]: Julio Barbaro
+                              - generic [ref=f1e1435]:
+                                - generic [ref=f1e1436]:
+                                  - generic [ref=f1e1438]: ADMIN
+                                  - generic [ref=f1e1440]:
+                                    - generic [ref=f1e1442]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1445]: AMBULATORIA-IMÁGENES
+                          - listitem "Julio Barbaro ADMIN AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1446] [cursor=pointer]:
+                            - generic [ref=f1e1447]:
+                              - generic [ref=f1e1451]: Julio Barbaro
+                              - generic [ref=f1e1452]:
+                                - generic [ref=f1e1453]:
+                                  - generic [ref=f1e1455]: ADMIN
+                                  - generic [ref=f1e1457]:
+                                    - generic [ref=f1e1459]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1462]: AMBULATORIA-FARMACIA
+                          - listitem "Julio Barbaro ADMIN URGENCIAS-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1463] [cursor=pointer]:
+                            - generic [ref=f1e1464]:
+                              - generic [ref=f1e1468]: Julio Barbaro
+                              - generic [ref=f1e1469]:
+                                - generic [ref=f1e1470]:
+                                  - generic [ref=f1e1472]: ADMIN
+                                  - generic [ref=f1e1474]:
+                                    - generic [ref=f1e1476]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1479]: URGENCIAS-ADMISION
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1480] [cursor=pointer]:
+                            - generic [ref=f1e1481]:
+                              - generic [ref=f1e1485]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1486]:
+                                - generic [ref=f1e1487]:
+                                  - generic [ref=f1e1489]: FRGUTIERRE
+                                  - generic [ref=f1e1491]:
+                                    - generic [ref=f1e1493]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1496]: AMBULATORIA-FARMACIA
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1497] [cursor=pointer]:
+                            - generic [ref=f1e1498]:
+                              - generic [ref=f1e1502]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1503]:
+                                - generic [ref=f1e1504]:
+                                  - generic [ref=f1e1506]: FRGUTIERRE
+                                  - generic [ref=f1e1508]:
+                                    - generic [ref=f1e1510]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1513]: AMBULATORIA-ADMISION
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1514] [cursor=pointer]:
+                            - generic [ref=f1e1515]:
+                              - generic [ref=f1e1519]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1520]:
+                                - generic [ref=f1e1521]:
+                                  - generic [ref=f1e1523]: FRGUTIERRE
+                                  - generic [ref=f1e1525]:
+                                    - generic [ref=f1e1527]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1530]: AMBULATORIA-FARMACIA
+                          - listitem "Julio Barbaro ADMIN URGENCIAS-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1531] [cursor=pointer]:
+                            - generic [ref=f1e1532]:
+                              - generic [ref=f1e1536]: Julio Barbaro
+                              - generic [ref=f1e1537]:
+                                - generic [ref=f1e1538]:
+                                  - generic [ref=f1e1540]: ADMIN
+                                  - generic [ref=f1e1542]:
+                                    - generic [ref=f1e1544]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1547]: URGENCIAS-ADMISION
+                          - listitem "CARLOS RAMOS ESCALANTE CRAMOS AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1548] [cursor=pointer]:
+                            - generic [ref=f1e1549]:
+                              - generic [ref=f1e1553]: CARLOS RAMOS ESCALANTE
+                              - generic [ref=f1e1554]:
+                                - generic [ref=f1e1555]:
+                                  - generic [ref=f1e1557]: CRAMOS
+                                  - generic [ref=f1e1559]:
+                                    - generic [ref=f1e1561]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1564]: AMBULATORIA-FARMACIA
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1565] [cursor=pointer]:
+                            - generic [ref=f1e1566]:
+                              - generic [ref=f1e1570]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1571]:
+                                - generic [ref=f1e1572]:
+                                  - generic [ref=f1e1574]: FRGUTIERRE
+                                  - generic [ref=f1e1576]:
+                                    - generic [ref=f1e1578]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1581]: AMBULATORIA-ADMISION
+                          - listitem "CARLOS RAMOS ESCALANTE CRAMOS AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1582] [cursor=pointer]:
+                            - generic [ref=f1e1583]:
+                              - generic [ref=f1e1587]: CARLOS RAMOS ESCALANTE
+                              - generic [ref=f1e1588]:
+                                - generic [ref=f1e1589]:
+                                  - generic [ref=f1e1591]: CRAMOS
+                                  - generic [ref=f1e1593]:
+                                    - generic [ref=f1e1595]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1598]: AMBULATORIA-FARMACIA
+                          - listitem "FRANCIS GUTIERREZ SANCHEZ FRGUTIERRE AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1599] [cursor=pointer]:
+                            - generic [ref=f1e1600]:
+                              - generic [ref=f1e1604]: FRANCIS GUTIERREZ SANCHEZ
+                              - generic [ref=f1e1605]:
+                                - generic [ref=f1e1606]:
+                                  - generic [ref=f1e1608]: FRGUTIERRE
+                                  - generic [ref=f1e1610]:
+                                    - generic [ref=f1e1612]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1615]: AMBULATORIA-ADMISION
+                          - listitem "Julio Barbaro ADMIN URGENCIAS-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1616] [cursor=pointer]:
+                            - generic [ref=f1e1617]:
+                              - generic [ref=f1e1621]: Julio Barbaro
+                              - generic [ref=f1e1622]:
+                                - generic [ref=f1e1623]:
+                                  - generic [ref=f1e1625]: ADMIN
+                                  - generic [ref=f1e1627]:
+                                    - generic [ref=f1e1629]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1632]: URGENCIAS-ADMISION
+                          - listitem "CINTHIA CUYA CCUYA1 AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1633] [cursor=pointer]:
+                            - generic [ref=f1e1634]:
+                              - generic [ref=f1e1638]: CINTHIA CUYA
+                              - generic [ref=f1e1639]:
+                                - generic [ref=f1e1640]:
+                                  - generic [ref=f1e1642]: CCUYA1
+                                  - generic [ref=f1e1644]:
+                                    - generic [ref=f1e1646]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1649]: AMBULATORIA-FARMACIA
+                          - listitem "CINTHIA CUYA CCUYA1 AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1650] [cursor=pointer]:
+                            - generic [ref=f1e1651]:
+                              - generic [ref=f1e1655]: CINTHIA CUYA
+                              - generic [ref=f1e1656]:
+                                - generic [ref=f1e1657]:
+                                  - generic [ref=f1e1659]: CCUYA1
+                                  - generic [ref=f1e1661]:
+                                    - generic [ref=f1e1663]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1666]: AMBULATORIA-ADMISION
+                          - listitem "CINTHYA ZAPATA CZAPATA1 AMBULATORIA-ADMISION 01-2021 Object Status Entry successfully validated" [ref=f1e1667] [cursor=pointer]:
+                            - generic [ref=f1e1668]:
+                              - generic [ref=f1e1672]: CINTHYA ZAPATA
+                              - generic [ref=f1e1673]:
+                                - generic [ref=f1e1674]:
+                                  - generic [ref=f1e1676]: CZAPATA1
+                                  - generic [ref=f1e1678]:
+                                    - generic [ref=f1e1680]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1683]: AMBULATORIA-ADMISION
+                          - listitem "KAREN MARIETTA MACO CHONATE PRUEBASCAJASCP AREA 1 01-2021 Object Status Entry successfully validated" [ref=f1e1684] [cursor=pointer]:
+                            - generic [ref=f1e1685]:
+                              - generic [ref=f1e1689]: KAREN MARIETTA MACO CHONATE
+                              - generic [ref=f1e1690]:
+                                - generic [ref=f1e1691]:
+                                  - generic [ref=f1e1693]: PRUEBASCAJASCP
+                                  - generic [ref=f1e1695]:
+                                    - generic [ref=f1e1697]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1700]: AREA 1
+                          - listitem "AILYN HERRERA PRUEBAARQUEO AMBULATORIA-FARMACIA 01-2021 Object Status Entry successfully validated" [ref=f1e1701] [cursor=pointer]:
+                            - generic [ref=f1e1702]:
+                              - generic [ref=f1e1706]: AILYN HERRERA
+                              - generic [ref=f1e1707]:
+                                - generic [ref=f1e1708]:
+                                  - generic [ref=f1e1710]: PRUEBAARQUEO
+                                  - generic [ref=f1e1712]:
+                                    - generic [ref=f1e1714]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1717]: AMBULATORIA-FARMACIA
+                          - listitem "AILYN HERRERA PRUEBAARQUEO AREA 1 01-2021 Object Status Entry successfully validated" [ref=f1e1718] [cursor=pointer]:
+                            - generic [ref=f1e1719]:
+                              - generic [ref=f1e1723]: AILYN HERRERA
+                              - generic [ref=f1e1724]:
+                                - generic [ref=f1e1725]:
+                                  - generic [ref=f1e1727]: PRUEBAARQUEO
+                                  - generic [ref=f1e1729]:
+                                    - generic [ref=f1e1731]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1734]: AREA 1
+                          - listitem "PRUEBA NOMBRE TI APELLIDO EARAUCO AMBULATORIA-LABORATORIO 01-2021 Object Status Entry successfully validated" [ref=f1e1735] [cursor=pointer]:
+                            - generic [ref=f1e1736]:
+                              - generic [ref=f1e1740]: PRUEBA NOMBRE TI APELLIDO
+                              - generic [ref=f1e1741]:
+                                - generic [ref=f1e1742]:
+                                  - generic [ref=f1e1744]: EARAUCO
+                                  - generic [ref=f1e1746]:
+                                    - generic [ref=f1e1748]: 01-2021
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1751]: AMBULATORIA-LABORATORIO
+                          - listitem "Renzo Aaron Ramos Guillen RRAMOS AMBULATORIA-FARMACIA 01-2020 Object Status Entry successfully validated" [ref=f1e1752] [cursor=pointer]:
+                            - generic [ref=f1e1753]:
+                              - generic [ref=f1e1757]: Renzo Aaron Ramos Guillen
+                              - generic [ref=f1e1758]:
+                                - generic [ref=f1e1759]:
+                                  - generic [ref=f1e1761]: RRAMOS
+                                  - generic [ref=f1e1763]:
+                                    - generic [ref=f1e1765]: 01-2020
+                                    - generic: Object Status
+                                    - generic: Entry successfully validated
+                                - generic [ref=f1e1768]: AMBULATORIA-FARMACIA
+                - contentinfo [ref=f1e1770]:
+                  - toolbar "Footer actions" [ref=f1e1771]:
+                    - button "Eliminar Supervisor" [ref=f1e1773] [cursor=pointer]:
+                      - generic [ref=f1e1775]: 
+                    - button "Agregar Supervisor" [ref=f1e1776] [cursor=pointer]:
+                      - generic [ref=f1e1778]: 
+                    - button "Exportar Excel" [ref=f1e1779] [cursor=pointer]:
+                      - generic [ref=f1e1781]: 
+              - generic [ref=f1e1789]:
+                - generic [ref=f1e1790]: 
+                - generic [ref=f1e1791]: Horario
+                - generic [ref=f1e1792]: Asignación Supervisor
     - contentinfo
 ```
