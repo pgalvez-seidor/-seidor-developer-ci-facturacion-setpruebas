@@ -13,8 +13,8 @@ const rootDir = path.resolve(__dirname, '..');
 
 app.use(cors());
 app.use(express.json());
-// Servir imágenes de evidencia
-app.use('/evidence', express.static(path.join(rootDir, 'evidence')));
+// Servir imágenes de evidencia y directorios anidados
+app.use('/evidence', express.static(path.join(rootDir, 'evidence'), { fallthrough: true }));
 
 // Utilidad para ejecutar comandos
 const runCmd = (cmd) => {
@@ -265,6 +265,12 @@ app.post('/api/run-batch', async (req, res) => {
                 const { taskId, config, file } = task;
                 const isHeadless = config.headless !== false;
                 
+                // Generar carpeta de evidencia aislada
+                const timestamp = new Date().toISOString().replace(/T/, '-').replace(/:/g, '').substring(0, 13);
+                const runDirName = `run-${timestamp}-${taskId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+                const runDir = path.join(rootDir, 'evidence', runDirName);
+                if (!fs.existsSync(runDir)) fs.mkdirSync(runDir, { recursive: true });
+
                 sendLog(taskId, 'log', `Iniciando tarea ${taskId}...`);
                 
                 let preId = null;
@@ -280,7 +286,8 @@ app.post('/api/run-batch', async (req, res) => {
                 
                 const testEnv = { 
                     ...process.env, 
-                    TEST_PARAMS: JSON.stringify(config)
+                    TEST_PARAMS: JSON.stringify(config),
+                    EVIDENCE_DIR: runDir
                 };
                 if (preId) testEnv.PREFACTURA_ID = preId;
 
@@ -300,12 +307,24 @@ app.post('/api/run-batch', async (req, res) => {
                         sendLog(taskId, 'result', 'Documentos generados', match[1]);
                     }
 
-                    // Extraer Ruta del PDF si el script avisa su culminación
+                    // Extraer Error de Negocio para globo
+                    const errorNegocioMatch = text.match(/❌ Error de Negocio Detectado:\s*(.+)/);
+                    if (errorNegocioMatch) {
+                        // Enviar tipo 'business_error'
+                        sendLog(taskId, 'business_error', errorNegocioMatch[1]);
+                    }
+
+                    // Extraer Ruta del PDF
                     const pdfMatch = text.match(/✅ PDF Generado:\s*(.+)/);
                     if (pdfMatch) {
-                        const arrPath = pdfMatch[1].split(/[\\/]/);
-                        const fileName = arrPath[arrPath.length - 1]; // "Reporte_Tecnico_123.pdf"
-                        sendLog(taskId, 'pdf', 'Reporte PDF', `/evidence/${fileName}`);
+                        const absPath = pdfMatch[1].trim();
+                        const idx = absPath.indexOf('/evidence/');
+                        if (idx !== -1) {
+                            sendLog(taskId, 'pdf', 'Reporte PDF', absPath.substring(idx));
+                        } else {
+                            const arrPath = absPath.split(/[\\/]/);
+                            sendLog(taskId, 'pdf', 'Reporte PDF', `/evidence/${arrPath.pop()}`);
+                        }
                     }
                 });
                 workerProcess.stderr.on('data', (data) => {
@@ -331,6 +350,30 @@ app.post('/api/run-batch', async (req, res) => {
     } catch(error) {
         console.error(error);
         res.end();
+    }
+});
+
+// 4.6. Abrir PDF usando visor Nativo (macOS/Windows) para saltar bloqueo Chrome
+app.post('/api/open-pdf', async (req, res) => {
+    let { pdfUrl } = req.body;
+    if (!pdfUrl) return res.status(400).json({ error: 'Falta pdfUrl' });
+    try {
+        pdfUrl = pdfUrl.trim();
+        // pdfUrl viene como /evidence/run-202X-XX/Reporte.pdf
+        const relativeUrl = pdfUrl.startsWith('/evidence') ? pdfUrl.replace('/evidence', 'evidence') : pdfUrl;
+        const absolutePath = path.join(rootDir, relativeUrl);
+        
+        console.log(`[OPEN-PDF] Intento de abrir ruta absoluta nativa: ${absolutePath}`);
+
+        if (fs.existsSync(absolutePath)) {
+            const openCommand = /^win/.test(process.platform) ? 'start' : (process.platform === 'darwin' ? 'open' : 'xdg-open');
+            await runCmd(`${openCommand} "${absolutePath}"`);
+            res.json({ success: true, message: 'Abierto en el visor de sistema' });
+        } else {
+            res.status(404).json({ error: 'El archivo PDF no se encontró físicamente en el disco' });
+        }
+    } catch (e) {
+        res.status(500).json({ error: e.toString() });
     }
 });
 
