@@ -104,32 +104,38 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
 
         // 3. FILTRAR EN PANEL IZQUIERDO
         logStep('filtrar-lista', 'running');
-        console.log(`🔍 Filtrando Área: ${testConfig.area}, Período: Febrero, Sup: ${env.user.toUpperCase()}`);
+        console.log(`🔍 Filtrando Área: ${testConfig.area}, Período: ${testConfig.periodo}, Sup: ${env.user.toUpperCase()}`);
         
         // Área: Primer dropdown/combobox disponible en el panel de filtros
         const areaDropdown = await find('input[placeholder*="rea"], div[title*="Área"], span:has-text("Seleccione Área"), .sapMSlt, .sapMComboBox', 3000);
         await areaDropdown.click({ force: true });
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(500);
         // Clic en la opción AMBULATORIA-ADMISION
-        await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}"), div:has-text("${testConfig.area}")`, 2000);
+        await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}"), div:has-text("${testConfig.area}")`, 3000);
         
+        // ESPERAR DATOS MAESTROS (Busy Indicator) ante el cambio de área
+        console.log("⏳ Esperando carga de datos maestros para el área seleccionada...");
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'visible', timeout: 5000 }).catch(() => {});
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 15000 }).catch(() => {});
+        await page.waitForTimeout(1000);
+
         // Período: Input interactivo después del área
         const periodoInput = await find('input[placeholder*="eríodo"], input[placeholder*="eriod"], input.sapMInputBaseInner:not([readonly])', 3000);
         await periodoInput.click({ force: true });
-        await page.waitForTimeout(100);
         await periodoInput.fill(testConfig.periodo);
         await page.keyboard.press('Tab');
-        await page.waitForTimeout(200);
+        await page.waitForTimeout(500);
         
         // Supervisor (Usuario logueado)
         logStep('filtrar-supervisor', 'running');
         const supervisorInput = await find('input[placeholder*="upervisor" i]', 3000);
         await supervisorInput.click({ force: true });
         await supervisorInput.fill(env.user.toUpperCase());
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(500);
         
         // Clic en Buscar
-        await tap('button[id*="buscar", i], button[title*="Buscar", i], button:has-text("Buscar"), .sapMSearchFieldSearch', 3000);
+        console.log("🔍 Clic en la lupa de búsqueda...");
+        await tap('button[id*="buscar", i], button[title*="Buscar", i], button:has-text("Buscar"), .sapMSearchFieldSearch', 5000);
         
         // Esperar bloqueador de UI (sapMBusyIndicator)
         await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'visible', timeout: 5000 }).catch(() => {});
