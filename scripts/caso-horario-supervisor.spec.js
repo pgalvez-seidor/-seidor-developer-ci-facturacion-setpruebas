@@ -104,45 +104,47 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
 
         // 3. FILTRAR EN PANEL IZQUIERDO
         logStep('filtrar-lista', 'running');
-        console.log(`🔍 Secuencia de Filtros: Área -> Periodo (02-2026) -> Supervisor -> Lupa`);
+        console.log(`🔍 Secuencia: Área -> Periodo -> Supervisor -> LUPA (x2)`);
         
-        // Área: Selección inicial
+        // Área
         const areaDropdown = await find('input[placeholder*="rea"], div[title*="Área"], span:has-text("Seleccione Área"), .sapMSlt, .sapMComboBox', 5000);
         await areaDropdown.click({ force: true });
         await page.waitForTimeout(500);
         await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}"), div:has-text("${testConfig.area}")`, 3000);
         
-        // ESPERAR DATOS MAESTROS
-        console.log("⏳ Esperando Busy Indicator tras Área...");
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'visible', timeout: 5000 }).catch(() => {});
+        // EsperarBusy
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'visible', timeout: 3000 }).catch(() => {});
         await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 15000 }).catch(() => {});
         await page.waitForTimeout(1000);
 
-        // Período: 02-2026 con ENTER para forzar actualización de modelo SAP
-        console.log(`📅 Ingresando Periodo: ${testConfig.periodo}`);
+        // Período: 02-2026
+        console.log(`📅 Periodo: ${testConfig.periodo}`);
         const periodoInput = await find('input[placeholder*="eríodo"], input[placeholder*="eriod"], input.sapMInputBaseInner:not([readonly])', 3000);
         await periodoInput.click({ force: true });
-        await periodoInput.fill(""); // Limpiar previo
         await periodoInput.fill(testConfig.periodo);
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(1000);
+        await page.keyboard.press('Tab');
+        await page.waitForTimeout(800);
         
-        // Supervisor: PGALVEZ3 con ENTER
+        // Supervisor: PGALVEZ3 (SIN ENTER para no abrir popup)
         logStep('filtrar-supervisor', 'running');
-        console.log(`👤 Ingresando Supervisor: ${env.user.toUpperCase()}`);
         const supervisorInput = await find('input[placeholder*="upervisor" i]', 3000);
         await supervisorInput.click({ force: true });
         await supervisorInput.fill("");
         await supervisorInput.fill(env.user.toUpperCase());
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(500);
         
-        // Clic en Buscar (Lupa)
-        console.log("🔍 Ejecutando búsqueda (Lupa)...");
-        await tap('button[id*="buscar", i], button[title*="Buscar", i], button:has-text("Buscar"), .sapMSearchFieldSearch', 5000);
+        // Clic en Buscar (Lupa de la derecha)
+        const selectorLupa = 'button[id$="search"], button[title*="Buscar"], .sapMSearchFieldSearch';
+        console.log("🔍 Clic en Lupa...");
+        await tap(selectorLupa, 5000);
+        await page.waitForTimeout(1500);
+
+        // "Siempre vuelve a presionar la lupa"
+        console.log("🔍 Re-presionando Lupa para asegurar...");
+        await tap(selectorLupa, 3000).catch(() => {});
         
         // Esperar resultados
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'visible', timeout: 5000 }).catch(() => {});
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'visible', timeout: 3000 }).catch(() => {});
         await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 15000 }).catch(() => {});
         await page.waitForTimeout(2000); 
         await shot('hs_02_lista_filtrada');
