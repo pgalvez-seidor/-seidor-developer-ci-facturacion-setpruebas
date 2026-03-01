@@ -422,12 +422,16 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
             } catch (e) {}
         }
         
-        if (!clickedAny) {
-            // Un escape más fuerte si no reaccionó a botones
-            await page.keyboard.press('Escape');
-        }
         await page.waitForTimeout(600);
     }
+
+    // Asegurarse de cerrar diálogos de SAP antes de ir a documentos
+    console.log("🧹 Limpiando overlays finales...");
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(1000);
+    const closeBtn = page.locator('button:has-text("Cerrar"), button:has-text("OK")').first();
+    if (await closeBtn.isVisible({ timeout: 500 }).catch(()=>false)) await closeBtn.click().catch(()=>{});
+    await page.waitForTimeout(1500);
 
     // Dar un tiempo extra y asegurarse que desaparezca la caparazón de overlays
     await page.waitForTimeout(2000);
@@ -444,27 +448,26 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     console.log("📋 Verificando DOCUMENTOS...");
     activeFrame = null;
 
-    await (await find('[role="tab"]:has-text("DOCUMENTOS"), [id*="DOCUMENTOS"]', 8000)).click({ force: true });
-    await page.waitForTimeout(600);
+    await (await find('[role="tab"]:has-text("DOCUMENTOS"), [id*="DOCUMENTOS"]', 10000)).click({ force: true });
+    await page.waitForTimeout(2500); // Esperar renderizado de lista
 
     // Seleccionar primer doc emitido y tomar la captura final
-    const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 5000).catch(() => null);
+    const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 8000).catch(() => null);
     if (firstDoc) {
         await firstDoc.click({ force: true });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(1500); // Esperar carga de detalle a la derecha
         const text = await firstDoc.textContent() || "";
-        const docMatch = text.match(/[BF]\\d{3}-\\d+/);
+        const docMatch = text.match(/[BF]\d{3}-\d+/);
         if (docMatch) docExtracted = docMatch[0];
         else docExtracted = text.substring(0, 25).trim();
     }
 
-    console.log(`\\[RESULT\\] Prefactura: ${activeId} | Doc: ${docExtracted}`);
+    console.log(`[RESULT] Prefactura: ${activeId} | Doc: ${docExtracted}`);
 
     logStep('verificar-documentos', 'ok');
     await shot('comprobante_emitido');
 
     // =======================
-    // RESULTADO FINAL
     // =======================
     } catch (error) {
         testStatus = "❌ FALLIDO";
@@ -511,48 +514,83 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         // GENERAR PDF DE REPORTE TÉCNICO
         // =========================================================
         try {
-            console.log("📄 Generando PDF con evidencias...");
+            console.log("📄 Generando PDF con evidencias (Versión Elegante)...");
             const { chromium } = require('@playwright/test');
-            // Lanzamos un browser headless temporal solo para imprimir el documento
             const pdfBrowser = await chromium.launch({ headless: true });
             const pdfPage = await pdfBrowser.newPage();
             
             let html = `
-            <html>
-                <head>
-                    <style>
-                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
-                        h1 { color: #005587; border-bottom: 2px solid #005587; padding-bottom: 10px; }
-                        .step { margin-bottom: 40px; page-break-inside: avoid; }
-                        img { max-width: 100%; border: 1px solid #ccc; border-radius: 4px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); margin-top: 10px; }
-                        .meta { background: #f8fafc; padding: 15px; border-radius: 5px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
-                        .error-box { background: #fee2e2; border: 1px solid #ef4444; padding: 15px; border-radius: 5px; color: #b91c1c; margin-bottom: 30px; }
-                    </style>
-                </head>
-                <body>
-                    <h1>Reporte Técnico - SetPruebas CI</h1>
-                    <h2>Configuración de Escenario Lote (Batch)</h2>
-                    <div class="meta">
-                        <p><strong>ID Pre-Factura:</strong> ${activeId}</p>
-                        <p><strong>Documento Generado:</strong> ${docExtracted || "No detectado"}</p>
-                        <p><strong>Medios de Pago:</strong> ${(testConfig.pagos||[]).map(p=>p.tipo).join(' + ')}</p>
-                        <p><strong>Medio de Vuelto (Si aplica):</strong> ${testConfig.medioVuelto}</p>
-                        <hr style="border: 0; border-top: 1px dashed #ccc; margin: 10px 0;">
-                        <p><strong>Duración:</strong> ${dur} segundos | <strong>Fecha:</strong> ${new Date().toLocaleString('es-PE')}</p>
-                        <p><strong>Estado:</strong> ${testStatus}</p>
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+                    body { font-family: 'Inter', 'Segoe UI', sans-serif; padding: 50px; color: #1e293b; background: #fff; line-height: 1.5; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; }
+                    .header-left h1 { margin: 0; color: #0f172a; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
+                    .header-right { text-align: right; color: #64748b; font-size: 12px; }
+                    
+                    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+                    .meta-item { background: #f8fafc; padding: 12px 16px; border-radius: 6px; border: 1px solid #e2e8f0; }
+                    .meta-item label { display: block; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+                    .meta-item span { font-size: 14px; font-weight: 600; color: #0f172a; }
+
+                    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+                    .status-success { background: #dcfce7; color: #166534; }
+                    .status-failed { background: #fee2e2; color: #991b1b; }
+
+                    .section-title { font-size: 18px; color: #334155; border-left: 4px solid #3b82f6; padding-left: 12px; margin: 40px 0 20px 0; font-weight: 700; }
+                    
+                    .evidence-card { margin-bottom: 50px; page-break-inside: avoid; }
+                    .evidence-card h3 { font-size: 14px; color: #475569; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9; }
+                    .img-container { background: #f1f5f9; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+                    img { width: 100%; border-radius: 4px; display: block; }
+                    
+                    .error-summary { background: #fef2f2; border: 1px solid #ef4444; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+                    .error-summary h4 { color: #991b1b; margin: 0 0 10px 0; font-size: 16px; }
+                    .error-summary p { color: #b91c1c; margin: 0; font-family: monospace; font-size: 13px; }
+
+                    .footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="header-left">
+                        <h1>Reporte de Certificación</h1>
+                        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">Suite de Automatización - Facturador CI</p>
                     </div>
-                        <p><strong>Descripción:</strong> Flujo automatizado sin intervención manual que ingresa pagos múltiples y emite el documento electrónico.</p>
+                    <div class="header-right">
+                        <p>ID Ejecución: ${Date.now()}</p>
+                        <p>${new Date().toLocaleString('es-PE')}</p>
                     </div>
-                    ${testError ? `<div class="error-box"><strong>Error en ejecución:</strong> ${testError}</div>` : ''}
-                    <h2>Evidencias Fotográficas</h2>
+                </div>
+
+                <div class="meta-grid">
+                    <div class="meta-item"><label>Pre-Factura ID</label><span>${activeId}</span></div>
+                    <div class="meta-item"><label>Comprobante</label><span>${docExtracted || "Pendiente/Error"}</span></div>
+                    <div class="meta-item"><label>Estado Final</label>
+                        <span class="status-badge ${testStatus.includes('EXITO') ? 'status-success' : 'status-failed'}">${testStatus}</span>
+                    </div>
+                    <div class="meta-item"><label>Duración</label><span>${dur} segundos</span></div>
+                </div>
+
+                ${testError ? `
+                <div class="error-summary">
+                    <h4>🔴 Detalle de Interrupción</h4>
+                    <p>${testError}</p>
+                </div>
+                ` : ''}
+
+                <div class="section-title">EVIDENCIAS FOTOGRÁFICAS</div>
             `;
 
             const pics = [
-                { id: 'antes_de_cobrar', title: '1. Antes del Cobro (Detalle de pre-factura cargado)' },
-                { id: 'modal_efectivo', title: '2. Modal de Pago (Monto ingresado)' },
-                { id: 'post_pago', title: '3. Posterior al Pago (Efectivo registrado)' },
-                { id: 'comprobante_emitido', title: '4. Comprobante Emitido (Verificación en tab Documentos)' },
-                { id: 'error_flujo', title: '🔴 Error de Flujo (Captura de pantalla al fallar el test)' }
+                { id: 'antes_de_cobrar', title: '01. CARGA DE PRE-FACTURA' },
+                { id: 'modal_efectivo', title: '02. PROCESO DE PAGO' },
+                { id: 'post_pago', title: '03. REGISTRO DE TRANSACCIÓN' },
+                { id: 'comprobante_emitido', title: '04. VERIFICACIÓN EN TAB DOCUMENTOS' },
+                { id: 'error_flujo', title: '⚠️ CAPTURA DE ERROR / INCIDENCIA' }
             ];
 
             for (const p of pics) {
@@ -560,21 +598,28 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                 if (fs.existsSync(imgPath)) {
                     const base64 = fs.readFileSync(imgPath).toString('base64');
                     html += `
-                    <div class="step">
+                    <div class="evidence-card">
                         <h3>${p.title}</h3>
-                        <img src="data:image/png;base64,${base64}" />
+                        <div class="img-container">
+                            <img src="data:image/png;base64,${base64}" />
+                        </div>
                     </div>
                     `;
                 }
             }
             
-            html += `</body></html>`;
+            html += `
+                <div class="footer">
+                    Este documento es una evidencia generada automáticamente por el sistema de QA de Seidor/CI.<br>
+                    © 2026 Seidor - Todos los derechos reservados.
+                </div>
+            </body></html>`;
             
             await pdfPage.setContent(html, { waitUntil: 'networkidle' });
             const pdfPath = path.join(evidenceDir, `Reporte_Tecnico_${activeId}.pdf`);
-            await pdfPage.pdf({ path: pdfPath, format: 'A4', margin: { top: '20px', bottom: '20px' } });
+            await pdfPage.pdf({ path: pdfPath, format: 'A4', margin: { top: '0', bottom: '0' }, printBackground: true });
             await pdfBrowser.close();
-            console.log(`✅ PDF Generado: ${pdfPath}`);
+            console.log(`✅ PDF Generado (Elegante): ${pdfPath}`);
         } catch (err) {
             console.log("⚠️ No se pudo generar el PDF:", err.message);
         }

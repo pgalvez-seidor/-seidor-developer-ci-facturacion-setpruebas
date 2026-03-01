@@ -137,6 +137,7 @@ export default function App() {
   const [queue, setQueue] = useState([]);
   const [isBatchRunning, setIsBatchRunning] = useState(false);
   const [batchParallel, setBatchParallel] = useState(true);
+  const [globalPdf, setGlobalPdf] = useState(null);
 
   // Floating Balloons (Toasts)
   const [toasts, setToasts] = useState([]);
@@ -293,7 +294,8 @@ export default function App() {
     setQueue(q => q.filter(i => i.taskId !== id));
   };
   const clearBatch = () => {
-    if(!isBatchRunning) setQueue([]);
+    if(!isBatchRunning)    setQueue([]);
+    setGlobalPdf(null);
   };
 
   const runBatch = async () => {
@@ -382,6 +384,9 @@ export default function App() {
                 } else if (type === 'pdf') {
                     // docData contiene la ruta del PDF
                     newPdfUrl = docData || msg;
+                } else if (type === 'pdf_global') {
+                    setGlobalPdf(docData);
+                    addToast("¡Reporte Global de Lote generado con éxito!", "success");
                 }
 
                 return { ...t, progress: newProg, status: newSt, result: newRes, currentLog: newLog, pdfUrl: newPdfUrl };
@@ -596,17 +601,22 @@ export default function App() {
             </div>
 
             {queue.length > 0 && (
-                <div className="batch-footer">
-                   <div className="batch-controls">
-                      <label>
-                          <input type="checkbox" checked={batchParallel} onChange={e=>setBatchParallel(e.target.checked)} disabled={isBatchRunning}/> 
-                          Ejecutar en Paralelo
-                      </label>
-                   </div>
-                   <button className="btn-run-batch" onClick={runBatch} disabled={isBatchRunning || queue.every(q => q.status === 'done')}>
-                      {isBatchRunning ? '⏳ Procesando Lote...' : '▶ EJECUTAR TODOS'}
-                   </button>
-                </div>
+              <div className="batch-footer">
+                  <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
+                        <input type="checkbox" checked={batchParallel} onChange={(e) => setBatchParallel(e.target.checked)} disabled={isBatchRunning} />
+                        Ejecutar en Paralelo (Controlado)
+                    </label>
+                    {globalPdf && (
+                        <button className="btn-primary" onClick={() => handleOpenPdf(globalPdf)} style={{ background: '#0f172a', padding: '8px 16px' }}>
+                           📄 Ver Reporte Global de Lote
+                        </button>
+                    )}
+                  </div>
+                  <button className="btn-run" onClick={runBatch} disabled={isBatchRunning || queue.length === 0}>
+                      {isBatchRunning ? '⏳ Ejecutando...' : '▶ EJECUTAR TODOS'}
+                  </button>
+              </div>
             )}
           </div>
 
