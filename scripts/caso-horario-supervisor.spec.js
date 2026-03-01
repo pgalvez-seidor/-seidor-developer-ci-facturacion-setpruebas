@@ -170,7 +170,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             
             if (!detalleCargado || esVacio) {
                  console.log("⚠️ El detalle está vacío. Creando nueva asignación desde el pie de lista...");
-                 const btnFooterAdd = frameInputs.locator('.sapMPageFooter button, .sapMTB button').filter({ has: page.locator('[data-sap-ui-icon-content=""]') }).first();
+                 const btnFooterAdd = frameInputs.locator('.sapMPageFooter button, .sapMTB button').filter({ has: frameInputs.locator('[data-sap-ui-icon-content=""]') }).first();
                  await btnFooterAdd.click({ force: true });
                  await page.waitForTimeout(1500);
             }
