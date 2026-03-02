@@ -93,19 +93,33 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         }
         logStep('login', 'ok');
 
-        // 2. ABRIR APP
+        // 2. ABRIR APP con reintento inteligente
         logStep('abrir-app', 'running');
-        const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Horario Supervisor$/ }).first();
-        await tile.waitFor({ state: 'visible', timeout: 20000 });
-        await tile.click();
-        await page.waitForTimeout(4000);
+        let appLoaded = false;
+        for (let i = 1; i <= 5; i++) {
+            console.log(`🔄 Intento de carga de app Horario Supervisor ${i}/5...`);
+            const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Horario Supervisor$/ }).first();
+            if (await tile.isVisible({ timeout: 5000 }).catch(() => false)) {
+                await tile.click();
+                try {
+                    // Esperamos que el iframe principal aparezca
+                    await page.waitForSelector('iframe', { timeout: 10000 });
+                    appLoaded = true;
+                    break;
+                } catch (e) {
+                    console.log("⚠️ Iframe no cargó, reintentando...");
+                }
+            }
+        }
+        if (!appLoaded) throw new Error("La aplicación de Horario Supervisor no cargó correctamente.");
+        await page.waitForTimeout(1000);
         await shot('hs_01_app_inicial');
         logStep('abrir-app', 'ok');
 
         // 3. FILTRAR EN PANEL IZQUIERDO
         logStep('filtrar-lista', 'running');
         console.log(`🔍 Filtrando: Área -> ${testConfig.periodo} -> ${env.user.toUpperCase()} -> Buscar`);
-        
+
         // Área
         const areaField = await find('span:has-text("Seleccione Área"), input[placeholder*="rea" i]', 10000);
         await areaField.click({ force: true });
@@ -118,29 +132,29 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         await periodoInput.fill(testConfig.periodo);
         await page.keyboard.press('Enter');
         await page.waitForTimeout(2000);
-        
+
         // Supervisor
         const supervisorInput = await find('input[placeholder*="upervisor" i]', 3000);
         await supervisorInput.click({ force: true });
         await supervisorInput.fill("");
         await supervisorInput.fill(env.user.toUpperCase());
-        await page.keyboard.press('Escape'); 
+        await page.keyboard.press('Escape');
         await page.waitForTimeout(50);
-        
+
         // LUPA DE BÚSQUEDA DEL LISTADO
         console.log("🔍 Clic en Lupa de búsqueda...");
         // Usamos el ID exacto y title "Search" extraído del DOM real de este frame
         const btnLupa = await find('button[title="Search"], button[title="Buscar"]', 5000);
-        
+
         await btnLupa.click({ force: true });
         await page.waitForTimeout(1500);
 
         console.log("🔍 Re-presionando Lupa...");
-        await btnLupa.click({ force: true }).catch(() => {});
-        
+        await btnLupa.click({ force: true }).catch(() => { });
+
         // Espera Busy Final
-        await page.waitForSelector('.sapMBusyIndicator', { state: 'hidden', timeout: 10000 }).catch(() => {});
-        await page.waitForTimeout(2000); 
+        await page.waitForSelector('.sapMBusyIndicator', { state: 'hidden', timeout: 10000 }).catch(() => { });
+        await page.waitForTimeout(2000);
         await shot('hs_02_lista_filtrada');
         logStep('filtrar-lista', 'ok');
 
@@ -149,11 +163,11 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         const userPeriodoTexto = `${env.user.toUpperCase()}`;
         // Declarar frameInputs!
         let frameInputs = activeFrame ? activeFrame : page;
-        
+
         const listItem = frameInputs.locator(`.sapMList .sapMLIBContent, .sapMList [role="listitem"]`)
-                             .filter({ hasText: userPeriodoTexto })
-                             .first();
-        
+            .filter({ hasText: userPeriodoTexto })
+            .first();
+
         let supervisorExiste = false;
         try {
             await listItem.waitFor({ state: 'visible', timeout: 5000 });
@@ -161,63 +175,63 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         } catch {
             supervisorExiste = false;
         }
-        
+
         let necesitaCrear = false;
 
         if (supervisorExiste) {
             console.log("✅ El supervisor YA EXISTE para este período. Seleccionando de la lista...");
             await listItem.click({ timeout: 5000, force: true });
-            
+
             console.log("⏳ Esperando que cargue el panel de Horario...");
-            await frameInputs.locator('.sapMTitle:has-text("Horario"), .sapMPageTitle:has-text("Horario"), .sapMTable').first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-            
+            await frameInputs.locator('.sapMTitle:has-text("Horario"), .sapMPageTitle:has-text("Horario"), .sapMTable').first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => { });
+
             // Check for empty screen (No Data/MessagePage) by absence of table or presence of Asignación text
             const tieneTabla = await frameInputs.locator('.sapMTable').first().isVisible().catch(() => false);
             const textEmpty = await frameInputs.locator('text="Asignación Supervisor"').first().isVisible().catch(() => false);
             const esVacio = !tieneTabla || textEmpty;
-            
-            if (esVacio) {
-                 console.log("⚠️ El detalle está vacío.");
-                 necesitaCrear = true;
-            } else {
-                 await shot('hs_03_detalle_abierto');
-                 console.log("📝 Haciendo scroll al contenedor de la tabla...");
-                 await page.evaluate(() => {
-                     const scrollable = document.querySelector('[id$="--table-scroll"], .sapUiTableCtrlScr, .sapMScrollCont:last-child');
-                     if (scrollable) scrollable.scrollTop = scrollable.scrollHeight;
-                 }).catch(() => {});
-                 await page.waitForTimeout(50);
 
-                 const lastRowContent = await frameInputs.locator('.sapMTable tbody tr, [role="row"]').last().textContent({ timeout: 3000 }).catch(() => "");
-                 if (lastRowContent.includes(testConfig.fechaHoy)) {
-                     console.log(`✅ ¡Ya existe un horario activo para hoy (${testConfig.fechaHoy})!`);
-                     testStatus = '✅ EXITOSO (Ya existía)';
-                     return;
-                 }
-                 console.log(`📝 Procediendo a crear el horario para HOY (${testConfig.fechaHoy})...`);
+            if (esVacio) {
+                console.log("⚠️ El detalle está vacío.");
+                necesitaCrear = true;
+            } else {
+                await shot('hs_03_detalle_abierto');
+                console.log("📝 Haciendo scroll al contenedor de la tabla...");
+                await page.evaluate(() => {
+                    const scrollable = document.querySelector('[id$="--table-scroll"], .sapUiTableCtrlScr, .sapMScrollCont:last-child');
+                    if (scrollable) scrollable.scrollTop = scrollable.scrollHeight;
+                }).catch(() => { });
+                await page.waitForTimeout(50);
+
+                const lastRowContent = await frameInputs.locator('.sapMTable tbody tr, [role="row"]').last().textContent({ timeout: 3000 }).catch(() => "");
+                if (lastRowContent.includes(testConfig.fechaHoy)) {
+                    console.log(`✅ ¡Ya existe un horario activo para hoy (${testConfig.fechaHoy})!`);
+                    testStatus = '✅ EXITOSO (Ya existía)';
+                    return;
+                }
+                console.log(`📝 Procediendo a crear el horario para HOY (${testConfig.fechaHoy})...`);
             }
         } else {
             console.log("📝 Llenando formulario Agregar Asignación en el panel derecho...");
-            
+
             try {
                 console.log("   -> Seleccionando Área...");
                 const areaDropDer = frameInputs.locator('.sapMSplitContainerDetail .sapMComboBox, .sapMSplitContainerDetail .sapMSelect, .sapMSplitContainerDetail [role="combobox"]').first();
-                await areaDropDer.click({force: true, timeout: 5000});
+                await areaDropDer.click({ force: true, timeout: 5000 });
                 await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}")`, 5000);
                 await page.waitForTimeout(100);
-                
+
                 console.log("   -> Ingresando Supervisor...");
                 // Es el primer input vacío no-readonly (el de Sede es readonly)
                 const supInpDer = frameInputs.locator('.sapMSplitContainerDetail input:not([readonly])').first();
-                await supInpDer.click({force: true});
+                await supInpDer.click({ force: true });
                 await supInpDer.fill(env.user.toUpperCase());
                 await page.waitForTimeout(50);
-                await page.keyboard.press('Escape'); 
+                await page.keyboard.press('Escape');
                 await page.waitForTimeout(50);
-                
+
                 console.log("   -> Ingresando Período...");
                 const perInpDer = frameInputs.locator('.sapMSplitContainerDetail input[placeholder*="eríodo"], .sapMSplitContainerDetail input[placeholder*="eriod"], .sapMSplitContainerDetail input:not([readonly])').nth(1);
-                await perInpDer.click({force: true});
+                await perInpDer.click({ force: true });
                 await perInpDer.fill(testConfig.periodo);
                 await page.keyboard.press('Enter');
                 await page.waitForTimeout(100);
@@ -228,10 +242,10 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
                 await page.keyboard.press('Escape');
                 await page.waitForTimeout(100);
             }
-            
+
             await shot('hs_03_form_nuevo');
         }
-        
+
         logStep('seleccionar-supervisor', 'ok');
 
         // 6. AGREGAR DETALLE (+) DE UN DÍA
@@ -256,7 +270,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
                 dateInputs.push(input);
             }
         }
-        
+
         // Usualmente los dos últimos editables son de la nueva fila añadida
         if (dateInputs.length >= 2) {
             await dateInputs[dateInputs.length - 2].fill(testConfig.fechaHoy);
@@ -267,26 +281,26 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
 
         // Botón CHECK (✔️)
         const btnCheck = await frameInputs.locator('button[title*="Aceptar"], button[title*="Confirmar"], button[title*="Guardar"], .sapUiIcon[data-sap-ui-icon-content=""]').last();
-        if (await btnCheck.isVisible({timeout:2000}).catch(()=>false)) {
+        if (await btnCheck.isVisible({ timeout: 2000 }).catch(() => false)) {
             await btnCheck.click({ timeout: 5000, force: true });
         }
         await page.waitForTimeout(100);
 
         // Botón PERSONA (👤) para Habilitar el día
         const btnPersona = await frameInputs.locator('button[title*="Habilitar"], button[title*="Persona"], button[title*="habilitar"], .sapUiIcon[data-sap-ui-icon-content=""]').last();
-        if (await btnPersona.isVisible({timeout:3000}).catch(()=>false)) {
+        if (await btnPersona.isVisible({ timeout: 3000 }).catch(() => false)) {
             await btnPersona.click({ timeout: 5000, force: true });
             await page.waitForTimeout(1500);
             await shot('hs_05_popup_habilitar');
 
             // Popup > Seleccionar check
-            const filaPopup = frameInputs.locator('[role="dialog"], .sapMDialog').locator('.sapMLIBContent, [role="row"]').filter({hasText: testConfig.fechaHoy}).first();
-            if (await filaPopup.isVisible({timeout:2000})) {
+            const filaPopup = frameInputs.locator('[role="dialog"], .sapMDialog').locator('.sapMLIBContent, [role="row"]').filter({ hasText: testConfig.fechaHoy }).first();
+            if (await filaPopup.isVisible({ timeout: 2000 })) {
                 await filaPopup.locator('.sapMCb, [role="checkbox"]').click({ timeout: 5000, force: true });
             } else {
                 await tap('[role="dialog"] .sapMCb, [role="dialog"] [role="checkbox"]', 2000);
             }
-            
+
             await tap('[role="dialog"] button:has-text("OK"), [role="dialog"] button:has-text("Aceptar")', 3000);
             await page.waitForTimeout(100);
         }
@@ -304,7 +318,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         // Confirmación
         await tap('button:has-text("Sí"), button:has-text("Aceptar"), button:has-text("OK")', 3000);
         await page.waitForTimeout(2000);
-        
+
         await shot('hs_07_guardado_final');
         logStep('guardar', 'ok');
 
@@ -315,7 +329,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         console.error(`❌ Error Crítico: ${testError}`);
     } finally {
         const dur = ((Date.now() - startTime) / 1000).toFixed(2);
-        
+
         // Reporte PDF
         try {
             console.log('📄 Generando PDF de evidencia...');
@@ -328,7 +342,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             try {
                 const lp = path.join(process.cwd(), 'ui', 'public', 'seidor-logo.png');
                 logoBase64 = fs.readFileSync(lp).toString('base64');
-            } catch(e) {}
+            } catch (e) { }
 
             let html = `
             <!DOCTYPE html>
@@ -440,13 +454,13 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
                     <div>Página <span class="pageNumber"></span> de <span class="totalPages"></span></div>
                 </div>
             `;
-            
+
             await pdfPage.setContent(html, { waitUntil: 'networkidle' });
             const pdfPath = path.join(evidenceDir, `Reporte_HS_Diario_${Date.now()}.pdf`);
-            await pdfPage.pdf({ 
-                path: pdfPath, 
-                format: 'A4', 
-                printBackground: true, 
+            await pdfPage.pdf({
+                path: pdfPath,
+                format: 'A4',
+                printBackground: true,
                 displayHeaderFooter: true,
                 headerTemplate: headerTemplate,
                 footerTemplate: footerTemplate,

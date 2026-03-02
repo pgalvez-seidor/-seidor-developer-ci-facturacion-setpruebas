@@ -1,0 +1,53 @@
+{
+  "prefacturaId": "1393494273",
+  "steps": [
+    {
+      "step": "Iniciando sesión en Portal",
+      "status": "running",
+      "timestamp": "2026-03-02T15:18:52.726Z"
+    },
+    {
+      "step": "Iniciando sesión en Portal",
+      "status": "ok",
+      "timestamp": "2026-03-02T15:18:56.400Z"
+    },
+    {
+      "step": "Iniciando app Facturación",
+      "status": "running",
+      "timestamp": "2026-03-02T15:18:56.400Z"
+    },
+    {
+      "step": "Iniciando app Facturación",
+      "status": "ok",
+      "timestamp": "2026-03-02T15:19:00.969Z"
+    },
+    {
+      "step": "Buscando PRE-FACTURA emitida por API",
+      "status": "running",
+      "timestamp": "2026-03-02T15:19:00.969Z"
+    },
+    {
+      "step": "Buscando PRE-FACTURA emitida por API",
+      "status": "ok",
+      "timestamp": "2026-03-02T15:19:13.604Z"
+    },
+    {
+      "step": "Iniciando cobranza...",
+      "status": "running",
+      "timestamp": "2026-03-02T15:19:14.201Z"
+    },
+    {
+      "step": "Cobrando...",
+      "status": "running",
+      "timestamp": "2026-03-02T15:19:14.202Z"
+    },
+    {
+      "step": "Validando pago realizado",
+      "status": "running",
+      "timestamp": "2026-03-02T15:19:14.956Z"
+    }
+  ],
+  "duration": "30.39s",
+  "status": "❌ FALLIDO",
+  "error": "Cannot read properties of undefined (reading 'toLowerCase')"
+}

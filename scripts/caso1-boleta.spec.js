@@ -29,8 +29,8 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     const shot = async (name) => {
         await page.waitForTimeout(500); // Esperar que desaparezcan los busy indicators
         // Intentar esperar a que no haya loaders
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 300 }).catch(() => {});
-        
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 300 }).catch(() => { });
+
         const p = path.join(evidenceDir, `${name}.png`);
         await page.screenshot({ path: p, fullPage: true });
         console.log(`📸 ${name}.png`);
@@ -88,12 +88,12 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     // =========================================================
     page.on('dialog', async dialog => {
         console.log(`⚠️ Dialog interceptado [${dialog.type()}]: ${dialog.message()}`);
-        await dialog.accept().catch(() => {});
+        await dialog.accept().catch(() => { });
     });
 
     page.on('popup', async popup => {
         console.log(`⚠️ Popup de nueva ventana interceptado (ej: Print Preview). Cerrando...`);
-        await popup.close().catch(() => {});
+        await popup.close().catch(() => { });
     });
     let testStatus = "✅ EXITOSO";
     let testError = "";
@@ -102,141 +102,179 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     try {
         // =======================
         // PASO 1: Iniciando sesión en Portal
-    // =======================
-    logStep('Iniciando sesión en Portal', 'running');
-    await page.goto(env.url, { waitUntil: 'domcontentloaded' });
-    const loginField = page.locator('#j_username');
-    if (await loginField.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await loginField.fill(env.user);
-        await page.locator('#j_password').fill(env.pass);
-        await page.click('#logOnFormSubmit');
-    }
-    logStep('Iniciando sesión en Portal', 'ok');
-
-    // =======================
-    // PASO 2: Iniciando app Facturación
-    // =======================
-    logStep('Iniciando app Facturación', 'running');
-    const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Facturación$/ }).first();
-    await tile.waitFor({ state: 'visible', timeout: 20000 });
-    await tile.click();
-    await page.waitForSelector('iframe', { timeout: 15000 });
-    await page.waitForTimeout(200);
-    logStep('Iniciando app Facturación', 'ok');
-
-    // =======================
-    // PASO 3: Buscando PRE-FACTURA emitida por API
-    // =======================
-    logStep('Buscando PRE-FACTURA emitida por API', 'running');
-    
-    // VALIDACIÓN PROACTIVA DE ACCESO (REGLA DE NEGOCIO: FUERA DE HORARIO)
-    try {
-        const errorSel = '.sapMMessageBox, [role="alertdialog"], .sapMMessageToast, .sapMDialog:has(.sapUiIcon[data-sap-ui-icon-content=""])';
-        const dialogFastCheck = await find(errorSel, 50).catch(() => null);
-        if (dialogFastCheck) {
-            const txt = await dialogFastCheck.innerText();
-            if (txt && txt.toLowerCase().includes("fuera de horario")) {
-                throw new Error("UI Bloqueada: No se pudo completar la facturación porque el usuario no tiene horario.");
-            }
+        // =======================
+        logStep('Iniciando sesión en Portal', 'running');
+        await page.goto(env.url, { waitUntil: 'domcontentloaded' });
+        const loginField = page.locator('#j_username');
+        if (await loginField.isVisible({ timeout: 5000 }).catch(() => false)) {
+            await loginField.fill(env.user);
+            await page.locator('#j_password').fill(env.pass);
+            await page.click('#logOnFormSubmit');
         }
-    } catch(e) {
-        // Si el throw inicial es nuestro string custom, re-lanzarlo
-        if (e.message.includes("No se pudo completar la facturación")) throw e;
-    }
+        logStep('Iniciando sesión en Portal', 'ok');
 
-    await (await find('text="PRE"', 15000)).click({ force: true });
-    await page.waitForTimeout(800);
-
-    // =======================
-    // PASO 4: SELECCIONAR PRIMER ITEM (la pre-factura recién creada
-    // siempre está al tope — orden descendente por fecha/ID)
-    // =======================
-    console.log(`🔎 Seleccionando Pre-factura ${activeId}...`);
-
-    // Estrategia 1: primer listitem → verificar que el panel cargó con nuestro ID
-    let selected = false;
-    try {
-        const first = await find('[role="listitem"], li[class*="sapMLIB"]', 6000);
-        await first.click();
-        await page.waitForTimeout(600);
-        if (await find(`text="${activeId}"`, 3000).catch(() => null)) {
-            selected = true;
-            console.log("✅ Primer item seleccionado");
-        }
-    } catch { }
-
-    // Estrategia 2: buscar por texto del ID
-    if (!selected) {
-        for (const sel of [`[role="listitem"]:has-text("${activeId}")`, `li:has-text("${activeId}")`]) {
-            try {
-                await (await find(sel, 4000)).click();
-                await page.waitForTimeout(600);
-                selected = true;
-                console.log(`✅ Seleccionado con: ${sel}`);
-                break;
-            } catch { }
-        }
-    }
-
-    if (!selected) {
-        await shot('error-item-no-seleccionado');
-        throw new Error(`No se pudo seleccionar PRE-FACTURA ${activeId}`);
-    }
-    logStep('Buscando PRE-FACTURA emitida por API', 'ok');
-    await shot('antes_de_cobrar');
-
-    // =======================================================
-    // PASO 5: Iniciando cobranza...
-    // =======================================================
-    logStep('Iniciando cobranza...', 'running');
-    console.log(`💳 Iniciando cobranza en ${testConfig.medioPago}...`);
-    activeFrame = null;
-
-    let metricStartTime = Date.now();
-
-    // Procesar array de pagos configurados (Mixtos, Efectivo, Tarjeta)
-    const pagos = testConfig.pagos || [];
-    if (pagos.length === 0) {
-        throw new Error("No se configuró ningún medio de pago.");
-    }
-
-    for (const pago of pagos) {
-        logStep('Cobrando...', 'running');
-        console.log(`💳 Agregando pago: ${pago.tipo} por S/ ${pago.monto || '(auto-completado)'}...`);
-        
-        if (pago.tipo === 'Efectivo') {
-            const btnEfectivo = await find('button:has-text("Efectivo")', 10000);
-            await btnEfectivo.click();
-            await page.waitForTimeout(50);
-
-            if (pago.monto) {
-                console.log(`🔄 Ingresando monto exacto/Vuelto para Efectivo: S/ ${pago.monto}`);
-                const inputMontoLoc = activeFrame ? 
-                                       activeFrame.locator('input[type="text"], input[type="number"]').first() : 
-                                       page.locator('input[type="text"]:visible, input[type="number"]:visible').first();
+        // =======================
+        // PASO 2: Iniciando app Facturación
+        // Reintento inteligente para carga de iframe
+        // =======================
+        logStep('Iniciando app Facturación', 'running');
+        let appLoaded = false;
+        for (let i = 1; i <= 5; i++) {
+            console.log(`🔄 Intento de carga de app ${i}/5...`);
+            const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Facturación$/ }).first();
+            if (await tile.isVisible({ timeout: 5000 }).catch(() => false)) {
+                await tile.click();
                 try {
-                    if (await inputMontoLoc.isVisible({ timeout: 2000 })) {
-                        await inputMontoLoc.click();
-                        await inputMontoLoc.fill(pago.monto.toString());
-                        await page.waitForTimeout(50);
-                    }
+                    // Esperamos que el iframe principal aparezca
+                    await page.waitForSelector('iframe', { timeout: 10000 });
+                    appLoaded = true;
+                    break;
                 } catch (e) {
-                    console.log("⚠️ No se pudo inyectar el monto de efectivo.");
+                    console.log("⚠️ Iframe no cargó, reintentando click...");
                 }
             }
-            await shot(`modal_efectivo`);
+        }
+        if (!appLoaded) throw new Error("La aplicación de Facturación no cargó correctamente.");
+        await page.waitForTimeout(500);
+        logStep('Iniciando app Facturación', 'ok');
 
-        } else if (pago.tipo === 'Tarjeta') {
-            const btnTarjeta = await find('button:has-text("Tarjeta")', 10000);
-            await btnTarjeta.click();
-            await page.waitForTimeout(50);
-            
-            // Navegar al tab Manual
-            const manualTab = activeFrame ? activeFrame.locator('div[role="tab"] bdi:has-text("Manual")').first() : page.locator('div[role="tab"] bdi:has-text("Manual")').first();
-            if (await manualTab.isVisible({timeout: 3000}).catch(()=>false)) {
-                await manualTab.click();
+        // =======================
+        // PASO 3: Buscando PRE-FACTURA emitida por API
+        // =======================
+        logStep('Buscando PRE-FACTURA emitida por API', 'running');
+
+        // VALIDACIÓN PROACTIVA DE ACCESO (REGLA DE NEGOCIO: FUERA DE HORARIO)
+        try {
+            const errorSel = '.sapMMessageBox, [role="alertdialog"], .sapMMessageToast, .sapMDialog:has(.sapUiIcon[data-sap-ui-icon-content=""])';
+            const dialogFastCheck = await find(errorSel, 50).catch(() => null);
+            if (dialogFastCheck) {
+                const txt = await dialogFastCheck.innerText();
+                if (txt && txt.toLowerCase().includes("fuera de horario")) {
+                    throw new Error("UI Bloqueada: No se pudo completar la facturación porque el usuario no tiene horario.");
+                }
+            }
+        } catch (e) {
+            // Si el throw inicial es nuestro string custom, re-lanzarlo
+            if (e.message.includes("No se pudo completar la facturación")) throw e;
+        }
+
+        await (await find('text="PRE"', 15000)).click({ force: true });
+        await page.waitForTimeout(800);
+
+        // =======================
+        // PASO 4: SELECCIONAR PRIMER ITEM (la pre-factura recién creada
+        // siempre está al tope — orden descendente por fecha/ID)
+        // =======================
+        console.log(`🔎 Seleccionando Pre-factura ${activeId}...`);
+
+        // Estrategia 1: primer listitem → verificar que el panel cargó con nuestro ID
+        let selected = false;
+        try {
+            const first = await find('[role="listitem"], li[class*="sapMLIB"]', 6000);
+            await first.click();
+            await page.waitForTimeout(600);
+            if (await find(`text="${activeId}"`, 3000).catch(() => null)) {
+                selected = true;
+                console.log("✅ Primer item seleccionado");
+            }
+        } catch { }
+
+        // Estrategia 2: buscar por texto del ID
+        if (!selected) {
+            for (const sel of [`[role="listitem"]:has-text("${activeId}")`, `li:has-text("${activeId}")`]) {
+                try {
+                    await (await find(sel, 4000)).click();
+                    await page.waitForTimeout(600);
+                    selected = true;
+                    console.log(`✅ Seleccionado con: ${sel}`);
+                    break;
+                } catch { }
+            }
+        }
+
+        if (!selected) {
+            await shot('error-item-no-seleccionado');
+            throw new Error(`No se pudo seleccionar PRE-FACTURA ${activeId}`);
+        }
+        logStep('Buscando PRE-FACTURA emitida por API', 'ok');
+        await shot('antes_de_cobrar');
+
+        // =======================================================
+        // PASO 5: Iniciando cobranza...
+        // =======================================================
+        logStep('Iniciando cobranza...', 'running');
+        console.log(`💳 Iniciando cobranza en ${testConfig.medioPago}...`);
+        activeFrame = null;
+
+        let metricStartTime = Date.now();
+
+        // Procesar array de pagos configurados (Mixtos, Efectivo, Tarjeta)
+        const pagos = testConfig.pagos || [];
+        if (pagos.length === 0) {
+            throw new Error("No se configuró ningún medio de pago.");
+        }
+
+        for (const pago of pagos) {
+            logStep('Cobrando...', 'running');
+            console.log(`💳 Agregando pago: ${pago.tipo} por S/ ${pago.monto || '(auto-completado)'}...`);
+
+            if (pago.tipo === 'Efectivo') {
+                let modalOpened = false;
+                for (let i = 1; i <= 5; i++) {
+                    console.log(`🔄 Intento apertura modal Efectivo ${i}/5...`);
+                    const btnEfectivo = await find('button:has-text("Efectivo")', 5000).catch(() => null);
+                    if (btnEfectivo) {
+                        await btnEfectivo.click();
+                        await page.waitForTimeout(1000); // Requerimiento: espera de 1s para carga
+                        // Validamos si abrió el modal (buscando input de monto o texto de pago)
+                        const modalCheck = await find('input[type="text"]:visible, input[type="number"]:visible, .sapMDialogTitle:has-text("Efectivo")', 1500).catch(() => null);
+                        if (modalCheck) { modalOpened = true; break; }
+                    }
+                }
+                if (!modalOpened) throw new Error("No se pudo abrir el modal de pago en Efectivo.");
                 await page.waitForTimeout(50);
-                
+
+                if (pago.monto) {
+                    console.log(`🔄 Ingresando monto exacto/Vuelto para Efectivo: S/ ${pago.monto}`);
+                    const inputMontoLoc = activeFrame ?
+                        activeFrame.locator('input[type="text"], input[type="number"]').first() :
+                        page.locator('input[type="text"]:visible, input[type="number"]:visible').first();
+                    try {
+                        if (await inputMontoLoc.isVisible({ timeout: 2000 })) {
+                            await inputMontoLoc.click();
+                            await inputMontoLoc.fill(pago.monto.toString());
+                            await page.waitForTimeout(50);
+                        }
+                    } catch (e) {
+                        console.log("⚠️ No se pudo inyectar el monto de efectivo.");
+                    }
+                }
+                await shot(`modal_efectivo`);
+
+            } else if (pago.tipo === 'Tarjeta') {
+                let modalOpened = false;
+                for (let i = 1; i <= 5; i++) {
+                    console.log(`🔄 Intento apertura modal Tarjeta ${i}/5...`);
+                    const btnTarjeta = await find('button:has-text("Tarjeta")', 5000).catch(() => null);
+                    if (btnTarjeta) {
+                        await btnTarjeta.click();
+                        await page.waitForTimeout(1000);
+                        const modalCheck = await find('div[role="tab"] bdi:has-text("Manual"), .sapMDialogTitle:has-text("Tarjeta")', 1500).catch(() => null);
+                        if (modalCheck) { modalOpened = true; break; }
+                    }
+                }
+                if (!modalOpened) throw new Error("No se pudo abrir el modal de pago con Tarjeta.");
+                await page.waitForTimeout(50);
+
+                // Navegar al tab Manual con reintento corto
+                const manualTab = activeFrame ? activeFrame.locator('div[role="tab"] bdi:has-text("Manual")').first() : page.locator('div[role="tab"] bdi:has-text("Manual")').first();
+                if (await manualTab.isVisible({ timeout: 3000 }).catch(() => false)) {
+                    await manualTab.click();
+                    await page.waitForTimeout(500);
+                } else {
+                    console.log("⚠️ Tab Manual no encontrado de inmediato, continuando...");
+                }
+
                 // Si la UI mandó flag de auto-generar datos:
                 if (pago.autoData) {
                     const idTransaccion = 'TRx' + Math.floor(Math.random() * 1000000);
@@ -250,250 +288,282 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                             await inputs.nth(count - 2).fill(idTransaccion); // penultimo: ID Transaccion?
                             await inputs.nth(count - 1).fill(digitos);       // ultimo: Digitos?
                         }
-                    } catch(e) {
+                    } catch (e) {
                         console.log("⚠️ Falló llenado manual de tarjeta.");
                     }
                 }
-            } else {
-                console.log("⚠️ Tab Manual no encontrado, continuando...");
-            }
 
-            if (pago.monto) {
-                // Inyectar monto en tarjeta
-                 const inputMontoLoc = activeFrame ? 
-                                       activeFrame.locator('input[type="text"], input[type="number"]').first() : 
-                                       page.locator('input[type="text"]:visible, input[type="number"]:visible').first();
-                try {
-                    if (await inputMontoLoc.isVisible({ timeout: 2000 })) {
-                        await inputMontoLoc.fill(pago.monto.toString());
-                    }
-                } catch(e){}
-            }
-            
-            await shot('modal_tarjeta_manual');
-        } else {
-            console.log(`⚠️ Medio de pago ${pago.tipo} desconocido.`);
-        }
-
-        // Si hay más de un pago (o si Fiori lo requiere manual), presionar "Añadir pago"
-        if (pagos.length > 1) {
-             const aniadirBtn = activeFrame ? activeFrame.locator('bdi:text-is("Añadir pago")') : page.locator('bdi:text-is("Añadir pago")');
-             if (await aniadirBtn.isVisible({timeout:2000}).catch(()=>false)) {
-                 await aniadirBtn.click();
-             }
-        }
-    }
-
-    // =======================================================
-    // PASO 6: Validando pago realizado
-    // =======================================================
-    logStep('Validando pago realizado', 'running');
-    console.log("💰 Validando pago realizado en el modal...");
-    if (!await tap('button:has-text("Pagar"), button:has-text("Procesar")', 6000)) {
-        await shot(`error-pagar-${testConfig.medioPago.toLowerCase()}`);
-        throw new Error(`Botón de confirmación no encontrado en modal ${testConfig.medioPago}`);
-    }
-    await page.waitForTimeout(50);
-    await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("SI")', 4000);
-    await page.waitForTimeout(1000); 
-    await tap('button:has-text("OK"), button:has-text("Aceptar")', 2000); 
-
-    logStep('Cobrando...', 'ok');
-    logStep('Validando pago realizado', 'ok');
-    logStep('Iniciando cobranza...', 'ok');
-    await shot('post_pago');
-
-    // =======================================================
-    // PASO 7: Emitiendo comprobante electrónico
-    // =======================================================
-    logStep('Emitiendo comprobante electrónico', 'running');
-    console.log(`📄 Emitiendo comprobante electrónico: ${testConfig.tipoComprobante}...`);
-    activeFrame = null;
-
-    await (await find('button:has-text("Generar")', 8000)).click({ force: true });
-    await page.waitForTimeout(1000);
-
-    // Seleccionamos la pestaña del comprobante solicitado desde la UI
-    const tabSelector = `[role="tab"]:has-text("${testConfig.tipoComprobante}"), .sapMTabStripItem:has-text("${testConfig.tipoComprobante}")`;
-    if (await tap(tabSelector, 2500)) {
-        console.log(`✅ Fila seleccionada para emisión: ${testConfig.tipoComprobante}`);
-        await page.waitForTimeout(800);
-    } else {
-        console.log(`⚠️ Pestaña específica '${testConfig.tipoComprobante}' no encontrada, asumiendo selección por defecto.`);
-    }
-
-    // Lógica para Factura (Ingresar RUC y esperar SUNAT)
-    if (testConfig.tipoComprobante === 'Factura') {
-        const ruc = testConfig.ruc || '20100047218';
-        console.log(`🆔 Ingresando RUC: ${ruc}`);
-        const rucInput = await find('input[placeholder*="Buscar"], .sapMSFInput, [type="search"]', 6000);
-        await rucInput.clear();
-        await rucInput.fill(ruc);
-        await page.keyboard.press('Enter');
-        console.log("⏳ Esperando respuesta de SUNAT...");
-        await page.waitForTimeout(4000); // Dar margen para la consulta externa
-
-        // Verificar si se cargaron los datos (Razón Social)
-        const infoCargada = await page.evaluate(() => {
-            // Buscamos inputs que no sean el placeholder de RUC y tengan un valor razonable
-            const inputs = Array.from(document.querySelectorAll('input.sapMInputBaseInner'));
-            return inputs.some(i => i.value.length > 5 && !i.getAttribute('placeholder')?.includes('RUC'));
-        }).catch(() => false);
-
-        if (!infoCargada) {
-            console.log("❌ No se detectaron datos cargados tras ingresar RUC.");
-            await shot('error-ruc-sin-datos');
-            throw new Error(`Los datos para el RUC ${ruc} no se cargaron automáticamente.`);
-        }
-        await shot('factura_datos_ruc');
-    }
-
-    // Modal opcional de simulación de error SUNAT if config checkbox was ticked
-    if (testConfig.forzarErrorSunat) {
-        console.log("🚨 SIMULACIÓN: Config 'forzarErrorSunat' detectada (Mock Error SUNAT).");
-        // No enviamos clic a imprimir, simplemente lanzamos el error para que caiga en el catch y pdf de rror
-        await page.waitForTimeout(100);
-        throw new Error("SUNAT_MOCK: Servicio de validación de comprobante no disponible o fuera de línea (Timeout Forzado).");
-    }
-
-    logStep('Emitiendo comprobante electrónico', 'running');
-    console.log("📄 Iniciando proceso de emisión final...");
-    let emissionStartTime = Date.now();
-
-    // Imprimir
-    if (!await tap('button:has-text("Imprimir")', 6000)) {
-        await shot('error-imprimir');
-        throw new Error('"Imprimir" no encontrado en modal emision');
-    }
-    await page.waitForTimeout(1000);
-
-    // Dialog "¿Seguro que desea imprimir el comprobante?" → "Yes"
-    await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("OK")', 2000);
-
-    // Esperar que el servidor procese la emisión y aparezcan los dialogs de resultado
-    // (ej: "Alerta: No hay conexión con la impresora / Se facturó correctamente")
-    // La emisión puede tardar varios segundos (API SUNAT, etc.) — aumentamos el tiempo
-    console.log("⏳ Esperando respuesta de emisión...");
-    await page.waitForTimeout(1000);
-
-    // Lógica de limpieza de popups
-    logStep('Cerrando popups de confirmación...', 'running');
-    console.log("🧹 Cerrando popups de confirmación...");
-    
-    let emissionEndTime = Date.now();
-    let emissionDuration = (emissionEndTime - emissionStartTime) / 1000;
-    console.log(`[METRIC] document_emission: ${emissionDuration.toFixed(2)}s`);
-    // Selectores más amplios, incluyendo los propios del iframe activo si lo hay
-    const possibleCloseButtons = [
-        'footer button:has-text("OK")',
-        'footer button:has-text("Yes")',
-        'footer button:has-text("Sí")',
-        '.sapMDialog footer button:has-text("Aceptar")',
-        '.sapMDialog footer button:has-text("Cerrar")',
-        'button[title="Cerrar"]',
-        'button:has-text("Cerrar")'
-    ];
-
-    for (let i = 0; i < 8; i++) {
-        let clickedAny = false;
-        
-        // Enfocamos el body de la página para asegurar que no perdimos el foco 
-        // por culpa de un popup del navegador o diálogo de impresión
-        await page.bringToFront();
-        await page.evaluate(() => {
-            if (document.activeElement && document.activeElement !== document.body) {
-                document.activeElement.blur();
-            }
-            window.focus();
-        }).catch(() => {});
-        
-        await page.locator('body').click({ position: { x: 10, y: 10 }, force: true }).catch(() => {});
-        // Multi-escape
-        await page.keyboard.press('Escape');
-        await page.waitForTimeout(10); // Changed from 300 to 10
-
-        // Si ya no hay diálogos visibles, salir antes
-        const hasDialog = await page.locator('.sapMDialog, .sapMMessageBox, .sapMMessageToast').isVisible().catch(() => false);
-        if (!hasDialog) break;
-
-        for (const selector of possibleCloseButtons) {
-            try {
-                // Buscar en el frame principal
-                let btn = page.locator(selector).first();
-                if (await btn.isVisible({ timeout: 100 }).catch(() => false)) {
-                    await btn.click({ force: true });
-                    await page.waitForTimeout(50);
-                    clickedAny = true;
-                    continue;
+                if (pago.monto) {
+                    // Inyectar monto en tarjeta
+                    const inputMontoLoc = activeFrame ?
+                        activeFrame.locator('input[type="text"], input[type="number"]').first() :
+                        page.locator('input[type="text"]:visible, input[type="number"]:visible').first();
+                    try {
+                        if (await inputMontoLoc.isVisible({ timeout: 2000 })) {
+                            await inputMontoLoc.fill(pago.monto.toString());
+                        }
+                    } catch (e) { }
                 }
-                
-                // Buscar dentro de todos los iframes adicionales
-                for (const f of page.frames()) {
-                    btn = f.locator(selector).first();
+
+                await shot('modal_tarjeta_manual');
+            } else {
+                console.log(`⚠️ Medio de pago ${pago.tipo} desconocido.`);
+            }
+
+            // Si hay más de un pago (o si Fiori lo requiere manual), presionar "Añadir pago"
+            if (pagos.length > 1) {
+                const aniadirBtn = activeFrame ? activeFrame.locator('bdi:text-is("Añadir pago")') : page.locator('bdi:text-is("Añadir pago")');
+                if (await aniadirBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+                    await aniadirBtn.click();
+                }
+            }
+        }
+
+        // =======================================================
+        // PASO 6: Validando pago realizado
+        // =======================================================
+        logStep('Validando pago realizado', 'running');
+        console.log("💰 Validando pago realizado en el modal...");
+
+        let processed = false;
+        for (let i = 1; i <= 5; i++) {
+            console.log(`🔄 Intento de confirmación de pago ${i}/5...`);
+            if (await tap('button:has-text("Pagar"), button:has-text("Procesar")', 3000)) {
+                await page.waitForTimeout(1000);
+                // Verificar si apareció el diálogo de confirmación (¿Desea continuar?) o si el modal de pago se cerró
+                const confirmDialog = await find('button:has-text("Yes"), button:has-text("Sí"), button:has-text("SI")', 2000).catch(() => null);
+                if (confirmDialog) {
+                    await confirmDialog.click();
+                    await page.waitForTimeout(1000);
+                    // Cerrar el último OK de éxito
+                    await tap('button:has-text("OK"), button:has-text("Aceptar")', 2000);
+                    processed = true;
+                    break;
+                }
+            }
+            await page.waitForTimeout(500);
+        }
+
+        if (!processed) {
+            await shot(`error-confirmacion-pago`);
+            throw new Error("No se pudo confirmar la transacción de pago tras varios intentos.");
+        }
+        logStep('Cobrando...', 'ok');
+        logStep('Validando pago realizado', 'ok');
+        logStep('Iniciando cobranza...', 'ok');
+        await shot('post_pago');
+
+        // =======================================================
+        // PASO 7: Emitiendo comprobante electrónico
+        // =======================================================
+        logStep('Emitiendo comprobante electrónico', 'running');
+        console.log(`📄 Emitiendo comprobante electrónico: ${testConfig.tipoComprobante}...`);
+        activeFrame = null;
+
+        let generating = false;
+        for (let i = 1; i <= 5; i++) {
+            console.log(`🔄 Intento de click en Generar ${i}/5...`);
+            if (await tap('button:has-text("Generar")', 4000)) {
+                await page.waitForTimeout(1000);
+                // Verificar si cargó la lista de comprobantes (buscando pestañas de Boleta/Factura)
+                const tabCheck = await find(`[role="tab"]:has-text("Boleta"), [role="tab"]:has-text("Factura")`, 2000).catch(() => null);
+                if (tabCheck) {
+                    generating = true;
+                    break;
+                }
+            }
+        }
+        if (!generating) throw new Error("No se pudo abrir el panel de generación de comprobantes.");
+
+        // Seleccionamos la pestaña del comprobante solicitado desde la UI
+        const tabSelector = `[role="tab"]:has-text("${testConfig.tipoComprobante}"), .sapMTabStripItem:has-text("${testConfig.tipoComprobante}")`;
+        if (await tap(tabSelector, 2500)) {
+            console.log(`✅ Fila seleccionada para emisión: ${testConfig.tipoComprobante}`);
+            await page.waitForTimeout(800);
+        } else {
+            console.log(`⚠️ Pestaña específica '${testConfig.tipoComprobante}' no encontrada, asumiendo selección por defecto.`);
+        }
+
+        // Lógica para Factura (Ingresar RUC y esperar SUNAT)
+        if (testConfig.tipoComprobante === 'Factura') {
+            const ruc = testConfig.ruc || '20100047218';
+            console.log(`🆔 Ingresando RUC: ${ruc}`);
+            const rucInput = await find('input[placeholder*="Buscar"], .sapMSFInput, [type="search"]', 6000);
+            await rucInput.clear();
+            await rucInput.fill(ruc);
+            await page.keyboard.press('Enter');
+            console.log("⏳ Esperando respuesta de SUNAT...");
+            await page.waitForTimeout(4000); // Dar margen para la consulta externa
+
+            // Verificar si se cargaron los datos (Razón Social)
+            const infoCargada = await page.evaluate(() => {
+                // Buscamos inputs que no sean el placeholder de RUC y tengan un valor razonable
+                const inputs = Array.from(document.querySelectorAll('input.sapMInputBaseInner'));
+                return inputs.some(i => i.value.length > 5 && !i.getAttribute('placeholder')?.includes('RUC'));
+            }).catch(() => false);
+
+            if (!infoCargada) {
+                console.log("❌ No se detectaron datos cargados tras ingresar RUC.");
+                await shot('error-ruc-sin-datos');
+                throw new Error(`Los datos para el RUC ${ruc} no se cargaron automáticamente.`);
+            }
+            await shot('factura_datos_ruc');
+        }
+
+        // Modal opcional de simulación de error SUNAT if config checkbox was ticked
+        if (testConfig.forzarErrorSunat) {
+            console.log("🚨 SIMULACIÓN: Config 'forzarErrorSunat' detectada (Mock Error SUNAT).");
+            // No enviamos clic a imprimir, simplemente lanzamos el error para que caiga en el catch y pdf de rror
+            await page.waitForTimeout(100);
+            throw new Error("SUNAT_MOCK: Servicio de validación de comprobante no disponible o fuera de línea (Timeout Forzado).");
+        }
+
+        logStep('Emitiendo comprobante electrónico', 'running');
+        console.log("📄 Iniciando proceso de emisión final...");
+        let emissionStartTime = Date.now();
+
+        // Imprimir con reintento
+        let printed = false;
+        for (let i = 1; i <= 5; i++) {
+            console.log(`🔄 Intento de click en Imprimir ${i}/5...`);
+            if (await tap('button:has-text("Imprimir")', 4000)) {
+                await page.waitForTimeout(1000);
+                // Dialog "¿Seguro que desea imprimir el comprobante?" → "Yes"
+                if (await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("OK")', 2000)) {
+                    printed = true;
+                    break;
+                }
+            }
+        }
+
+        if (!printed) {
+            await shot('error-imprimir');
+            throw new Error('No se pudo completar el flujo de impresión tras varios intentos.');
+        }
+
+        // Esperar que el servidor procese la emisión y aparezcan los dialogs de resultado
+        // (ej: "Alerta: No hay conexión con la impresora / Se facturó correctamente")
+        console.log("⏳ Esperando respuesta de emisión...");
+        await page.waitForTimeout(1000);
+
+        // Lógica de limpieza de popups
+        logStep('Cerrando popups de confirmación...', 'running');
+        console.log("🧹 Cerrando popups de confirmación...");
+
+        let emissionEndTime = Date.now();
+        let emissionDuration = (emissionEndTime - emissionStartTime) / 1000;
+        console.log(`[METRIC] document_emission: ${emissionDuration.toFixed(2)}s`);
+        // Selectores más amplios, incluyendo los propios del iframe activo si lo hay
+        const possibleCloseButtons = [
+            'footer button:has-text("OK")',
+            'footer button:has-text("Yes")',
+            'footer button:has-text("Sí")',
+            '.sapMDialog footer button:has-text("Aceptar")',
+            '.sapMDialog footer button:has-text("Cerrar")',
+            'button[title="Cerrar"]',
+            'button:has-text("Cerrar")'
+        ];
+
+        for (let i = 0; i < 8; i++) {
+            let clickedAny = false;
+
+            // Enfocamos el body de la página para asegurar que no perdimos el foco 
+            // por culpa de un popup del navegador o diálogo de impresión
+            await page.bringToFront();
+            await page.evaluate(() => {
+                if (document.activeElement && document.activeElement !== document.body) {
+                    document.activeElement.blur();
+                }
+                window.focus();
+            }).catch(() => { });
+
+            await page.locator('body').click({ position: { x: 10, y: 10 }, force: true }).catch(() => { });
+            // Multi-escape
+            await page.keyboard.press('Escape');
+            await page.waitForTimeout(10); // Changed from 300 to 10
+
+            // Si ya no hay diálogos visibles, salir antes
+            const hasDialog = await page.locator('.sapMDialog, .sapMMessageBox, .sapMMessageToast').isVisible().catch(() => false);
+            if (!hasDialog) break;
+
+            for (const selector of possibleCloseButtons) {
+                try {
+                    // Buscar en el frame principal
+                    let btn = page.locator(selector).first();
                     if (await btn.isVisible({ timeout: 100 }).catch(() => false)) {
                         await btn.click({ force: true });
                         await page.waitForTimeout(50);
                         clickedAny = true;
+                        continue;
                     }
-                }
-            } catch (e) {}
+
+                    // Buscar dentro de todos los iframes adicionales
+                    for (const f of page.frames()) {
+                        btn = f.locator(selector).first();
+                        if (await btn.isVisible({ timeout: 100 }).catch(() => false)) {
+                            await btn.click({ force: true });
+                            await page.waitForTimeout(50);
+                            clickedAny = true;
+                        }
+                    }
+                } catch (e) { }
+            }
+
+            await page.waitForTimeout(600);
         }
-        
-        await page.waitForTimeout(600);
-    }
 
-    // Asegurarse de cerrar diálogos de SAP antes de ir a documentos
-    console.log("🧹 Limpiando overlays finales...");
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(10);
-    const closeBtn = page.locator('button:has-text("Cerrar"), button:has-text("OK")').first();
-    if (await closeBtn.isVisible({ timeout: 500 }).catch(()=>false)) await closeBtn.click().catch(()=>{});
-    await page.waitForTimeout(50);
+        // Asegurarse de cerrar diálogos de SAP antes de ir a documentos
+        console.log("🧹 Limpiando overlays finales...");
+        await page.keyboard.press('Escape');
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(10);
+        const closeBtn = page.locator('button:has-text("Cerrar"), button:has-text("OK")').first();
+        if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) await closeBtn.click().catch(() => { });
+        await page.waitForTimeout(50);
 
-    await page.waitForTimeout(800);
+        await page.waitForTimeout(800);
 
-    logStep('Cerrando popups de confirmación...', 'ok');
-    logStep('Emitiendo comprobante electrónico', 'ok');
+        logStep('Cerrando popups de confirmación...', 'ok');
+        logStep('Emitiendo comprobante electrónico', 'ok');
 
-    let metricEndTime = Date.now();
-    let paymentDuration = (metricEndTime - metricStartTime) / 1000;
-    console.log(`[METRIC] payment_registration: ${paymentDuration.toFixed(2)}s`);
+        let metricEndTime = Date.now();
+        let paymentDuration = (metricEndTime - metricStartTime) / 1000;
+        console.log(`[METRIC] payment_registration: ${paymentDuration.toFixed(2)}s`);
 
-    // =======================
-    // PASO 8: Tomando captura de evidencia del comprobante
-    // =======================
-    logStep('Tomando captura de evidencia del comprobante', 'running');
-    // =======================
-    logStep('verificar-documentos', 'running');
-    console.log("📋 Verificando DOCUMENTOS...");
-    activeFrame = null;
+        // =======================
+        // PASO 8: Tomando captura de evidencia del comprobante
+        // =======================
+        logStep('Tomando captura de evidencia del comprobante', 'running');
+        // =======================
+        logStep('verificar-documentos', 'running');
+        console.log("📋 Verificando DOCUMENTOS...");
+        activeFrame = null;
 
-    await (await find('[role="tab"]:has-text("DOCUMENTOS"), [id*="DOCUMENTOS"]', 10000)).click({ force: true });
-    await page.waitForTimeout(1200); // Esperar renderizado de lista (Reducido)
+        await (await find('[role="tab"]:has-text("DOCUMENTOS"), [id*="DOCUMENTOS"]', 10000)).click({ force: true });
+        await page.waitForTimeout(1200); // Esperar renderizado de lista (Reducido)
 
-    // Seleccionar primer doc emitido y tomar la captura final
-    const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 8000).catch(() => null);
-    if (firstDoc) {
-        await firstDoc.click({ force: true });
-        await page.waitForTimeout(800); // Esperar carga de detalle (Reducido)
-        const text = await firstDoc.textContent() || "";
-        const docMatch = text.match(/[BF]\d{3}-\d+/);
-        if (docMatch) docExtracted = docMatch[0];
-        else docExtracted = text.substring(0, 25).trim();
-    }
+        // Seleccionar primer doc emitido y tomar la captura final
+        const firstDoc = await find('[role="listitem"], li[class*="sapMLIB"]', 8000).catch(() => null);
+        if (firstDoc) {
+            await firstDoc.click({ force: true });
+            await page.waitForTimeout(800); // Esperar carga de detalle (Reducido)
+            const text = await firstDoc.textContent() || "";
+            const docMatch = text.match(/[BF]\d{3}-\d+/);
+            if (docMatch) docExtracted = docMatch[0];
+            else docExtracted = text.substring(0, 25).trim();
+        }
 
-    console.log(`[RESULT] Prefactura: ${activeId} | Doc: ${docExtracted}`);
+        console.log(`[RESULT] Prefactura: ${activeId} | Doc: ${docExtracted}`);
 
-    logStep('verificar-documentos', 'ok');
-    await shot('comprobante_emitido');
-    logStep('Tomando captura de evidencia del comprobante', 'ok');
+        logStep('verificar-documentos', 'ok');
+        await shot('comprobante_emitido');
+        logStep('Tomando captura de evidencia del comprobante', 'ok');
 
-    // =======================
-    // =======================
+        // =======================
+        // =======================
     } catch (error) {
         testStatus = "❌ FALLIDO";
-        
+
         // Intentar extraer el error de negocio real de la UI cruzando iframes
         let uiErrorText = "";
         try {
@@ -503,8 +573,8 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                 uiErrorText = await errorDialog.innerText();
                 uiErrorText = uiErrorText.replace(/\\nOK/g, '').replace(/\\nAceptar/g, '').replace(/\\nCerrar/g, '').trim();
                 // Si el mensaje es multilínea, toma solo las dos primeras (título y detalle)
-                uiErrorText = uiErrorText.split('\\n').slice(0,2).join(": ");
-                
+                uiErrorText = uiErrorText.split('\\n').slice(0, 2).join(": ");
+
                 // --- MAPEO DE ERRORES DE NEGOCIO ---
                 if (uiErrorText.toLowerCase().includes("fuera de horario")) {
                     uiErrorText = "No se pudo completar la facturación porque el usuario no tiene horario.";
@@ -512,7 +582,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                     uiErrorText = "No se encontró una cartuchera activa para este cajero.";
                 }
             }
-        } catch(e) {}
+        } catch (e) { }
 
         if (uiErrorText) {
             testError = `UI Bloqueada: ${uiErrorText}`;
@@ -523,7 +593,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
 
         await shot('error_flujo');
         if (!uiErrorText) console.error(`❌ Error Crítico: ${testError}`);
-        
+
     } finally {
         const dur = ((Date.now() - startTime) / 1000).toFixed(2);
 
@@ -542,13 +612,13 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
             const { chromium } = require('@playwright/test');
             const pdfBrowser = await chromium.launch({ headless: true });
             const pdfPage = await pdfBrowser.newPage();
-            
+
             // Cargar Logo para el PDF individual
             let logoBase64 = "";
             try {
                 const lp = path.join(process.cwd(), 'ui', 'public', 'seidor-logo.png');
                 logoBase64 = fs.readFileSync(lp).toString('base64');
-            } catch(e) {}
+            } catch (e) { }
 
             let html = `
             <!DOCTYPE html>
@@ -668,7 +738,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                     `;
                 }
             }
-            
+
             html += `
                 </div>
             </body></html>`;
@@ -686,13 +756,13 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                     <div>Página <span class="pageNumber"></span> de <span class="totalPages"></span></div>
                 </div>
             `;
-            
+
             await pdfPage.setContent(html, { waitUntil: 'networkidle' });
             const pdfPath = path.join(evidenceDir, `Reporte_Tecnico_${activeId}.pdf`);
-            await pdfPage.pdf({ 
-                path: pdfPath, 
-                format: 'A4', 
-                margin: { top: '70px', bottom: '50px', left: '0', right: '0' }, 
+            await pdfPage.pdf({
+                path: pdfPath,
+                format: 'A4',
+                margin: { top: '70px', bottom: '50px', left: '0', right: '0' },
                 printBackground: true,
                 displayHeaderFooter: true,
                 headerTemplate: headerTemplate,
@@ -710,7 +780,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         console.log(`   Duración    : ${dur}s`);
         console.log(`   Evidencia   : ${evidenceDir}`);
         console.log(`${'='.repeat(50)}\n`);
-        
+
         if (testError) {
             throw new Error(testError);
         }

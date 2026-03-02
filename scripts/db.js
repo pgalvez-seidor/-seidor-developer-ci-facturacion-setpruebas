@@ -52,31 +52,31 @@ const seedData = () => {
         {
             id: "esc_1709140000000",
             name: "Efectivo 100% de la Deuda",
-            config: { tipoComprobante: "Boleta", iteraciones: 1, headless: true, medioVuelto: "Efectivo", pagos: [{ id: 1, tipo: "Efectivo", monto: "" }] }
+            config: { tipoComprobante: "Boleta", iteraciones: 1, headless: true, medioVuelto: "Efectivo", pagos: [{ id: 1, tipo: "Efectivo", monto: "" }], usuarioCajero: 'PGALVEZ3', codigoCentro: '4' }
         },
         {
             id: "esc_1709140000001",
             name: "Mixto: Efectivo y Tarjeta Manual",
-            config: { tipoComprobante: "Factura", iteraciones: 1, headless: true, medioVuelto: "Efectivo", pagos: [{ id: 1, tipo: "Tarjeta", monto: "25.00", autoData: true }, { id: 2, tipo: "Efectivo", monto: "" }] }
+            config: { tipoComprobante: "Factura", iteraciones: 1, headless: true, medioVuelto: "Efectivo", pagos: [{ id: 1, tipo: "Tarjeta", monto: "25.00", autoData: true }, { id: 2, tipo: "Efectivo", monto: "" }], usuarioCajero: 'PGALVEZ3', codigoCentro: '4' }
         }
     ];
 
     db.serialize(() => {
         db.run(`INSERT INTO clientes (id, name) VALUES ('CI', 'Clínica Internacional')`);
-        
+
         db.run(`INSERT INTO procesos (id, client_id, name) VALUES ('facturacion', 'CI', 'Facturación')`);
         db.run(`INSERT INTO procesos (id, client_id, name) VALUES ('horario_supervisor', 'CI', 'Horario Supervisor')`);
         db.run(`INSERT INTO procesos (id, client_id, name) VALUES ('horario_cajero', 'CI', 'Horario Cajero')`);
-        
+
         const stmt = db.prepare(`INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia) VALUES (?, ?, ?, ?, ?)`);
         for (const esc of defaultEscenarios) {
             stmt.run(esc.id, 'facturacion', esc.name, JSON.stringify(esc.config), "1. Navegar a Fiori.\n2. Abrir Cobranzas.");
         }
-        
+
         // Seed para Horario Supervisor
-        stmt.run("esc_hs_01", "horario_supervisor", "Creación Diaria (Ambulatoria)", JSON.stringify({ 
-            area: "AMBULATORIA-ADMISION", 
-            periodo: "02-2026", 
+        stmt.run("esc_hs_01", "horario_supervisor", "Creación Diaria (Ambulatoria)", JSON.stringify({
+            area: "AMBULATORIA-ADMISION",
+            periodo: "02-2026",
             headless: false,
             iteraciones: 1
         }), "Automatización de horario supervisor para el día de hoy.");
