@@ -1,0 +1,43 @@
+{
+  "prefacturaId": "1393494245",
+  "steps": [
+    {
+      "step": "login",
+      "status": "running",
+      "timestamp": "2026-03-01T21:38:23.025Z"
+    },
+    {
+      "step": "login",
+      "status": "ok",
+      "timestamp": "2026-03-01T21:38:26.812Z"
+    },
+    {
+      "step": "abrir-facturacion",
+      "status": "running",
+      "timestamp": "2026-03-01T21:38:26.812Z"
+    },
+    {
+      "step": "abrir-facturacion",
+      "status": "ok",
+      "timestamp": "2026-03-01T21:38:30.669Z"
+    },
+    {
+      "step": "buscar-prefactura",
+      "status": "running",
+      "timestamp": "2026-03-01T21:38:30.669Z"
+    },
+    {
+      "step": "buscar-prefactura",
+      "status": "ok",
+      "timestamp": "2026-03-01T21:38:43.762Z"
+    },
+    {
+      "step": "cobro-efectivo",
+      "status": "running",
+      "timestamp": "2026-03-01T21:38:44.348Z"
+    }
+  ],
+  "duration": "30.30s",
+  "status": "❌ FALLIDO",
+  "error": "Cannot read properties of undefined (reading 'toLowerCase')"
+}

@@ -1,0 +1,108 @@
+{
+  "prefacturaId": "1393494261",
+  "steps": [
+    {
+      "step": "Iniciando sesión en Portal",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:21.735Z"
+    },
+    {
+      "step": "Iniciando sesión en Portal",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:25.555Z"
+    },
+    {
+      "step": "Iniciando app Facturación",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:25.555Z"
+    },
+    {
+      "step": "Iniciando app Facturación",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:29.842Z"
+    },
+    {
+      "step": "Buscando PRE-FACTURA emitida por API",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:29.842Z"
+    },
+    {
+      "step": "Buscando PRE-FACTURA emitida por API",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:41.074Z"
+    },
+    {
+      "step": "Iniciando cobranza...",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:41.659Z"
+    },
+    {
+      "step": "Cobrando...",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:41.659Z"
+    },
+    {
+      "step": "Validando pago realizado",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:42.337Z"
+    },
+    {
+      "step": "Cobrando...",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:43.548Z"
+    },
+    {
+      "step": "Validando pago realizado",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:43.548Z"
+    },
+    {
+      "step": "Iniciando cobranza...",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:43.548Z"
+    },
+    {
+      "step": "Emitiendo comprobante electrónico",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:44.129Z"
+    },
+    {
+      "step": "Cerrando popups de confirmación...",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:48.969Z"
+    },
+    {
+      "step": "Cerrando popups de confirmación...",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:49.929Z"
+    },
+    {
+      "step": "Emitiendo comprobante electrónico",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:49.929Z"
+    },
+    {
+      "step": "Tomando captura de evidencia del comprobante",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:49.929Z"
+    },
+    {
+      "step": "verificar-documentos",
+      "status": "running",
+      "timestamp": "2026-03-01T22:49:49.929Z"
+    },
+    {
+      "step": "verificar-documentos",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:52.001Z"
+    },
+    {
+      "step": "Tomando captura de evidencia del comprobante",
+      "status": "ok",
+      "timestamp": "2026-03-01T22:49:52.588Z"
+    }
+  ],
+  "duration": "30.85s",
+  "status": "✅ EXITOSO",
+  "error": ""
+}

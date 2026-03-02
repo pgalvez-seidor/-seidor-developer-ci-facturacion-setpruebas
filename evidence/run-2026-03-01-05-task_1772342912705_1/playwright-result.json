@@ -1,0 +1,68 @@
+{
+  "prefacturaId": "1393494152",
+  "steps": [
+    {
+      "step": "login",
+      "status": "running",
+      "timestamp": "2026-03-01T05:28:43.426Z"
+    },
+    {
+      "step": "login",
+      "status": "ok",
+      "timestamp": "2026-03-01T05:28:46.796Z"
+    },
+    {
+      "step": "abrir-facturacion",
+      "status": "running",
+      "timestamp": "2026-03-01T05:28:46.796Z"
+    },
+    {
+      "step": "abrir-facturacion",
+      "status": "ok",
+      "timestamp": "2026-03-01T05:28:52.444Z"
+    },
+    {
+      "step": "buscar-prefactura",
+      "status": "running",
+      "timestamp": "2026-03-01T05:28:52.444Z"
+    },
+    {
+      "step": "buscar-prefactura",
+      "status": "ok",
+      "timestamp": "2026-03-01T05:29:02.538Z"
+    },
+    {
+      "step": "cobro-efectivo",
+      "status": "running",
+      "timestamp": "2026-03-01T05:29:04.173Z"
+    },
+    {
+      "step": "cobro-efectivo",
+      "status": "ok",
+      "timestamp": "2026-03-01T05:29:08.079Z"
+    },
+    {
+      "step": "generar-comprobante",
+      "status": "running",
+      "timestamp": "2026-03-01T05:29:09.704Z"
+    },
+    {
+      "step": "generar-comprobante",
+      "status": "ok",
+      "timestamp": "2026-03-01T05:29:36.456Z"
+    },
+    {
+      "step": "verificar-documentos",
+      "status": "running",
+      "timestamp": "2026-03-01T05:29:36.456Z"
+    },
+    {
+      "step": "verificar-documentos",
+      "status": "ok",
+      "timestamp": "2026-03-01T05:29:39.957Z"
+    }
+  ],
+  "duration": "58.12s",
+  "status": "✅ EXITOSO",
+  "error": ""
+}

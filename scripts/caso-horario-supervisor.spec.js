@@ -34,7 +34,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
     };
 
     const shot = async (name) => {
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(100);
         await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 4000 }).catch(() => { });
         const p = path.join(evidenceDir, `${name}.png`);
         await page.screenshot({ path: p, fullPage: true });
@@ -66,7 +66,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         throw new Error(`[find] Timeout ${timeout}ms: '${selector}'`);
     };
 
-    const tap = async (selector, timeout = 5000) => {
+    const tap = async (selector, timeout = 1000) => {
         try { await (await find(selector, timeout)).click(); return true; }
         catch { return false; }
     };
@@ -125,7 +125,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         await supervisorInput.fill("");
         await supervisorInput.fill(env.user.toUpperCase());
         await page.keyboard.press('Escape'); 
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(50);
         
         // LUPA DE BÚSQUEDA DEL LISTADO
         console.log("🔍 Clic en Lupa de búsqueda...");
@@ -186,7 +186,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
                      const scrollable = document.querySelector('[id$="--table-scroll"], .sapUiTableCtrlScr, .sapMScrollCont:last-child');
                      if (scrollable) scrollable.scrollTop = scrollable.scrollHeight;
                  }).catch(() => {});
-                 await page.waitForTimeout(500);
+                 await page.waitForTimeout(50);
 
                  const lastRowContent = await frameInputs.locator('.sapMTable tbody tr, [role="row"]').last().textContent({ timeout: 3000 }).catch(() => "");
                  if (lastRowContent.includes(testConfig.fechaHoy)) {
@@ -197,18 +197,6 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
                  console.log(`📝 Procediendo a crear el horario para HOY (${testConfig.fechaHoy})...`);
             }
         } else {
-            console.log("⚠️ El supervisor NO SE ENCONTRÓ en la lista.");
-            necesitaCrear = true;
-        }
-
-        if (necesitaCrear) {
-            console.log("📝 Iniciando flujo CREACIÓN NUEVA ASIGNACIÓN...");
-            const btnAgregarSup = frameInputs.locator('button, .sapMBtn').filter({has: frameInputs.locator('.sapUiIcon[data-sap-ui-icon-content=""]')}).last();
-            await btnAgregarSup.click({ timeout: 5000, force: true }).catch(async () => {
-                await frameInputs.locator('button[title="Agregar Supervisor"]').click({ force: true });
-            });
-            await page.waitForTimeout(2000);
-            
             console.log("📝 Llenando formulario Agregar Asignación en el panel derecho...");
             
             try {
@@ -216,29 +204,29 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
                 const areaDropDer = frameInputs.locator('.sapMSplitContainerDetail .sapMComboBox, .sapMSplitContainerDetail .sapMSelect, .sapMSplitContainerDetail [role="combobox"]').first();
                 await areaDropDer.click({force: true, timeout: 5000});
                 await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}")`, 5000);
-                await page.waitForTimeout(1000);
+                await page.waitForTimeout(100);
                 
                 console.log("   -> Ingresando Supervisor...");
                 // Es el primer input vacío no-readonly (el de Sede es readonly)
                 const supInpDer = frameInputs.locator('.sapMSplitContainerDetail input:not([readonly])').first();
                 await supInpDer.click({force: true});
                 await supInpDer.fill(env.user.toUpperCase());
-                await page.waitForTimeout(500);
+                await page.waitForTimeout(50);
                 await page.keyboard.press('Escape'); 
-                await page.waitForTimeout(500);
+                await page.waitForTimeout(50);
                 
                 console.log("   -> Ingresando Período...");
                 const perInpDer = frameInputs.locator('.sapMSplitContainerDetail input[placeholder*="eríodo"], .sapMSplitContainerDetail input[placeholder*="eriod"], .sapMSplitContainerDetail input:not([readonly])').nth(1);
                 await perInpDer.click({force: true});
                 await perInpDer.fill(testConfig.periodo);
                 await page.keyboard.press('Enter');
-                await page.waitForTimeout(1000);
+                await page.waitForTimeout(100);
             } catch (err) {
                 console.log("⚠️ Hubo un error al llenar el formulario explícito. Fallback...", err.message);
                 const supInputFallback = await find('.sapMSplitContainerDetail input[placeholder*="upervisor" i], .sapMSplitContainerDetail input:not([readonly])', 3000);
                 await supInputFallback.first().fill(env.user.toUpperCase());
                 await page.keyboard.press('Escape');
-                await page.waitForTimeout(1000);
+                await page.waitForTimeout(100);
             }
             
             await shot('hs_03_form_nuevo');
@@ -257,7 +245,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             btnMas = frameInputs.locator('button[id$="add-btn"], button[id$="addRow-btn"]').last();
             await btnMas.click({ timeout: 5000, force: true });
         }
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(50);
 
         // Identificar los inputs de fecha
         const dateInputsList = await frameInputs.locator('input[placeholder*="echa"], input[type="date"], input.sapMInputBaseInner').all();
@@ -275,14 +263,14 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             await dateInputs[dateInputs.length - 1].fill(testConfig.fechaHoy);
             await page.keyboard.press('Tab');
         }
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(100);
 
         // Botón CHECK (✔️)
         const btnCheck = await frameInputs.locator('button[title*="Aceptar"], button[title*="Confirmar"], button[title*="Guardar"], .sapUiIcon[data-sap-ui-icon-content=""]').last();
         if (await btnCheck.isVisible({timeout:2000}).catch(()=>false)) {
             await btnCheck.click({ timeout: 5000, force: true });
         }
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(100);
 
         // Botón PERSONA (👤) para Habilitar el día
         const btnPersona = await frameInputs.locator('button[title*="Habilitar"], button[title*="Persona"], button[title*="habilitar"], .sapUiIcon[data-sap-ui-icon-content=""]').last();
@@ -300,7 +288,7 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
             }
             
             await tap('[role="dialog"] button:has-text("OK"), [role="dialog"] button:has-text("Aceptar")', 3000);
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(100);
         }
 
         await shot('hs_06_dia_agregado');
@@ -330,40 +318,135 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
         
         // Reporte PDF
         try {
-            console.log('📄 Generando PDF...');
+            console.log('📄 Generando PDF de evidencia...');
             const { chromium } = require('@playwright/test');
             const pdfBrowser = await chromium.launch({ headless: true });
             const pdfPage = await pdfBrowser.newPage();
 
-            let html = `<html><head><style>
-                body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #333; }
-                h1 { color: #005587; border-bottom: 2px solid #005587; padding-bottom: 10px; }
-                .meta { background: #f8fafc; padding: 15px; border-radius: 5px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
-                .step { margin-bottom: 40px; }
-                img { max-width: 100%; border: 1px solid #ccc; border-radius: 4px; }
-                .error-box { background: #fee2e2; border: 1px solid #ef4444; padding: 15px; border-radius: 5px; color: #b91c1c; }
-            </style></head><body>
-                <h1>Reporte Técnico — Horario Supervisor (Flujo Diario CI)</h1>
-                <div class="meta">
-                    <p><strong>Fecha Objetivo:</strong> ${testConfig.fechaHoy}</p>
-                    <p><strong>Usuario Logueado:</strong> ${env.user.toUpperCase()}</p>
-                    <p><strong>Estado:</strong> ${testStatus}</p>
-                    <p><strong>Duración:</strong> ${dur}s</p>
+            // Cargar Logo para el PDF
+            let logoBase64 = "";
+            try {
+                const lp = path.join(process.cwd(), 'ui', 'public', 'seidor-logo.png');
+                logoBase64 = fs.readFileSync(lp).toString('base64');
+            } catch(e) {}
+
+            let html = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+                    body { font-family: 'Poppins', sans-serif; padding: 40px; color: #1e293b; background: #fff; line-height: 1.5; }
+                    
+                    .header-brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                    .header-brand img { height: 35px; width: auto; }
+                    .header-brand .app-name { font-weight: 800; font-size: 1rem; color: #004a99; letter-spacing: -0.5px; }
+
+                    .header { background: #f8fafc; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                    .header-left h1 { margin: 0; font-size: 22px; font-weight: 800; color: #0f172a; }
+                    .header-right { text-align: right; font-size: 11px; color: #64748b; font-weight: 600; }
+                    
+                    .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+                    .meta-item { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+                    .meta-item label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
+                    .meta-item span { font-size: 12px; font-weight: 700; color: #1e293b; }
+                    
+                    .status-badge { display: inline-block; padding: 5px 12px; border-radius: 30px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+                    .status-success { background: #dcfce7; color: #166534; }
+                    .status-failed { background: #fee2e2; color: #991b1b; }
+
+                    .section-title { font-size: 13px; color: #004a99; border-left: 4px solid #004a99; padding-left: 12px; margin: 30px 0 20px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+                    
+                    .evidence-card { margin-bottom: 40px; page-break-inside: avoid; }
+                    .evidence-card h3 { font-size: 10px; color: #64748b; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9; text-transform: uppercase; font-weight: 700; }
+                    .img-container { background: #f8fafc; padding: 6px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+                    img { width: 100%; border-radius: 8px; display: block; }
+                    
+                    .error-box { background: #fef2f2; border: 1px solid #ef4444; padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+                    .error-box strong { color: #991b1b; display: block; margin-bottom: 10px; font-size: 14px; }
+                    .error-box p { color: #b91c1c; margin: 0; font-family: monospace; font-size: 12px; }
+
+                    .footer { text-align: center; margin-top: 60px; padding: 30px 0; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 10px; }
+                    /* Watermark */
+                    .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); opacity: 0.05; width: 400px; z-index: -1; pointer-events: none; }
+                </style>
+            </head>
+            <body>
+                <!-- Watermark for all pages -->
+                <img class="watermark" src="data:image/png;base64,${logoBase64}" alt="" />
+
+                <div class="header">
+                    <div class="header-left">
+                        <h1>Certificación de Flujo</h1>
+                        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Módulo: Horario Supervisor - Clínica Internacional</p>
+                    </div>
+                    <div class="header-right">
+                        <p>FECHA: ${testConfig.fechaHoy}</p>
+                        <p>${new Date().toLocaleString('es-PE')}</p>
+                    </div>
                 </div>
-                ${testError ? `<div class="error-box"><strong>Error:</strong> ${testError}</div>` : ''}
-                <h2>Evidencias</h2>`;
+
+                <div class="meta-grid">
+                    <div class="meta-item"><label>Usuario</label><span>${env.user.toUpperCase()}</span></div>
+                    <div class="meta-item"><label>Estado</label>
+                        <span class="status-badge ${testStatus.includes('EXITO') ? 'status-success' : 'status-failed'}">${testStatus}</span>
+                    </div>
+                    <div class="meta-item"><label>Duración</label><span>${dur}s</span></div>
+                    <div class="meta-item"><label>ID</label><span>${Date.now()}</span></div>
+                </div>
+
+                ${testError ? `
+                <div class="error-box">
+                    <strong>⚠️ Interrupción detectada</strong>
+                    <p>${testError}</p>
+                </div>
+                ` : ''}
+
+                <div class="section-title">Evidencias Fotográficas</div>`;
 
             const fsImages = fs.readdirSync(evidenceDir).filter(f => f.startsWith('hs_') && f.endsWith('.png')).sort();
             for (const imgName of fsImages) {
                 const imgPath = path.join(evidenceDir, imgName);
-                const base64 = fs.readFileSync(imgPath).toString('base64');
-                html += `<div class="step"><h3>Vaso Visual: ${imgName}</h3><img src="data:image/png;base64,${base64}" /></div>`;
+                const b64 = fs.readFileSync(imgPath).toString('base64');
+                html += `
+                <div class="evidence-card">
+                    <h3>Paso: ${imgName}</h3>
+                    <div class="img-container">
+                        <img src="data:image/png;base64,${b64}" />
+                    </div>
+                </div>`;
             }
 
-            html += '</body></html>';
+            html += `
+                </div>
+            </body></html>`;
+
+            const headerTemplate = `
+                <div style="font-family: 'Poppins', sans-serif; font-size: 10px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; border-bottom: 0.5px solid #e2e8f0; margin-bottom: 10px;">
+                    <img src="data:image/png;base64,${logoBase64}" style="height: 15px; width: auto;" />
+                    <div style="font-weight: 800; color: #004a99; font-size: 11px;">AutoBot</div>
+                </div>
+            `;
+
+            const footerTemplate = `
+                <div style="font-family: 'Poppins', sans-serif; font-size: 8px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 8px 40px; color: #94a3b8; border-top: 0.5px solid #e2e8f0;">
+                    <div>Impreso: ${new Date().toLocaleString('es-PE')} | Seidor Perú</div>
+                    <div>Página <span class="pageNumber"></span> de <span class="totalPages"></span></div>
+                </div>
+            `;
+            
             await pdfPage.setContent(html, { waitUntil: 'networkidle' });
             const pdfPath = path.join(evidenceDir, `Reporte_HS_Diario_${Date.now()}.pdf`);
-            await pdfPage.pdf({ path: pdfPath, format: 'A4' });
+            await pdfPage.pdf({ 
+                path: pdfPath, 
+                format: 'A4', 
+                printBackground: true, 
+                displayHeaderFooter: true,
+                headerTemplate: headerTemplate,
+                footerTemplate: footerTemplate,
+                margin: { top: '70px', bottom: '50px', left: '0', right: '0' }
+            });
             await pdfBrowser.close();
             console.log(`✅ PDF Generado: ${pdfPath}`);
         } catch (e) {

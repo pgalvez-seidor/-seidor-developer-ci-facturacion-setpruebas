@@ -1,16 +1,28 @@
-# SetPruebas CI - Motor de Pruebas Fiori
+# 🤖 AutoBot: Motor de Automatización SAP BTP
 
-Este proyecto es una herramienta de automatización para flujos de pago complejos en SAP Fiori construida mediante una arquitectura híbrida: un Frontend en React (El Lote de Pruebas) y un Backend en Node.js que orquesta múltiples hilos de Playwright simultáneos.
+**Autor:** Pierre Gálvez Larriega  
+**Desarrollado para:** Seidor Perú
+
+AutoBot es una plataforma de automatización de alta performance diseñada para optimizar ciclos de pruebas completas en entornos SAP BTP. Utiliza una arquitectura híbrida de Frontend React y un motor multi-hilo en Node.js impulsado por Playwright.
+
+---
+
+## 📖 Centro de Documentación
+
+Toda la información detallada del proyecto se encuentra centralizada en la carpeta [`/Documentacion`](./Documentacion):
+
+1.  **[Especificaciones Técnicas](./Documentacion/Especificaciones_Tecnicas.md)**: El "Stack" (React, Node, Playwright), arquitectura de hilos y principios de diseño (Modo Turbo).
+2.  **[Manual Funcional](./Documentacion/Manual_Funcional.md)**: Guía paso a paso para usuarios finales y probadores.
+3.  **[Plan de Implementación](./Documentacion/Plan_Implementacion.md)**: Roadmap de las últimas mejoras y branding.
+4.  **[Walkthrough Ejecución](./Documentacion/Walkthrough_Lote_100.md)**: Evidencia visual de las capacidades de la herramienta.
 
 ---
 
 ## 🚀 Guía de Inicio Rápido (Start / Stop)
 
-Gracias al orquestador global, la aplicación Frontend y Backend se levantan con un solo comando mágico.
+### Paso 1: Instalar Dependencias
 
-### Paso 1: Instalar Dependencias (Solo la primera vez)
-
-Abre una terminal en la carpeta principal del proyecto e instala todo:
+Abre una terminal en la carpeta principal del proyecto:
 
 ```bash
 npm install
@@ -19,37 +31,29 @@ cd ..
 npx playwright install
 ```
 
-### Paso 2: Levantar Todo (Magic Command)
+### Paso 2: Levantar AutoBot (Magic Command)
 
-En la raíz del proyecto, ejecuta el siguiente comando. Esto lanzará simultáneamente el servidor Node y la Interfaz Web:
+En la raíz del proyecto, ejecuta:
 
 ```bash
 npm start
 ```
 
-_(Se abrirá tu navegador automáticamente en `http://localhost:5173`. Verás logs de ambos servicios en la misma terminal)._
+_(Se abrirá automáticamente el Dashboard en `http://localhost:5173`)_
+
+### Paso 3: Apagar Correctamente
+
+Presiona `Ctrl + C` en la terminal para limpiar los procesos y navegadores en segundo plano.
 
 ---
 
-### Paso 3: Apagar la Aplicación Correctamente (Shutdown)
+## 🛠 Estructura de Directorios
 
-Para detener la herramienta y liberar la memoria de tu computadora:
-
-1. Ve a la terminal donde ejecutaste `npm start`.
-2. Presiona `Ctrl + C` (En Mac o Windows).
-3. Confirma con `Y` si la terminal te pregunta "Terminate batch job?".
-
-**Es muy importante hacer esto para asegurar que los navegadores fantasma (Headless) de Playwright se destruyan y no consuman RAM en segundo plano.**
+- `/ui/`: Dashboard de Control (React/Vite).
+- `/scripts/`: Lógica del servidor y scripts de automatización Playwright.
+- `/Documentacion/`: Manuales, guías y especificaciones de Pierre Gálvez Larriega.
+- `/evidence/`: Capturas de pantalla y reportes PDF generados.
 
 ---
 
-## 🛠 Arquitectura del Proyecto
-
-- `/ui/`: Contiene la aplicación React (Vite) que sirve como "Shopping Cart" / Constructor Dinámico de Lotes.
-- `/scripts/ui-server.js`: El corazón del proyecto. Recibe el Array JSON desde React, reserva las prefacturas usando `api-helper.js` y lanza los `workers` de Playwright. Emite logs en tiempo real vía Server Sent Events (SSE).
-- `/scripts/casoX-boleta.spec.js`: Los scripts de Playwright que navegan por el DOM de Fiori. Leen la variable de entorno `TEST_PARAMS` inyectada por el servidor Node.
-- `/evidence/`: Directorio donde de guardan los Screenshots y los Reportes PDF finales.
-
-## 🤖 Integración de Nuevos Clientes (Flujo IA)
-
-Consultar el archivo `.agents/workflows/nuevo-cliente.md` para entender el protocolo estricto _"Exploration First"_ que las Inteligencias Artificiales deben seguir antes de programar automatizaciones en este repositorio.
+_© 2026 Pierre Gálvez Larriega. Todos los derechos reservados._

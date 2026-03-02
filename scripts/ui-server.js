@@ -179,12 +179,12 @@ app.post('/api/run-test', async (req, res) => {
         // Fase 1: Preparación (Generar Prefacturas previas si es en paralelo)
         let prefacturaIds = [];
         if (iterations > 1) {
-            sendLog('info', `🚀 Fase 1: Generando ${iterations} pre-facturas en SAP para evitar bloqueos...`);
+            sendLog('info', `🚀 Fase 1: Emitiendo ${iterations} PRE-FACTURAs vía API para evitar bloqueos...`);
             for (let i = 0; i < iterations; i++) {
-                sendLog('info', `⏳ Obteniendo prefactura (${i + 1}/${iterations})...`);
+                sendLog('info', `⏳ Obteniendo PRE-FACTURA (${i + 1}/${iterations})...`);
                 const id = await createPrefactura("PGALVEZ3");
                 prefacturaIds.push(id);
-                sendLog('info', `✅ Prefactura reservada: ${id}`);
+                sendLog('info', `✅ PRE-FACTURA reservada: ${id}`);
             }
         } else {
             prefacturaIds.push(null); // el script se encargará de crear una si es null
@@ -254,7 +254,7 @@ app.post('/api/run-batch', async (req, res) => {
         console.log(`[SSE Emit] Type: ${type}, Msg: ${message}`);
     };
 
-    const MAX_CONCURRENT = 5;
+    const MAX_CONCURRENT = req.body.concurrency || (parallel ? 5 : 1);
     let activeProcesses = [];
     let pendingTasks = [...tasks];
     let runningCount = 0;
@@ -282,9 +282,9 @@ app.post('/api/run-batch', async (req, res) => {
                 let preId = null;
                 try {
                     preId = await createPrefactura("PGALVEZ3");
-                    sendLog(taskId, 'log', `Prefactura reservada: ${preId}`);
+                    sendLog(taskId, 'log', `✅ PRE-FACTURA emitida vía API: ${preId}`);
                 } catch(e) {
-                    sendLog(taskId, 'log', `Advertencia: no se reservó prefactura previa.`);
+                    sendLog(taskId, 'log', `⚠️ Advertencia: no se pudo emitir PRE-FACTURA vía API.`);
                 }
 
                 const cmdArgs = ['playwright', 'test', `scripts/${file || 'caso1-boleta.spec.js'}`, '--reporter=line'];
@@ -385,8 +385,15 @@ app.post('/api/run-batch', async (req, res) => {
             const page = await browser.newPage();
             
             const timestamp = new Date().getTime();
-            const globalPdfName = `Reporte_Final_Certificacion_${timestamp}.pdf`;
+            const globalPdfName = `Reporte_Final_Autobot_${timestamp}.pdf`;
             const globalPdfPath = path.join(rootDir, 'evidence', globalPdfName);
+
+            // Cargar Logo Seidor para embeber en Base64
+            let seidorLogoBase64 = "";
+            try {
+                const logoPath = path.join(rootDir, 'ui', 'public', 'seidor-logo.png');
+                seidorLogoBase64 = fs.readFileSync(logoPath).toString('base64');
+            } catch(e) { console.log("⚠️ No se pudo cargar el logo para el PDF:", e.message); }
 
             let html = `
             <!DOCTYPE html>
@@ -394,54 +401,77 @@ app.post('/api/run-batch', async (req, res) => {
             <head>
                 <meta charset="UTF-8">
                 <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-                    body { font-family: 'Plus Jakarta Sans', sans-serif; padding: 40px; color: #1e293b; background: #fff; line-height: 1.6; }
-                    .cover { height: 90vh; display: flex; flex-direction: column; justify-content: center; border-left: 10px solid #0f172a; padding-left: 50px; margin-bottom: 100px; }
-                    .cover h1 { font-size: 56px; font-weight: 800; margin: 0; color: #0f172a; line-height: 1.1; }
-                    .cover p { font-size: 20px; color: #64748b; margin: 20px 0; }
+                    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+                    body { font-family: 'Poppins', sans-serif; padding: 40px; color: #1e293b; background: #fff; line-height: 1.6; }
+                    
+                    .header-brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; }
+                    .header-brand img { height: 40px; width: auto; }
+                    .header-brand .app-name { font-weight: 800; font-size: 1.2rem; color: #004a99; letter-spacing: -1px; }
+
+                    .cover { height: 75vh; display: flex; flex-direction: column; justify-content: center; border-left: 12px solid #004a99; padding-left: 50px; margin-bottom: 100px; }
+                    .cover p.subtitle { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #004a99; letter-spacing: 2px; margin-bottom: 10px; }
+                    .cover h1 { font-size: 52px; font-weight: 800; margin: 0; color: #0f172a; line-height: 1.05; }
+                    .cover p.desc { font-size: 18px; color: #64748b; margin: 20px 0 40px 0; max-width: 600px; }
                     
                     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 50px 0; }
-                    .summary-card { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
-                    .summary-card label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 5px; }
-                    .summary-card span { font-size: 24px; font-weight: 700; color: #0f172a; }
+                    .summary-card { background: #f8fafc; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
+                    .summary-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #e2e8f0; }
+                    .summary-card.success::before { background: #10b981; }
+                    .summary-card.error::before { background: #ef4444; }
+                    
+                    .summary-card label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 8px; letter-spacing: 1px; }
+                    .summary-card span { font-size: 32px; font-weight: 700; color: #0f172a; }
+
+                    .cover-container { min-height: 90vh; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; }
 
                     .page-break { page-break-before: always; }
-                    .test-header { background: #0f172a; color: #fff; padding: 25px 40px; margin: 40px -40px 30px -40px; display: flex; justify-content: space-between; align-items: center; }
-                    .test-header h2 { margin: 0; font-size: 20px; font-weight: 700; }
-                    .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; background: #fff; }
+                    .test-header { background: #004a99; color: #fff; padding: 30px 40px; margin: 40px -40px 30px -40px; display: flex; justify-content: space-between; align-items: center; }
+                    .test-header h2 { margin: 0; font-size: 18px; font-weight: 700; }
+                    .status-pill { padding: 6px 16px; border-radius: 30px; font-size: 10px; font-weight: 800; background: #fff; letter-spacing: 0.5px; }
                     
-                    .evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-                    .evidence-item { break-inside: avoid; margin-bottom: 30px; }
-                    .evidence-item h4 { font-size: 12px; color: #64748b; margin-bottom: 10px; text-transform: uppercase; }
-                    .img-wrap { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #f1f5f9; padding: 5px; }
-                    img { width: 100%; display: block; border-radius: 4px; }
+                    .evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 25px; }
+                    .evidence-item { break-inside: avoid; margin-bottom: 35px; }
+                    .evidence-item h4 { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+                    .img-wrap { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #f8fafc; padding: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+                    img.evidence-img { width: 100%; display: block; border-radius: 8px; }
                     
-                    .footer { text-align: center; margin-top: 100px; padding-top: 20px; border-top: 1px solid #f1f5f9; color: #94a3b8; font-size: 11px; }
+                    .footer strong { color: #64748b; }
+
+                    /* Watermark */
+                    .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); opacity: 0.05; width: 600px; z-index: -1; pointer-events: none; }
                 </style>
             </head>
             <body>
-                <div class="cover">
-                    <p>INFORME EJECUTIVO</p>
-                    <h1>Evidencia de Certificación Automatizada</h1>
-                    <p>Cliente: Clínica Internacional | Proyecto: Facturación CI</p>
-                    <div style="margin-top: 40px; font-size: 14px; font-weight: 600;">
-                        Fecha de Ejecución: ${new Date().toLocaleString('es-PE')}
-                    </div>
-                </div>
+                <!-- Watermark for all pages -->
+                <img class="watermark" src="data:image/png;base64,${seidorLogoBase64}" alt="" />
 
-                <div class="summary-grid">
-                    <div class="summary-card"><label>Total Pruebas</label><span>${results.length}</span></div>
-                    <div class="summary-card"><label>Exitosas</label><span style="color:#16a34a">${results.filter(r=>r.status==='EXITO').length}</span></div>
-                    <div class="summary-card"><label>Fallidas</label><span style="color:#dc2626">${results.filter(r=>r.status==='FALLIDO').length}</span></div>
+                <div class="cover-container">
+                    <div class="cover" style="height: auto; min-height: 60vh; margin-bottom: 40px;">
+                        <p class="subtitle">Informe de Ejecución</p>
+                        <h1>Evidencia de Certificación Automatizada</h1>
+                        <p class="desc">Reporte consolidado de ejecución masiva para entornos SAP BTP. Optimización de ciclos de pruebas completas.</p>
+                        
+                        <div style="font-size: 13px; color: #475569;">
+                            <b>Proyecto:</b> Facturación Clínica Internacional<br>
+                            <b>Tester:</b> Pierre Gálvez Larriega<br>
+                            <b>Fecha:</b> ${new Date().toLocaleString('es-PE')}
+                        </div>
+                    </div>
+
+                    <div class="summary-grid" style="margin-top: auto; margin-bottom: 40px;">
+                        <div class="summary-card"><label>Total Pruebas</label><span>${results.length}</span></div>
+                        <div class="summary-card success"><label>Exitosas</label><span style="color:#10b981">${results.filter(r=>r.status==='EXITO').length}</span></div>
+                        <div class="summary-card error"><label>Fallidas</label><span style="color:#ef4444">${results.filter(r=>r.status==='FALLIDO').length}</span></div>
+                    </div>
                 </div>
 
                 ${results.map((r, index) => {
                     const pics = [
-                        { id: 'antes_de_cobrar', title: 'Carga de Pre-Factura' },
-                        { id: 'modal_efectivo', title: 'Ingreso de Pago' },
-                        { id: 'post_pago', title: 'Transacción Registrada' },
-                        { id: 'comprobante_emitido', title: 'Voucher en Documentos' },
-                        { id: 'error_flujo', title: 'Evidencia de Error' }
+                        { id: 'antes_de_cobrar', title: '01. Carga de Pre-Factura' },
+                        { id: 'modal_efectivo', title: '02. Ingreso de Pago' },
+                        { id: 'post_pago', title: '03. Transacción Registrada' },
+                        { id: 'comprobante_emitido', title: '04. Voucher en Documentos' },
+                        { id: 'error_flujo', title: '⚠️ Evidencia de Error' }
                     ];
 
                     let evidenceHtml = '';
@@ -452,7 +482,7 @@ app.post('/api/run-batch', async (req, res) => {
                             evidenceHtml += `
                             <div class="evidence-item">
                                 <h4>${p.title}</h4>
-                                <div class="img-wrap"><img src="data:image/png;base64,${b64}" /></div>
+                                <div class="img-wrap"><img class="evidence-img" src="data:image/png;base64,${b64}" /></div>
                             </div>`;
                         }
                     });
@@ -461,15 +491,15 @@ app.post('/api/run-batch', async (req, res) => {
                     <div class="page-break">
                         <div class="test-header">
                             <div>
-                                <span style="font-size: 12px; opacity: 0.7; display: block;">PRUEBA #0${index + 1}</span>
-                                <h2>${r.config.tipoComprobante} - ${r.taskId}</h2>
+                                <span style="font-size: 10px; opacity: 0.8; display: block; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Caso de Prueba #${String(index + 1).padStart(3, '0')}</span>
+                                <h2>${r.config.tipoComprobante} - Línea de Ejecución #${index + 1}</h2>
                             </div>
-                            <div class="status-pill" style="color: ${r.status==='EXITO'?'#16a34a':'#dc2626'}">
+                            <div class="status-pill" style="color: ${r.status==='EXITO'?'#10b981':'#ef4444'}">
                                 ${r.status}
                             </div>
                         </div>
-                        <div style="margin-bottom: 20px; font-size: 13px; color: #475569;">
-                            <b>Configuración:</b> ${JSON.stringify(r.config.pagos)} | <b>Resultado:</b> ${r.result}
+                        <div style="margin-bottom: 20px; font-size: 12px; color: #64748b; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9;">
+                            <b>Configuración:</b> ${JSON.stringify(r.config.pagos.map(p=>p.tipo).join(' + '))} | <b>Resultado:</b> ${r.result}
                         </div>
                         <div class="evidence-grid">
                             ${evidenceHtml}
@@ -477,15 +507,34 @@ app.post('/api/run-batch', async (req, res) => {
                     </div>`;
                 }).join('')}
 
-                <div class="footer">
-                    Este reporte ha sido generado automáticamente por el motor de certificación Seidor.<br>
-                    © 2026 Seidor Chile - Todos los derechos reservados.
                 </div>
             </body>
             </html>`;
 
+            const headerTemplate = `
+                <div style="font-family: 'Poppins', sans-serif; font-size: 10px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 0.5px solid #e2e8f0; margin-bottom: 15px;">
+                    <img src="data:image/png;base64,${seidorLogoBase64}" style="height: 20px; width: auto;" />
+                    <div style="font-weight: 800; color: #004a99; font-size: 12px;">AutoBot</div>
+                </div>
+            `;
+
+            const footerTemplate = `
+                <div style="font-family: 'Poppins', sans-serif; font-size: 9px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; color: #94a3b8; border-top: 0.5px solid #e2e8f0;">
+                    <div>Impreso: ${new Date().toLocaleString('es-PE')} | Seidor Perú</div>
+                    <div>Página <span class="pageNumber"></span> de <span class="totalPages"></span></div>
+                </div>
+            `;
+
             await page.setContent(html);
-            await page.pdf({ path: globalPdfPath, format: 'A4', printBackground: true, margin: { top: '0', bottom: '0' } });
+            await page.pdf({ 
+                path: globalPdfPath, 
+                format: 'A4', 
+                printBackground: true, 
+                displayHeaderFooter: true,
+                headerTemplate: headerTemplate,
+                footerTemplate: footerTemplate,
+                margin: { top: '80px', bottom: '60px', left: '0', right: '0' }
+            });
             await browser.close();
             return globalPdfPath;
         };
