@@ -27,9 +27,9 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     };
 
     const shot = async (name) => {
-        await page.waitForTimeout(1500); // Esperar que desaparezcan los busy indicators
+        await page.waitForTimeout(500); // Esperar que desaparezcan los busy indicators
         // Intentar esperar a que no haya loaders
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 3000 }).catch(() => {});
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 300 }).catch(() => {});
         
         const p = path.join(evidenceDir, `${name}.png`);
         await page.screenshot({ path: p, fullPage: true });
@@ -78,7 +78,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     // =========================================================
     let activeId = prefacturaId;
     if (!activeId) {
-        console.log("🚀 Generando Pre-factura vía API...");
+        console.log("🚀 Emitiendo PRE-FACTURA vía API...");
         activeId = await createPrefactura("PGALVEZ3");
         console.log(`✅ ID: ${activeId}`);
     }
@@ -101,9 +101,9 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
 
     try {
         // =======================
-        // PASO 1: LOGIN
+        // PASO 1: Iniciando sesión en Portal
     // =======================
-    logStep('login', 'running');
+    logStep('Iniciando sesión en Portal', 'running');
     await page.goto(env.url, { waitUntil: 'domcontentloaded' });
     const loginField = page.locator('#j_username');
     if (await loginField.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -111,23 +111,23 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         await page.locator('#j_password').fill(env.pass);
         await page.click('#logOnFormSubmit');
     }
-    logStep('login', 'ok');
+    logStep('Iniciando sesión en Portal', 'ok');
 
     // =======================
-    // PASO 2: ABRIR APP FACTURACIÓN
+    // PASO 2: Iniciando app Facturación
     // =======================
-    logStep('abrir-facturacion', 'running');
+    logStep('Iniciando app Facturación', 'running');
     const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Facturación$/ }).first();
     await tile.waitFor({ state: 'visible', timeout: 20000 });
     await tile.click();
     await page.waitForSelector('iframe', { timeout: 15000 });
-    await page.waitForTimeout(2000);
-    logStep('abrir-facturacion', 'ok');
+    await page.waitForTimeout(200);
+    logStep('Iniciando app Facturación', 'ok');
 
     // =======================
-    // PASO 3: TAB PRE
+    // PASO 3: Buscando PRE-FACTURA emitida por API
     // =======================
-    logStep('buscar-prefactura', 'running');
+    logStep('Buscando PRE-FACTURA emitida por API', 'running');
     
     // VALIDACIÓN PROACTIVA DE ACCESO (REGLA DE NEGOCIO: FUERA DE HORARIO)
     try {
@@ -180,17 +180,16 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
 
     if (!selected) {
         await shot('error-item-no-seleccionado');
-        throw new Error(`No se pudo seleccionar pre-factura ${activeId}`);
+        throw new Error(`No se pudo seleccionar PRE-FACTURA ${activeId}`);
     }
-
-    logStep('buscar-prefactura', 'ok');
+    logStep('Buscando PRE-FACTURA emitida por API', 'ok');
     await shot('antes_de_cobrar');
 
     // =======================================================
-    // PASO 5: COBRO DINÁMICO (EFECTIVO O TARJETA)
+    // PASO 5: Iniciando cobranza...
     // =======================================================
-    logStep('cobro-efectivo', 'running');
-    console.log(`💳 Iniciando Cobro en ${testConfig.medioPago}...`);
+    logStep('Iniciando cobranza...', 'running');
+    console.log(`💳 Iniciando cobranza en ${testConfig.medioPago}...`);
     activeFrame = null;
 
     // Procesar array de pagos configurados (Mixtos, Efectivo, Tarjeta)
@@ -200,12 +199,13 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     }
 
     for (const pago of pagos) {
+        logStep('Cobrando...', 'running');
         console.log(`💳 Agregando pago: ${pago.tipo} por S/ ${pago.monto || '(auto-completado)'}...`);
         
         if (pago.tipo === 'Efectivo') {
             const btnEfectivo = await find('button:has-text("Efectivo")', 10000);
             await btnEfectivo.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(50);
 
             if (pago.monto) {
                 console.log(`🔄 Ingresando monto exacto/Vuelto para Efectivo: S/ ${pago.monto}`);
@@ -216,7 +216,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                     if (await inputMontoLoc.isVisible({ timeout: 2000 })) {
                         await inputMontoLoc.click();
                         await inputMontoLoc.fill(pago.monto.toString());
-                        await page.waitForTimeout(500);
+                        await page.waitForTimeout(50);
                     }
                 } catch (e) {
                     console.log("⚠️ No se pudo inyectar el monto de efectivo.");
@@ -227,13 +227,13 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         } else if (pago.tipo === 'Tarjeta') {
             const btnTarjeta = await find('button:has-text("Tarjeta")', 10000);
             await btnTarjeta.click();
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(50);
             
             // Navegar al tab Manual
             const manualTab = activeFrame ? activeFrame.locator('div[role="tab"] bdi:has-text("Manual")').first() : page.locator('div[role="tab"] bdi:has-text("Manual")').first();
             if (await manualTab.isVisible({timeout: 3000}).catch(()=>false)) {
                 await manualTab.click();
-                await page.waitForTimeout(500);
+                await page.waitForTimeout(50);
                 
                 // Si la UI mandó flag de auto-generar datos:
                 if (pago.autoData) {
@@ -283,26 +283,29 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     }
 
     // =======================================================
-    // PASO 6: CONFIRMAR PAGO
+    // PASO 6: Validando pago realizado
     // =======================================================
-    console.log("💰 Confirmando pago en el modal...");
+    logStep('Validando pago realizado', 'running');
+    console.log("💰 Validando pago realizado en el modal...");
     if (!await tap('button:has-text("Pagar"), button:has-text("Procesar")', 6000)) {
         await shot(`error-pagar-${testConfig.medioPago.toLowerCase()}`);
         throw new Error(`Botón de confirmación no encontrado en modal ${testConfig.medioPago}`);
     }
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(50);
     await tap('button:has-text("Yes"), button:has-text("Sí"), button:has-text("SI")', 4000);
     await page.waitForTimeout(1000); 
     await tap('button:has-text("OK"), button:has-text("Aceptar")', 2000); 
 
-    logStep('cobro-efectivo', 'ok');
+    logStep('Cobrando...', 'ok');
+    logStep('Validando pago realizado', 'ok');
+    logStep('Iniciando cobranza...', 'ok');
     await shot('post_pago');
 
     // =======================================================
-    // PASO 7: GENERAR COMPROBANTE DINÁMICO
+    // PASO 7: Emitiendo comprobante electrónico
     // =======================================================
-    logStep('generar-comprobante', 'running');
-    console.log(`📄 Generando comprobante: ${testConfig.tipoComprobante}...`);
+    logStep('Emitiendo comprobante electrónico', 'running');
+    console.log(`📄 Emitiendo comprobante electrónico: ${testConfig.tipoComprobante}...`);
     activeFrame = null;
 
     await (await find('button:has-text("Generar")', 8000)).click({ force: true });
@@ -347,7 +350,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     if (testConfig.forzarErrorSunat) {
         console.log("🚨 SIMULACIÓN: Config 'forzarErrorSunat' detectada (Mock Error SUNAT).");
         // No enviamos clic a imprimir, simplemente lanzamos el error para que caiga en el catch y pdf de rror
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(100);
         throw new Error("SUNAT_MOCK: Servicio de validación de comprobante no disponible o fuera de línea (Timeout Forzado).");
     }
 
@@ -365,10 +368,11 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     // (ej: "Alerta: No hay conexión con la impresora / Se facturó correctamente")
     // La emisión puede tardar varios segundos (API SUNAT, etc.) — aumentamos el tiempo
     console.log("⏳ Esperando respuesta de emisión...");
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(1000);
 
-    // Fuerza bruta para cerrar todos los modales (SAP Fragments, MessageToasts, Dialogs)
-    console.log("🧹 Cerrando popups y overlays (Fragments)...");
+    // Lógica de limpieza de popups
+    logStep('Cerrando popups de confirmación...', 'running');
+    console.log("🧹 Cerrando popups de confirmación...");
     
     // Selectores más amplios, incluyendo los propios del iframe activo si lo hay
     const possibleCloseButtons = [
@@ -397,7 +401,11 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         await page.locator('body').click({ position: { x: 10, y: 10 }, force: true }).catch(() => {});
         // Multi-escape
         await page.keyboard.press('Escape');
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(10); // Changed from 300 to 10
+
+        // Si ya no hay diálogos visibles, salir antes
+        const hasDialog = await page.locator('.sapMDialog, .sapMMessageBox, .sapMMessageToast').isVisible().catch(() => false);
+        if (!hasDialog) break;
 
         for (const selector of possibleCloseButtons) {
             try {
@@ -405,7 +413,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                 let btn = page.locator(selector).first();
                 if (await btn.isVisible({ timeout: 100 }).catch(() => false)) {
                     await btn.click({ force: true });
-                    await page.waitForTimeout(500);
+                    await page.waitForTimeout(50);
                     clickedAny = true;
                     continue;
                 }
@@ -415,7 +423,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                     btn = f.locator(selector).first();
                     if (await btn.isVisible({ timeout: 100 }).catch(() => false)) {
                         await btn.click({ force: true });
-                        await page.waitForTimeout(500);
+                        await page.waitForTimeout(50);
                         clickedAny = true;
                     }
                 }
@@ -428,21 +436,21 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     // Asegurarse de cerrar diálogos de SAP antes de ir a documentos
     console.log("🧹 Limpiando overlays finales...");
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(300);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(10);
     const closeBtn = page.locator('button:has-text("Cerrar"), button:has-text("OK")').first();
     if (await closeBtn.isVisible({ timeout: 500 }).catch(()=>false)) await closeBtn.click().catch(()=>{});
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(50);
 
-    // Dar un tiempo extra y asegurarse que desaparezca la caparazón de overlays
     await page.waitForTimeout(800);
 
-    logStep('generar-comprobante', 'ok');
+    logStep('Cerrando popups de confirmación...', 'ok');
+    logStep('Emitiendo comprobante electrónico', 'ok');
 
     // =======================
-    // PASO 8: TAB DOCUMENTOS → CAPTURAR COMPROBANTE
-    //
-    // Sin ningún overlay activo, ir a DOCUMENTOS, seleccionar el primer
-    // documento emitido (el más reciente aparece al tope) y capturar.
+    // PASO 8: Tomando captura de evidencia del comprobante
+    // =======================
+    logStep('Tomando captura de evidencia del comprobante', 'running');
     // =======================
     logStep('verificar-documentos', 'running');
     console.log("📋 Verificando DOCUMENTOS...");
@@ -466,6 +474,7 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
 
     logStep('verificar-documentos', 'ok');
     await shot('comprobante_emitido');
+    logStep('Tomando captura de evidencia del comprobante', 'ok');
 
     // =======================
     // =======================
@@ -486,6 +495,8 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                 // --- MAPEO DE ERRORES DE NEGOCIO ---
                 if (uiErrorText.toLowerCase().includes("fuera de horario")) {
                     uiErrorText = "No se pudo completar la facturación porque el usuario no tiene horario.";
+                } else if (uiErrorText.toLowerCase().includes("no hay cartuchera") || uiErrorText.toLowerCase().includes("cartuchera no")) {
+                    uiErrorText = "No se encontró una cartuchera activa para este cajero.";
                 }
             }
         } catch(e) {}
@@ -519,78 +530,95 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
             const pdfBrowser = await chromium.launch({ headless: true });
             const pdfPage = await pdfBrowser.newPage();
             
+            // Cargar Logo para el PDF individual
+            let logoBase64 = "";
+            try {
+                const lp = path.join(process.cwd(), 'ui', 'public', 'seidor-logo.png');
+                logoBase64 = fs.readFileSync(lp).toString('base64');
+            } catch(e) {}
+
             let html = `
             <!DOCTYPE html>
             <html lang="es">
             <head>
                 <meta charset="UTF-8">
                 <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-                    body { font-family: 'Inter', 'Segoe UI', sans-serif; padding: 50px; color: #1e293b; background: #fff; line-height: 1.5; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; }
-                    .header-left h1 { margin: 0; color: #0f172a; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
-                    .header-right { text-align: right; color: #64748b; font-size: 12px; }
+                    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+                    body { font-family: 'Poppins', sans-serif; padding: 40px; color: #1e293b; background: #fff; line-height: 1.5; }
                     
-                    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-                    .meta-item { background: #f8fafc; padding: 12px 16px; border-radius: 6px; border: 1px solid #e2e8f0; }
-                    .meta-item label { display: block; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
-                    .meta-item span { font-size: 14px; font-weight: 600; color: #0f172a; }
+                    .header-brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                    .header-brand img { height: 35px; width: auto; }
+                    .header-brand .app-name { font-weight: 800; font-size: 1rem; color: #004a99; letter-spacing: -0.5px; }
 
-                    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+                    .header { background: #f8fafc; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                    .header-left h1 { margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; }
+                    .header-right { text-align: right; font-size: 11px; color: #64748b; font-weight: 600; }
+                    
+                    .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+                    .meta-item { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+                    .meta-item label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
+                    .meta-item span { font-size: 13px; font-weight: 700; color: #1e293b; }
+                    
+                    .status-badge { display: inline-block; padding: 5px 12px; border-radius: 30px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
                     .status-success { background: #dcfce7; color: #166534; }
                     .status-failed { background: #fee2e2; color: #991b1b; }
 
-                    .section-title { font-size: 18px; color: #334155; border-left: 4px solid #3b82f6; padding-left: 12px; margin: 40px 0 20px 0; font-weight: 700; }
+                    .section-title { font-size: 14px; color: #004a99; border-left: 4px solid #004a99; padding-left: 12px; margin: 30px 0 20px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
                     
-                    .evidence-card { margin-bottom: 50px; page-break-inside: avoid; }
-                    .evidence-card h3 { font-size: 14px; color: #475569; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9; }
-                    .img-container { background: #f1f5f9; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
-                    img { width: 100%; border-radius: 4px; display: block; }
+                    .evidence-card { margin-bottom: 40px; page-break-inside: avoid; }
+                    .evidence-card h3 { font-size: 11px; color: #64748b; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9; text-transform: uppercase; font-weight: 700; }
+                    .img-container { background: #f8fafc; padding: 6px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+                    img { width: 100%; border-radius: 8px; display: block; }
                     
-                    .error-summary { background: #fef2f2; border: 1px solid #ef4444; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-                    .error-summary h4 { color: #991b1b; margin: 0 0 10px 0; font-size: 16px; }
-                    .error-summary p { color: #b91c1c; margin: 0; font-family: monospace; font-size: 13px; }
+                    .error-summary { background: #fef2f2; border: 1px solid #ef4444; padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+                    .error-summary h4 { color: #991b1b; margin: 0 0 10px 0; font-size: 15px; font-weight: 800; }
+                    .error-summary p { color: #b91c1c; margin: 0; font-family: 'Courier New', monospace; font-size: 12px; font-weight: 600; }
 
-                    .footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center; }
+                    .footer { text-align: center; margin-top: 50px; padding: 30px 0; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; }
+                    /* Watermark */
+                    .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); opacity: 0.05; width: 400px; z-index: -1; pointer-events: none; }
                 </style>
             </head>
             <body>
+                <!-- Watermark for all pages -->
+                <img class="watermark" src="data:image/png;base64,${logoBase64}" alt="" />
+
                 <div class="header">
                     <div class="header-left">
-                        <h1>Reporte de Certificación</h1>
-                        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">Suite de Automatización - Facturador CI</p>
+                        <h1>Certificación de Prueba</h1>
+                        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Módulo: Facturador Electrónico - Clínica Internacional</p>
                     </div>
                     <div class="header-right">
-                        <p>ID Ejecución: ${Date.now()}</p>
+                        <p>ID: ${activeId}</p>
                         <p>${new Date().toLocaleString('es-PE')}</p>
                     </div>
                 </div>
 
                 <div class="meta-grid">
-                    <div class="meta-item"><label>Pre-Factura ID</label><span>${activeId}</span></div>
-                    <div class="meta-item"><label>Comprobante</label><span>${docExtracted || "Pendiente/Error"}</span></div>
-                    <div class="meta-item"><label>Estado Final</label>
+                    <div class="meta-item"><label>Pre-Factura</label><span>${activeId}</span></div>
+                    <div class="meta-item"><label>Comprobante</label><span>${docExtracted || "N/A"}</span></div>
+                    <div class="meta-item"><label>Estado</label>
                         <span class="status-badge ${testStatus.includes('EXITO') ? 'status-success' : 'status-failed'}">${testStatus}</span>
                     </div>
-                    <div class="meta-item"><label>Duración</label><span>${dur} segundos</span></div>
+                    <div class="meta-item"><label>Tiempo</label><span>${dur}s</span></div>
                 </div>
 
                 ${testError ? `
                 <div class="error-summary">
-                    <h4>🔴 Detalle de Interrupción</h4>
+                    <h4>⚠️ Incidencia en el Flujo</h4>
                     <p>${testError}</p>
                 </div>
                 ` : ''}
 
-                <div class="section-title">EVIDENCIAS FOTOGRÁFICAS</div>
+                <div class="section-title">Evidencia de Pasos</div>
             `;
 
             const pics = [
-                { id: 'antes_de_cobrar', title: '01. CARGA DE PRE-FACTURA' },
-                { id: 'modal_efectivo', title: '02. PROCESO DE PAGO' },
-                { id: 'post_pago', title: '03. REGISTRO DE TRANSACCIÓN' },
-                { id: 'comprobante_emitido', title: '04. VERIFICACIÓN EN TAB DOCUMENTOS' },
-                { id: 'error_flujo', title: '⚠️ CAPTURA DE ERROR / INCIDENCIA' }
+                { id: 'antes_de_cobrar', title: '01. Carga de datos en SAP Fiori' },
+                { id: 'modal_efectivo', title: '02. Ejecución del Medio de Pago' },
+                { id: 'post_pago', title: '03. Respuesta del Servidor de Pagos' },
+                { id: 'comprobante_emitido', title: '04. Generación de Comprobante' },
+                { id: 'error_flujo', title: '⚠️ Captura de Pantalla del Error' }
             ];
 
             for (const p of pics) {
@@ -609,15 +637,34 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
             }
             
             html += `
-                <div class="footer">
-                    Este documento es una evidencia generada automáticamente por el sistema de QA de Seidor/CI.<br>
-                    © 2026 Seidor - Todos los derechos reservados.
                 </div>
             </body></html>`;
+
+            const headerTemplate = `
+                <div style="font-family: 'Poppins', sans-serif; font-size: 10px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; border-bottom: 0.5px solid #e2e8f0; margin-bottom: 10px;">
+                    <img src="data:image/png;base64,${logoBase64}" style="height: 15px; width: auto;" />
+                    <div style="font-weight: 800; color: #004a99; font-size: 11px;">AutoBot</div>
+                </div>
+            `;
+
+            const footerTemplate = `
+                <div style="font-family: 'Poppins', sans-serif; font-size: 8px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 8px 40px; color: #94a3b8; border-top: 0.5px solid #e2e8f0;">
+                    <div>Impreso: ${new Date().toLocaleString('es-PE')} | Seidor Perú</div>
+                    <div>Página <span class="pageNumber"></span> de <span class="totalPages"></span></div>
+                </div>
+            `;
             
             await pdfPage.setContent(html, { waitUntil: 'networkidle' });
             const pdfPath = path.join(evidenceDir, `Reporte_Tecnico_${activeId}.pdf`);
-            await pdfPage.pdf({ path: pdfPath, format: 'A4', margin: { top: '0', bottom: '0' }, printBackground: true });
+            await pdfPage.pdf({ 
+                path: pdfPath, 
+                format: 'A4', 
+                margin: { top: '70px', bottom: '50px', left: '0', right: '0' }, 
+                printBackground: true,
+                displayHeaderFooter: true,
+                headerTemplate: headerTemplate,
+                footerTemplate: footerTemplate
+            });
             await pdfBrowser.close();
             console.log(`✅ PDF Generado (Elegante): ${pdfPath}`);
         } catch (err) {

@@ -1,0 +1,33 @@
+{
+  "prefacturaId": "1393494188",
+  "steps": [
+    {
+      "step": "login",
+      "status": "running",
+      "timestamp": "2026-03-01T21:29:47.113Z"
+    },
+    {
+      "step": "login",
+      "status": "ok",
+      "timestamp": "2026-03-01T21:29:50.486Z"
+    },
+    {
+      "step": "abrir-facturacion",
+      "status": "running",
+      "timestamp": "2026-03-01T21:29:50.486Z"
+    },
+    {
+      "step": "abrir-facturacion",
+      "status": "ok",
+      "timestamp": "2026-03-01T21:30:00.364Z"
+    },
+    {
+      "step": "buscar-prefactura",
+      "status": "running",
+      "timestamp": "2026-03-01T21:30:00.364Z"
+    }
+  ],
+  "duration": "180.23s",
+  "status": "❌ FALLIDO",
+  "error": "page.waitForTimeout: Target page, context or browser has been closed"
+}

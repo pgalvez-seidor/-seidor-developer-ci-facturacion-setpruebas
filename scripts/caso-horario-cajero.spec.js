@@ -41,7 +41,7 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
     };
 
     const shot = async (name) => {
-        await page.waitForTimeout(1200);
+        await page.waitForTimeout(300);
         await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 4000 }).catch(() => { });
         const p = path.join(evidenceDir, `${name}.png`);
         await page.screenshot({ path: p, fullPage: true });
@@ -50,7 +50,7 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
     };
 
     let activeFrame = null;
-    const find = async (selector, timeout = 8000) => {
+    const find = async (selector, timeout = 800) => {
         const end = Date.now() + timeout;
         while (Date.now() < end) {
             if (activeFrame) {
@@ -73,7 +73,7 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
         throw new Error(`[find] Timeout ${timeout}ms: '${selector}'`);
     };
 
-    const tap = async (selector, timeout = 5000) => {
+    const tap = async (selector, timeout = 1000) => {
         try { await (await find(selector, timeout)).click(); return true; }
         catch { return false; }
     };
@@ -112,7 +112,7 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
         const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Horario cajero$|^Horario Cajero$/i }).first();
         await tile.waitFor({ state: 'visible', timeout: 20000 });
         await tile.click();
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(10);
         await shot('hc_app_inicial');
         logStep('abrir-horario-cajero', 'ok');
 
@@ -127,23 +127,23 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
         // -- Área
         const areaDropdown = await find('[placeholder*="rea"], select[id*="Area"], [class*="combobox"]', 10000);
         await areaDropdown.click();
-        await page.waitForTimeout(400);
+        await page.waitForTimeout(50);
         await tap(`[role="option"]:has-text("${testConfig.area}"), li:has-text("${testConfig.area}")`, 4000);
-        await page.waitForTimeout(400);
+        await page.waitForTimeout(50);
 
         // -- Período
         const periodoDropdown = await find('[placeholder*="eríodo"], select[id*="eriod"]', 8000);
         await periodoDropdown.click();
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(10);
         await tap(`[role="option"]:has-text("${testConfig.periodo}")`, 4000);
-        await page.waitForTimeout(400);
+        await page.waitForTimeout(50);
 
         // -- Semana
         const semanaDropdown = await find('[placeholder*="emana"], select[id*="emana"]', 8000);
         await semanaDropdown.click();
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(10);
         await tap(`[role="option"]:has-text("${testConfig.semana}")`, 4000);
-        await page.waitForTimeout(400);
+        await page.waitForTimeout(50);
 
         // Buscar
         await tap('button:has-text("Buscar"), button[id*="buscar"]', 5000);
@@ -154,7 +154,7 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
         if (alertaPasado) {
             console.log('⚠️ Alerta: Horario en el pasado — cerrando con OK...');
             await tap('button:has-text("OK"), button:has-text("Aceptar")', 3000);
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(100);
         }
 
         await shot('hc_lista_cajero');
@@ -168,7 +168,9 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
         const existe = await rowCajero.isVisible({ timeout: 5000 }).catch(() => false);
 
         if (!existe) {
-            throw new Error(`Usuario ${env.user.toUpperCase()} no encontrado en tabla para ${testConfig.semana}.`);
+            const msg = `USUARIO ${env.user.toUpperCase()} NO ENCONTRADO EN TABLA`;
+            console.log(`❌ Error de Negocio Detectado: ${msg}`);
+            throw new Error(msg);
         }
         
         console.log(`✅ Usuario ${env.user.toUpperCase()} encontrado. Asignando turnos...`);
@@ -190,7 +192,7 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
                     
                     // Hacer click para habilitar la edición (en Fiori a veces es un Text que al clic se hace Input)
                     await celda.click();
-                    await page.waitForTimeout(300);
+                    await page.waitForTimeout(10);
                     
                     // Buscar si hay un input activo dentro de la celda o globalmente enfocado
                     const inputActivo = celda.locator('input').first();
@@ -201,7 +203,7 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
                         await page.keyboard.type(horarioValor);
                     }
                     await page.keyboard.press('Tab'); // Salir de la celda para aplicar cambios
-                    await page.waitForTimeout(300);
+                    await page.waitForTimeout(10);
                 } else {
                     console.warn(`  ⚠️ Columna para día '${diaClave}' no encontrada en la cabecera.`);
                 }
@@ -216,13 +218,13 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
         logStep('guardar-turnos', 'running');
         const btnGuardar = await find('button[title*="Guardar"], button:has-text("Guardar"), [aria-label*="Guardar"]', 5000);
         await btnGuardar.click();
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(200);
 
         // Aceptar confirmación de éxito si la hay
         const okBtn = await find('button:has-text("OK"), button:has-text("Aceptar")', 3000).catch(() => null);
         if (okBtn) {
             await okBtn.click();
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(100);
         }
 
         await shot('hc_turnos_guardados');
@@ -243,56 +245,155 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
             );
         }
 
-        // PDF de evidencia
+        // Reporte PDF
         try {
             console.log('📄 Generando PDF de evidencia...');
             const { chromium } = require('@playwright/test');
             const pdfBrowser = await chromium.launch({ headless: true });
             const pdfPage = await pdfBrowser.newPage();
 
-            const pics = [
-                { id: 'hc_app_inicial', title: '1. App Horario Cajero cargado' },
-                { id: 'hc_lista_cajero', title: '2. Tabla HorarioCajero (resultados de búsqueda)' },
-                { id: 'hc_verificacion_final', title: '3. Verificación final (usuario en tabla)' },
-                { id: 'hc_error_flujo', title: '🔴 Error en el flujo' },
-            ];
+            // Cargar Logo para el PDF
+            let logoBase64 = "";
+            try {
+                const lp = path.join(process.cwd(), 'ui', 'public', 'seidor-logo.png');
+                logoBase64 = fs.readFileSync(lp).toString('base64');
+            } catch(e) {}
 
-            let html = `<html><head><style>
-                body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #333; }
-                h1 { color: #005587; border-bottom: 2px solid #005587; padding-bottom: 10px; }
-                .meta { background: #f8fafc; padding: 15px; border-radius: 5px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
-                .box-warn { background: #fffbeb; border: 1px solid #f59e0b; padding: 12px; border-radius: 5px; margin-bottom: 20px; color: #92400e; }
-                .step { margin-bottom: 40px; page-break-inside: avoid; }
-                img { max-width: 100%; border: 1px solid #ccc; border-radius: 4px; margin-top: 10px; }
-                .error-box { background: #fee2e2; border: 1px solid #ef4444; padding: 15px; border-radius: 5px; color: #b91c1c; }
-            </style></head><body>
-                <h1>Reporte Técnico — Horario Cajero (CI)</h1>
-                <div class="box-warn">⚠️ <strong>Prerequisito:</strong> Este flujo requiere que exista un Horario Supervisor activo para el mismo Área y Período.</div>
-                <div class="meta">
-                    <p><strong>Usuario:</strong> ${env.user.toUpperCase()}</p>
-                    <p><strong>Área:</strong> ${testConfig.area}</p>
-                    <p><strong>Período:</strong> ${testConfig.periodo}</p>
-                    <p><strong>Semana:</strong> ${testConfig.semana}</p>
-                    <hr style="border: 0; border-top: 1px dashed #ccc; margin: 10px 0;">
-                    <p><strong>Estado:</strong> ${testStatus}</p>
-                    <p><strong>Duración:</strong> ${dur}s | <strong>Fecha:</strong> ${new Date().toLocaleString('es-PE')}</p>
+            let html = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+                    body { font-family: 'Poppins', sans-serif; padding: 40px; color: #1e293b; background: #fff; line-height: 1.5; }
+                    
+                    .header-brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                    .header-brand img { height: 35px; width: auto; }
+                    .header-brand .app-name { font-weight: 800; font-size: 1rem; color: #004a99; letter-spacing: -0.5px; }
+
+                    .header { background: #f8fafc; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                    .header-left h1 { margin: 0; font-size: 22px; font-weight: 800; color: #0f172a; }
+                    .header-right { text-align: right; font-size: 11px; color: #64748b; font-weight: 600; }
+                    
+                    .box-warn { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px 20px; border-radius: 8px; margin-bottom: 30px; color: #92400e; font-size: 11px; font-weight: 600; }
+
+                    .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+                    .meta-item { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+                    .meta-item label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
+                    .meta-item span { font-size: 12px; font-weight: 700; color: #1e293b; }
+                    
+                    .status-badge { display: inline-block; padding: 5px 12px; border-radius: 30px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+                    .status-success { background: #dcfce7; color: #166534; }
+                    .status-failed { background: #fee2e2; color: #991b1b; }
+
+                    .section-title { font-size: 13px; color: #004a99; border-left: 4px solid #004a99; padding-left: 12px; margin: 30px 0 20px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+                    
+                    .evidence-card { margin-bottom: 40px; page-break-inside: avoid; }
+                    .evidence-card h3 { font-size: 10px; color: #64748b; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9; text-transform: uppercase; font-weight: 700; }
+                    .img-container { background: #f8fafc; padding: 6px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+                    img { width: 100%; border-radius: 8px; display: block; }
+                    
+                    .error-box { background: #fef2f2; border: 1px solid #ef4444; padding: 25px; border-radius: 16px; margin-bottom: 30px; }
+                    .error-box strong { color: #991b1b; display: block; margin-bottom: 10px; font-size: 14px; }
+                    .error-box p { color: #b91c1c; margin: 0; font-family: monospace; font-size: 12px; }
+
+                    .footer { text-align: center; margin-top: 60px; padding: 30px 0; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 10px; }
+                    /* Watermark */
+                    .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); opacity: 0.05; width: 400px; z-index: -1; pointer-events: none; }
+                </style>
+            </head>
+            <body>
+                <!-- Watermark for all pages -->
+                <img class="watermark" src="data:image/png;base64,${logoBase64}" alt="" />
+
+                <div class="header">
+                    <div class="header-left">
+                        <h1>Certificación de Flujo</h1>
+                        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Módulo: Horario Cajero - Clínica Internacional</p>
+                    </div>
+                    <div class="header-right">
+                        <p>ID: ${Date.now()}</p>
+                        <p>${new Date().toLocaleString('es-PE')}</p>
+                    </div>
                 </div>
-                ${testError ? `<div class="error-box"><strong>Error:</strong> ${testError}</div>` : ''}
-                <h2>Evidencias</h2>`;
+
+                <div class="box-warn">
+                    ⚠️ <strong>Prerequisito del Sistema:</strong> Este flujo requiere que exista un Horario Supervisor activo y aprobado para el mismo Área y Período seleccionado.
+                </div>
+
+                <div class="meta-grid">
+                    <div class="meta-item"><label>Área / Período</label><span>${testConfig.area} - ${testConfig.periodo}</span></div>
+                    <div class="meta-item"><label>Estado</label>
+                        <span class="status-badge ${testStatus.includes('EXITO') ? 'status-success' : 'status-failed'}">${testStatus}</span>
+                    </div>
+                    <div class="meta-item"><label>Tiempo</label><span>${dur}s</span></div>
+                    
+                    <div class="meta-item"><label>Semana</label><span>${testConfig.semana}</span></div>
+                    <div class="meta-item"><label>Usuario</label><span>${env.user.toUpperCase()}</span></div>
+                    <div class="meta-item"><label>Fecha Reporte</label><span>${new Date().toLocaleDateString('es-PE')}</span></div>
+                </div>
+
+                ${testError ? `
+                <div class="error-box">
+                    <strong>⚠️ Incidencia detectada</strong>
+                    <p>${testError}</p>
+                </div>
+                ` : ''}
+
+                <div class="section-title">Evidencia de Pasos</div>`;
+
+            const pics = [
+                { id: 'hc_app_inicial', title: '01. Carga de aplicación Horario Cajero' },
+                { id: 'hc_lista_cajero', title: '02. Búsqueda y filtrado de registros' },
+                { id: 'hc_verificacion_final', title: '03. Verificación de asignación final' },
+                { id: 'hc_error_flujo', title: '🔴 Captura de error / Excepción' },
+            ];
 
             for (const p of pics) {
                 const imgPath = path.join(evidenceDir, p.id + '.png');
                 if (fs.existsSync(imgPath)) {
                     const base64 = fs.readFileSync(imgPath).toString('base64');
-                    html += `<div class="step"><h3>${p.title}</h3><img src="data:image/png;base64,${base64}" /></div>`;
+                    html += `
+                    <div class="evidence-card">
+                        <h3>Paso: ${p.title}</h3>
+                        <div class="img-container">
+                            <img src="data:image/png;base64,${base64}" />
+                        </div>
+                    </div>`;
                 }
             }
-            html += '</body></html>';
 
+            html += `
+                </div>
+            </body></html>`;
+
+            const headerTemplate = `
+                <div style="font-family: 'Poppins', sans-serif; font-size: 10px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; border-bottom: 0.5px solid #e2e8f0; margin-bottom: 10px;">
+                    <img src="data:image/png;base64,${logoBase64}" style="height: 15px; width: auto;" />
+                    <div style="font-weight: 800; color: #004a99; font-size: 11px;">AutoBot</div>
+                </div>
+            `;
+
+            const footerTemplate = `
+                <div style="font-family: 'Poppins', sans-serif; font-size: 8px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 8px 40px; color: #94a3b8; border-top: 0.5px solid #e2e8f0;">
+                    <div>Impreso: ${new Date().toLocaleString('es-PE')} | Seidor Perú</div>
+                    <div>Página <span class="pageNumber"></span> de <span class="totalPages"></span></div>
+                </div>
+            `;
+            
             await pdfPage.setContent(html, { waitUntil: 'networkidle' });
             const timestamp = Date.now();
             const pdfPath = path.join(evidenceDir, `Reporte_HC_${timestamp}.pdf`);
-            await pdfPage.pdf({ path: pdfPath, format: 'A4', margin: { top: '20px', bottom: '20px' } });
+            await pdfPage.pdf({ 
+                path: pdfPath, 
+                format: 'A4', 
+                printBackground: true, 
+                displayHeaderFooter: true,
+                headerTemplate: headerTemplate,
+                footerTemplate: footerTemplate,
+                margin: { top: '70px', bottom: '50px', left: '0', right: '0' }
+            });
             await pdfBrowser.close();
             console.log(`✅ PDF Generado: ${pdfPath}`);
         } catch (err) {
