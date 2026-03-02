@@ -119,10 +119,16 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         // =======================
         logStep('Iniciando app Facturación', 'running');
         let appLoaded = false;
+        const tileSelector = '.sapMGT, [role="link"]';
+
+        // Intenta esperar por al menos un tile primero
+        await page.waitForSelector(tileSelector, { timeout: 20000 }).catch(() => { });
+
         for (let i = 1; i <= 5; i++) {
             console.log(`🔄 Intento de carga de app ${i}/5...`);
-            const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Facturación$/ }).first();
-            if (await tile.isVisible({ timeout: 5000 }).catch(() => false)) {
+            const tile = page.locator(tileSelector).filter({ hasText: /^Facturación$/ }).first();
+
+            if (await tile.isVisible({ timeout: 4000 }).catch(() => false)) {
                 await tile.click();
                 try {
                     // Esperamos que el iframe principal aparezca
@@ -130,11 +136,16 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                     appLoaded = true;
                     break;
                 } catch (e) {
-                    console.log("⚠️ Iframe no cargó, reintentando click...");
+                    console.log("⚠️ Iframe no cargó, reintentando...");
+                    // En caso de que haya dado clic pero no pasó nada, volver al inicio o cerrar popups
+                    await page.keyboard.press('Escape');
                 }
+            } else {
+                console.log(`⚠️ Tile 'Facturación' no visible en intento ${i}. Esperando...`);
+                await page.waitForTimeout(2000);
             }
         }
-        if (!appLoaded) throw new Error("La aplicación de Facturación no cargó correctamente.");
+        if (!appLoaded) throw new Error("La aplicación de Facturación no cargó correctamente (Tile no encontrado o iframe no renderizado).");
         await page.waitForTimeout(500);
         logStep('Iniciando app Facturación', 'ok');
 
