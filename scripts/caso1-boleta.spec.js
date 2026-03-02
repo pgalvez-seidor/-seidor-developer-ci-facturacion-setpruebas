@@ -27,9 +27,14 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     };
 
     const shot = async (name) => {
-        await page.waitForTimeout(500); // Esperar que desaparezcan los busy indicators
-        // Intentar esperar a que no haya loaders
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 300 }).catch(() => { });
+        // Esperamos un breve instante para dar tiempo a que aparezcan los loaders de red
+        await page.waitForTimeout(500);
+
+        // Espera DINÁMICA: Esperamos a que no haya loaders o desaparezcan (hasta 30 segundos)
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator, .sapMBlockLayer', { state: 'hidden', timeout: 30000 }).catch(() => { });
+
+        // Pequeño margen extra para garantizar que las animaciones de renderizado Fiori (UI5) hayan concluido
+        await page.waitForTimeout(500);
 
         const p = path.join(evidenceDir, `${name}.png`);
         await page.screenshot({ path: p, fullPage: true });
@@ -178,28 +183,41 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         // =======================
         console.log(`🔎 Seleccionando Pre-factura ${activeId}...`);
 
-        // Estrategia 1: primer listitem → verificar que el panel cargó con nuestro ID
         let selected = false;
-        try {
-            const first = await find('[role="listitem"], li[class*="sapMLIB"]', 6000);
-            await first.click();
-            await page.waitForTimeout(600);
-            if (await find(`text="${activeId}"`, 3000).catch(() => null)) {
-                selected = true;
-                console.log("✅ Primer item seleccionado");
-            }
-        } catch { }
+        for (let i = 1; i <= 5 && !selected; i++) {
+            console.log(`🔄 Intento de selección de PRE-FACTURA ${i}/5...`);
 
-        // Estrategia 2: buscar por texto del ID
-        if (!selected) {
-            for (const sel of [`[role="listitem"]:has-text("${activeId}")`, `li:has-text("${activeId}")`]) {
-                try {
-                    await (await find(sel, 4000)).click();
-                    await page.waitForTimeout(600);
+            // Estrategia 1: seleccionar primer listitem → verificar que el panel cargó con nuestro ID
+            try {
+                const first = await find('[role="listitem"], li[class*="sapMLIB"]', 4000);
+                await first.click();
+                await page.waitForTimeout(1000); // Dar chance al panel de renderizar un poco
+                if (await find(`text="${activeId}"`, 2000).catch(() => null)) {
                     selected = true;
-                    console.log(`✅ Seleccionado con: ${sel}`);
+                    console.log("✅ Primer item seleccionado y validado visualmente");
                     break;
-                } catch { }
+                }
+            } catch { }
+
+            // Estrategia 2: buscar explícitamente el elemento en la lista que contenga el activeId
+            if (!selected) {
+                for (const sel of [`[role="listitem"]:has-text("${activeId}")`, `li:has-text("${activeId}")`]) {
+                    try {
+                        const itemSearch = await find(sel, 2000);
+                        await itemSearch.click();
+                        await page.waitForTimeout(1000);
+                        if (await find(`text="${activeId}"`, 2000).catch(() => null)) {
+                            selected = true;
+                            console.log(`✅ Seleccionado exactamente con match de texto: ${sel}`);
+                            break;
+                        }
+                    } catch { }
+                }
+            }
+
+            if (!selected) {
+                console.log(`⚠️ Falló la validación del panel de detalle en el intento ${i}. Esperando lista...`);
+                await page.waitForTimeout(2000);
             }
         }
 

@@ -34,8 +34,9 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
     };
 
     const shot = async (name) => {
-        await page.waitForTimeout(100);
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 4000 }).catch(() => { });
+        await page.waitForTimeout(300); // Dar más holgura antes de chequear el loader
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator, .sapMBlockLayer', { state: 'hidden', timeout: 30000 }).catch(() => { });
+        await page.waitForTimeout(500); // Margen extra de render
         const p = path.join(evidenceDir, `${name}.png`);
         await page.screenshot({ path: p, fullPage: true });
         console.log(`📸 ${name}.png`);
