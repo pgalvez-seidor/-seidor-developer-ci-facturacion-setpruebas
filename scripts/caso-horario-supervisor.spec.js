@@ -403,7 +403,12 @@ test(`Horario Supervisor — Flujo Diario [${testConfig.fechaHoy}]`, async ({ pa
                 </div>
                 ` : ''}
 
-                <div class="section-title">Evidencias Fotográficas</div>`;
+                <div class="section-title">Evidencias Fotográficas</div>
+                
+                <div style="margin: 20px 0; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                    <span>⏱️ Tiempo Total de Certificación (SLA)</span>
+                    <b style="color: #004a99; font-size: 13px;">${dur}s <span style="width: 8px; height: 8px; border-radius: 50%; margin-left: 6px; display: inline-block; background: ${dur < 120 ? '#10b981' : '#f59e0b'};"></span></b>
+                </div>`;
 
             const fsImages = fs.readdirSync(evidenceDir).filter(f => f.startsWith('hs_') && f.endsWith('.png')).sort();
             for (const imgName of fsImages) {
