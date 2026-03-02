@@ -108,7 +108,9 @@ async function runCaso(caso) {
     result.steps[result.steps.length - 1].status = "skipped";
   } else {
     try {
-      const prefacturaId = await createPrefactura(tester.toUpperCase());
+      const user = tester.toUpperCase();
+      const centro = caso.config?.codigoCentro || "4";
+      const prefacturaId = await createPrefactura(user, centro);
       result.prefacturaId = prefacturaId;
       result.steps[result.steps.length - 1].status = "ok";
       console.log(`   ✅ Pre-factura creada: ${prefacturaId}`);
@@ -206,11 +208,11 @@ async function main() {
   if (Array.isArray(registry)) {
     registry.forEach(cliente => {
       if (cliente.procesos) {
-         cliente.procesos.forEach(proceso => {
-            if (proceso.escenarios) {
-               allCasos = allCasos.concat(proceso.escenarios.map(esc => ({ ...esc, _proceso: proceso.id })));
-            }
-         });
+        cliente.procesos.forEach(proceso => {
+          if (proceso.escenarios) {
+            allCasos = allCasos.concat(proceso.escenarios.map(esc => ({ ...esc, _proceso: proceso.id })));
+          }
+        });
       }
     });
   } else if (registry.casos) {

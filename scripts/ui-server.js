@@ -183,7 +183,9 @@ app.post('/api/run-test', async (req, res) => {
             sendLog('info', `🚀 Fase 1: Emitiendo ${iterations} PRE-FACTURAs vía API para evitar bloqueos...`);
             for (let i = 0; i < iterations; i++) {
                 sendLog('info', `⏳ Obteniendo PRE-FACTURA (${i + 1}/${iterations})...`);
-                const id = await createPrefactura("PGALVEZ3");
+                const user = config.usuarioCajero || "PGALVEZ3";
+                const centro = config.codigoCentro || "4";
+                const id = await createPrefactura(user, centro);
                 prefacturaIds.push(id);
                 sendLog('info', `✅ PRE-FACTURA reservada: ${id}`);
             }
@@ -282,7 +284,9 @@ app.post('/api/run-batch', async (req, res) => {
 
                 let preId = null;
                 try {
-                    preId = await createPrefactura("PGALVEZ3");
+                    const user = config.usuarioCajero || "PGALVEZ3";
+                    const centro = config.codigoCentro || "4";
+                    preId = await createPrefactura(user, centro);
                     sendLog(taskId, 'log', `✅ PRE-FACTURA emitida vía API: ${preId}`);
                 } catch (e) {
                     sendLog(taskId, 'log', `⚠️ Advertencia: no se pudo emitir PRE-FACTURA vía API.`);

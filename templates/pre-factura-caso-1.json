@@ -42,7 +42,7 @@
         "TI_PACIENTE": "2",
         "CA_REME": "",
         "DES_COND_PAG": "",
-        "CO_CENTRO_XHIS": "4",
+        "CO_CENTRO_XHIS": "{{CENTRO}}",
         "EPrefacturaDetalle": [
             {
                 "PK_PREFAC": "{{ID}}",

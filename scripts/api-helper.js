@@ -2,7 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-async function createPrefactura(user) {
+async function createPrefactura(user, centro = "4") {
     const config = JSON.parse(fs.readFileSync('./config/api-config.json', 'utf8')).QAS;
     const template = fs.readFileSync('./templates/pre-factura-caso-1.json', 'utf8');
 
@@ -10,7 +10,7 @@ async function createPrefactura(user) {
     try {
         console.log("🔄 Sincronizando correlativo con repositorio...");
         execSync('git pull origin HEAD --rebase', { stdio: 'ignore' });
-    } catch(e) {
+    } catch (e) {
         console.log("⚠️ Advertencia: No se pudo hacer git pull del correlativo.");
     }
 
@@ -22,7 +22,12 @@ async function createPrefactura(user) {
 
     for (let attempt = 0; attempt < 5; attempt++) {
         const idStr = currentId.toString();
-        const payload = JSON.parse(template.replace(/{{ID}}/g, idStr).replace(/{{USER}}/g, user));
+        const payload = JSON.parse(
+            template
+                .replace(/{{ID}}/g, idStr)
+                .replace(/{{USER}}/g, user)
+                .replace(/{{CENTRO}}/g, centro)
+        );
 
         console.log(`Intentando con PK: ${idStr}`);
         try {

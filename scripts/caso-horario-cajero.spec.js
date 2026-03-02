@@ -106,13 +106,27 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
         logStep('login', 'ok');
 
         // =======================
-        // PASO 2: ABRIR APP HORARIO CAJERO
+        // PASO 2: ABRIR APP HORARIO CAJERO con reintento inteligente
         // =======================
         logStep('abrir-horario-cajero', 'running');
-        const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Horario cajero$|^Horario Cajero$/i }).first();
-        await tile.waitFor({ state: 'visible', timeout: 20000 });
-        await tile.click();
-        await page.waitForTimeout(10);
+        let appLoaded = false;
+        for (let i = 1; i <= 5; i++) {
+            console.log(`🔄 Intento de carga de app Horario Cajero ${i}/5...`);
+            const tile = page.locator('.sapMGT, [role="link"]').filter({ hasText: /^Horario cajero$|^Horario Cajero$/i }).first();
+            if (await tile.isVisible({ timeout: 5000 }).catch(() => false)) {
+                await tile.click();
+                try {
+                    // Esperamos que el iframe principal aparezca
+                    await page.waitForSelector('iframe', { timeout: 10000 });
+                    appLoaded = true;
+                    break;
+                } catch (e) {
+                    console.log("⚠️ Iframe no cargó, reintentando...");
+                }
+            }
+        }
+        if (!appLoaded) throw new Error("La aplicación de Horario Cajero no cargó correctamente.");
+        await page.waitForTimeout(1000);
         await shot('hc_app_inicial');
         logStep('abrir-horario-cajero', 'ok');
 
@@ -172,28 +186,28 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
             console.log(`❌ Error de Negocio Detectado: ${msg}`);
             throw new Error(msg);
         }
-        
+
         console.log(`✅ Usuario ${env.user.toUpperCase()} encontrado. Asignando turnos...`);
 
         // Extraer cabeceras (para ubicar el índice de las columnas de los días)
         const thead = page.locator('thead').first();
         const colHeaders = await thead.locator('th, [role="columnheader"]').allTextContents();
         // Ej: ["Item", "Usuario", "Lunes (2)", "Martes (3)", ...]
-        
+
         if (testConfig.turnos) {
             for (const [diaClave, horarioValor] of Object.entries(testConfig.turnos)) {
                 // diaClave ej: "Lunes". Buscar qué columna contiene "Lunes"
                 const colIndex = colHeaders.findIndex(header => header.toLowerCase().includes(diaClave.toLowerCase()));
-                
+
                 if (colIndex > -1) {
                     console.log(`  🕒 Set ${diaClave} (col ${colIndex}) -> ${horarioValor}`);
                     // Encontrar la celda correspondiente en la fila del cajero
                     const celda = rowCajero.locator('td, [role="gridcell"]').nth(colIndex);
-                    
+
                     // Hacer click para habilitar la edición (en Fiori a veces es un Text que al clic se hace Input)
                     await celda.click();
                     await page.waitForTimeout(10);
-                    
+
                     // Buscar si hay un input activo dentro de la celda o globalmente enfocado
                     const inputActivo = celda.locator('input').first();
                     if (await inputActivo.isVisible({ timeout: 1000 }).catch(() => false)) {
@@ -209,7 +223,7 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
                 }
             }
         }
-        
+
         await shot('hc_turnos_ingresados');
 
         // =======================
@@ -257,7 +271,7 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
             try {
                 const lp = path.join(process.cwd(), 'ui', 'public', 'seidor-logo.png');
                 logoBase64 = fs.readFileSync(lp).toString('base64');
-            } catch(e) {}
+            } catch (e) { }
 
             let html = `
             <!DOCTYPE html>
@@ -386,14 +400,14 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
                     <div>Página <span class="pageNumber"></span> de <span class="totalPages"></span></div>
                 </div>
             `;
-            
+
             await pdfPage.setContent(html, { waitUntil: 'networkidle' });
             const timestamp = Date.now();
             const pdfPath = path.join(evidenceDir, `Reporte_HC_${timestamp}.pdf`);
-            await pdfPage.pdf({ 
-                path: pdfPath, 
-                format: 'A4', 
-                printBackground: true, 
+            await pdfPage.pdf({
+                path: pdfPath,
+                format: 'A4',
+                printBackground: true,
                 displayHeaderFooter: true,
                 headerTemplate: headerTemplate,
                 footerTemplate: footerTemplate,
