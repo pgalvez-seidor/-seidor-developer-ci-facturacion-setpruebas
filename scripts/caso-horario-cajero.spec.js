@@ -341,7 +341,12 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
                 </div>
                 ` : ''}
 
-                <div class="section-title">Evidencia de Pasos</div>`;
+                <div class="section-title">Evidencia de Pasos</div>
+                
+                <div style="margin: 20px 0; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                    <span>⏱️ Tiempo Total de Certificación (SLA)</span>
+                    <b style="color: #004a99; font-size: 13px;">${dur}s <span style="width: 8px; height: 8px; border-radius: 50%; margin-left: 6px; display: inline-block; background: ${dur < 60 ? '#10b981' : '#f59e0b'};"></span></b>
+                </div>`;
 
             const pics = [
                 { id: 'hc_app_inicial', title: '01. Carga de aplicación Horario Cajero' },

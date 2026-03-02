@@ -320,6 +320,14 @@ app.post('/api/run-batch', async (req, res) => {
                         sendLog(taskId, 'business_error', errorNegocioMatch[1]);
                     }
 
+                    // Extraer Métricas [METRIC] name: value
+                    const metricMatch = text.match(/\[METRIC\]\s+(\w+):\s+([\d\.]+)s/);
+                    if (metricMatch) {
+                        if (!config.metrics) config.metrics = {}; // Usemos el objeto config de la tarea para guardar temporalmente
+                        config.metrics[metricMatch[1]] = metricMatch[2];
+                        sendLog(taskId, 'log', `📊 Métrica capturada -> ${metricMatch[1]}: ${metricMatch[2]}s`);
+                    }
+
                     // Extraer Ruta del PDF
                     const pdfMatch = text.match(/✅ PDF Generado:\s*(.+)/);
                     if (pdfMatch) {
@@ -349,6 +357,7 @@ app.post('/api/run-batch', async (req, res) => {
                         runDir, // Importante para recuperar fotos
                         status: isSuccess ? 'EXITO' : 'FALLIDO',
                         result: resultMsg,
+                        metrics: config.metrics || {},
                         timestamp: new Date().toLocaleString()
                     });
 
@@ -439,6 +448,14 @@ app.post('/api/run-batch', async (req, res) => {
 
                     /* Watermark */
                     .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); opacity: 0.05; width: 600px; z-index: -1; pointer-events: none; }
+
+                    .metrics-container { display: flex; gap: 15px; margin-bottom: 25px; }
+                    .metric-tag { background: #f1f5f9; padding: 10px 15px; border-radius: 10px; border: 1px dashed #cbd5e1; font-size: 11px; flex: 1; display: flex; justify-content: space-between; align-items: center; }
+                    .metric-tag b { color: #004a99; font-size: 12px; }
+                    .sla-indicator { width: 8px; height: 8px; border-radius: 50%; margin-left: 8px; display: inline-block; }
+                    .sla-good { background: #10b981; }
+                    .sla-warn { background: #f59e0b; }
+                    .sla-bad { background: #ef4444; }
                 </style>
             </head>
             <body>
@@ -501,6 +518,19 @@ app.post('/api/run-batch', async (req, res) => {
                         <div style="margin-bottom: 20px; font-size: 12px; color: #64748b; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9;">
                             <b>Configuración:</b> ${JSON.stringify(r.config.pagos.map(p=>p.tipo).join(' + '))} | <b>Resultado:</b> ${r.result}
                         </div>
+
+                        <!-- Métricas de Negocio -->
+                        <div class="metrics-container">
+                            <div class="metric-tag">
+                                <div>⏱️ Registro de Pago (E2E)</div>
+                                <b>${r.metrics.payment_registration || '--'}s <span class="sla-indicator ${parseFloat(r.metrics.payment_registration) < 25 ? 'sla-good' : 'sla-warn'}"></span></b>
+                            </div>
+                            <div class="metric-tag">
+                                <div>⚡ Emisión (Backend/SUNAT)</div>
+                                <b>${r.metrics.document_emission || '--'}s <span class="sla-indicator ${parseFloat(r.metrics.document_emission) < 15 ? 'sla-good' : 'sla-warn'}"></span></b>
+                            </div>
+                        </div>
+
                         <div class="evidence-grid">
                             ${evidenceHtml}
                         </div>

@@ -192,6 +192,8 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     console.log(`💳 Iniciando cobranza en ${testConfig.medioPago}...`);
     activeFrame = null;
 
+    let metricStartTime = Date.now();
+
     // Procesar array de pagos configurados (Mixtos, Efectivo, Tarjeta)
     const pagos = testConfig.pagos || [];
     if (pagos.length === 0) {
@@ -354,6 +356,10 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
         throw new Error("SUNAT_MOCK: Servicio de validación de comprobante no disponible o fuera de línea (Timeout Forzado).");
     }
 
+    logStep('Emitiendo comprobante electrónico', 'running');
+    console.log("📄 Iniciando proceso de emisión final...");
+    let emissionStartTime = Date.now();
+
     // Imprimir
     if (!await tap('button:has-text("Imprimir")', 6000)) {
         await shot('error-imprimir');
@@ -374,6 +380,9 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
     logStep('Cerrando popups de confirmación...', 'running');
     console.log("🧹 Cerrando popups de confirmación...");
     
+    let emissionEndTime = Date.now();
+    let emissionDuration = (emissionEndTime - emissionStartTime) / 1000;
+    console.log(`[METRIC] document_emission: ${emissionDuration.toFixed(2)}s`);
     // Selectores más amplios, incluyendo los propios del iframe activo si lo hay
     const possibleCloseButtons = [
         'footer button:has-text("OK")',
@@ -446,6 +455,10 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
 
     logStep('Cerrando popups de confirmación...', 'ok');
     logStep('Emitiendo comprobante electrónico', 'ok');
+
+    let metricEndTime = Date.now();
+    let paymentDuration = (metricEndTime - metricStartTime) / 1000;
+    console.log(`[METRIC] payment_registration: ${paymentDuration.toFixed(2)}s`);
 
     // =======================
     // PASO 8: Tomando captura de evidencia del comprobante
@@ -577,6 +590,13 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                     .footer { text-align: center; margin-top: 50px; padding: 30px 0; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; }
                     /* Watermark */
                     .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); opacity: 0.05; width: 400px; z-index: -1; pointer-events: none; }
+                    
+                    .metrics-row { display: flex; gap: 15px; margin: 20px 0; }
+                    .metric-box { flex: 1; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+                    .metric-box b { color: #004a99; font-size: 13px; }
+                    .sla-dot { width: 8px; height: 8px; border-radius: 50%; margin-left: 6px; display: inline-block; }
+                    .dot-good { background: #10b981; }
+                    .dot-warn { background: #f59e0b; }
                 </style>
             </head>
             <body>
@@ -597,10 +617,23 @@ test(`Facturación Dinámica - ${testConfig.tipoComprobante} vía ${testConfig.m
                 <div class="meta-grid">
                     <div class="meta-item"><label>Pre-Factura</label><span>${activeId}</span></div>
                     <div class="meta-item"><label>Comprobante</label><span>${docExtracted || "N/A"}</span></div>
+                    <div class="meta-item"><label>Usuario</label><span>${(env.user || 'Desconocido').toUpperCase()}</span></div>
+                    <div class="meta-item"><label>Fecha</label><span>${new Date().toLocaleDateString('es-PE')}</span></div>
                     <div class="meta-item"><label>Estado</label>
                         <span class="status-badge ${testStatus.includes('EXITO') ? 'status-success' : 'status-failed'}">${testStatus}</span>
                     </div>
                     <div class="meta-item"><label>Tiempo</label><span>${dur}s</span></div>
+                </div>
+
+                <div class="metrics-row">
+                    <div class="metric-box">
+                        <span>⏱️ Registro de Pago (SLA)</span>
+                        <b>${paymentDuration.toFixed(2)}s <span class="sla-dot ${paymentDuration < 25 ? 'dot-good' : 'dot-warn'}"></span></b>
+                    </div>
+                    <div class="metric-box">
+                        <span>⚡ Emisión Comprobante</span>
+                        <b>${emissionDuration.toFixed(2)}s <span class="sla-dot ${emissionDuration < 15 ? 'dot-good' : 'dot-warn'}"></span></b>
+                    </div>
                 </div>
 
                 ${testError ? `
