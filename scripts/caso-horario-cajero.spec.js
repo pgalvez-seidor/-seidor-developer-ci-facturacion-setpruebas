@@ -41,8 +41,10 @@ test(`Horario Cajero — Consultar [${testConfig.area} / ${testConfig.periodo} /
     };
 
     const shot = async (name) => {
-        await page.waitForTimeout(300);
-        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator', { state: 'hidden', timeout: 4000 }).catch(() => { });
+        await page.waitForTimeout(300); // Pequeño delay por si la UI lanza el loader tarde
+        // Espera dinámica para que desaparezcan los busy indicators antes del screenshot
+        await page.waitForSelector('.sapMBusyIndicator, .sapUiLocalBusyIndicator, .sapMBlockLayer', { state: 'hidden', timeout: 30000 }).catch(() => { });
+        await page.waitForTimeout(500); // Render gap
         const p = path.join(evidenceDir, `${name}.png`);
         await page.screenshot({ path: p, fullPage: true });
         console.log(`📸 ${name}.png`);
