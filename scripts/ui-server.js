@@ -81,7 +81,7 @@ app.get('/api/registry', (req, res) => {
     db.serialize(() => {
         db.all("SELECT * FROM clientes", [], (err, clientesRows) => {
             if (err) return res.status(500).json({ error: err.toString() });
-            
+
             db.all("SELECT * FROM procesos", [], (err, procesosRows) => {
                 if (err) return res.status(500).json({ error: err.toString() });
 
@@ -101,6 +101,7 @@ app.get('/api/registry', (req, res) => {
                         return { id: c.id, name: c.name, procesos: procs };
                     });
 
+                    console.log(`[REGISTRY] Clientes: ${clientesRows.length}, Procesos: ${procesosRows.length}, Escenarios: ${escenariosRows.length}`);
                     res.json(result);
                 });
             });
@@ -123,17 +124,17 @@ app.post('/api/registry/scenario', (req, res) => {
         if (err) return res.status(500).json({ error: err.toString() });
 
         if (row) {
-            db.run(`UPDATE escenarios SET name = ?, config_json = ?, instrucciones_ia = ? WHERE id = ?`, 
-                [name, configStr, instStr, id], function(err) {
-                if (err) return res.status(500).json({ error: err.toString() });
-                res.json({ success: true, message: 'Escenario actualizado' });
-            });
+            db.run(`UPDATE escenarios SET name = ?, config_json = ?, instrucciones_ia = ? WHERE id = ?`,
+                [name, configStr, instStr, id], function (err) {
+                    if (err) return res.status(500).json({ error: err.toString() });
+                    res.json({ success: true, message: 'Escenario actualizado' });
+                });
         } else {
-            db.run(`INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia) VALUES (?, ?, ?, ?, ?)`, 
-                [id, processId, name, configStr, instStr], function(err) {
-                if (err) return res.status(500).json({ error: err.toString() });
-                res.json({ success: true, message: 'Escenario guardado' });
-            });
+            db.run(`INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia) VALUES (?, ?, ?, ?, ?)`,
+                [id, processId, name, configStr, instStr], function (err) {
+                    if (err) return res.status(500).json({ error: err.toString() });
+                    res.json({ success: true, message: 'Escenario guardado' });
+                });
         }
     });
 });
@@ -141,7 +142,7 @@ app.post('/api/registry/scenario', (req, res) => {
 // 3.6. Eliminar un Escenario
 app.delete('/api/registry/scenario/:id', (req, res) => {
     const { id } = req.params;
-    db.run("DELETE FROM escenarios WHERE id = ?", [id], function(err) {
+    db.run("DELETE FROM escenarios WHERE id = ?", [id], function (err) {
         if (err) return res.status(500).json({ error: err.toString() });
         res.json({ success: true, message: 'Escenario eliminado' });
     });
@@ -150,7 +151,7 @@ app.delete('/api/registry/scenario/:id', (req, res) => {
 // 4. Ejecutar prueba con SSE (POST paramétrico multi-hilos)
 app.post('/api/run-test', async (req, res) => {
     const { file, config } = req.body;
-    
+
     if (!file) {
         return res.status(400).json({ error: "No se especificó un archivo de prueba." });
     }
@@ -196,14 +197,14 @@ app.post('/api/run-test', async (req, res) => {
             return new Promise((resolve) => {
                 const cmdArgs = ['playwright', 'test', `scripts/${file}`];
                 if (!isHeadless) cmdArgs.push('--headed');
-                
-                const testEnv = { 
-                    ...process.env, 
+
+                const testEnv = {
+                    ...process.env,
                     TEST_PARAMS: config ? JSON.stringify(config) : '{}'
                 };
                 if (preId) testEnv.PREFACTURA_ID = preId;
 
-                const workerProcess = spawn(cmd, cmdArgs, { 
+                const workerProcess = spawn(cmd, cmdArgs, {
                     cwd: rootDir,
                     env: testEnv
                 });
@@ -227,7 +228,7 @@ app.post('/api/run-test', async (req, res) => {
 
         sendLog('done', `✅ LA BATERÍA ENTERA FINALIZÓ CON ÉXITO.`);
         res.end();
-    } catch(error) {
+    } catch (error) {
         sendLog('error', `❌ Error Crítico en Orquestador: ${error.message}`);
         res.end();
     }
@@ -237,7 +238,7 @@ app.post('/api/run-test', async (req, res) => {
 app.post('/api/run-batch', async (req, res) => {
     console.log("--> [BACKEND] Endpoint POST /api/run-batch invocado!");
     const { tasks, parallel } = req.body;
-    
+
     if (!tasks || !tasks.length) {
         return res.status(400).json({ error: "No se especificaron tareas." });
     }
@@ -270,7 +271,7 @@ app.post('/api/run-batch', async (req, res) => {
                 runningCount++;
                 const { taskId, config, file } = task;
                 const isHeadless = config.headless !== false;
-                
+
                 // Generar carpeta de evidencia aislada
                 const timestamp = new Date().toISOString().replace(/T/, '-').replace(/:/g, '').substring(0, 13);
                 const runDirName = `run-${timestamp}-${taskId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
@@ -278,26 +279,26 @@ app.post('/api/run-batch', async (req, res) => {
                 if (!fs.existsSync(runDir)) fs.mkdirSync(runDir, { recursive: true });
 
                 sendLog(taskId, 'log', `Iniciando tarea ${taskId}...`);
-                
+
                 let preId = null;
                 try {
                     preId = await createPrefactura("PGALVEZ3");
                     sendLog(taskId, 'log', `✅ PRE-FACTURA emitida vía API: ${preId}`);
-                } catch(e) {
+                } catch (e) {
                     sendLog(taskId, 'log', `⚠️ Advertencia: no se pudo emitir PRE-FACTURA vía API.`);
                 }
 
                 const cmdArgs = ['playwright', 'test', `scripts/${file || 'caso1-boleta.spec.js'}`, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
-                
-                const testEnv = { 
-                    ...process.env, 
+
+                const testEnv = {
+                    ...process.env,
                     TEST_PARAMS: JSON.stringify(config),
                     EVIDENCE_DIR: runDir
                 };
                 if (preId) testEnv.PREFACTURA_ID = preId;
 
-                const workerProcess = spawn(cmd, cmdArgs, { 
+                const workerProcess = spawn(cmd, cmdArgs, {
                     cwd: rootDir,
                     env: testEnv
                 });
@@ -306,7 +307,7 @@ app.post('/api/run-batch', async (req, res) => {
                 workerProcess.stdout.on('data', (data) => {
                     const text = stripAnsi(data.toString());
                     sendLog(taskId, 'log', text);
-                    
+
                     // Extraer Resultado Final si el script de Playwright lo imprime
                     const match = text.match(/\\[RESULT\\] (Prefactura: .+ \\| Doc: .+)/);
                     if (match) {
@@ -349,7 +350,7 @@ app.post('/api/run-batch', async (req, res) => {
                     const isSuccess = code === 0;
                     const resultMsg = isSuccess ? 'Finalizado con éxito' : `Finalizado con código ${code}`;
                     sendLog(taskId, isSuccess ? 'done' : 'error', resultMsg);
-                    
+
                     // Guardar para el reporte global (incluyendo ruta de evidencias para consolidar)
                     batchResults.push({
                         taskId,
@@ -392,7 +393,7 @@ app.post('/api/run-batch', async (req, res) => {
             const { chromium } = require('playwright');
             const browser = await chromium.launch({ headless: true });
             const page = await browser.newPage();
-            
+
             const timestamp = new Date().getTime();
             const globalPdfName = `Reporte_Final_Autobot_${timestamp}.pdf`;
             const globalPdfPath = path.join(rootDir, 'evidence', globalPdfName);
@@ -402,7 +403,7 @@ app.post('/api/run-batch', async (req, res) => {
             try {
                 const logoPath = path.join(rootDir, 'ui', 'public', 'seidor-logo.png');
                 seidorLogoBase64 = fs.readFileSync(logoPath).toString('base64');
-            } catch(e) { console.log("⚠️ No se pudo cargar el logo para el PDF:", e.message); }
+            } catch (e) { console.log("⚠️ No se pudo cargar el logo para el PDF:", e.message); }
 
             let html = `
             <!DOCTYPE html>
@@ -477,46 +478,46 @@ app.post('/api/run-batch', async (req, res) => {
 
                     <div class="summary-grid" style="margin-top: auto; margin-bottom: 40px;">
                         <div class="summary-card"><label>Total Pruebas</label><span>${results.length}</span></div>
-                        <div class="summary-card success"><label>Exitosas</label><span style="color:#10b981">${results.filter(r=>r.status==='EXITO').length}</span></div>
-                        <div class="summary-card error"><label>Fallidas</label><span style="color:#ef4444">${results.filter(r=>r.status==='FALLIDO').length}</span></div>
+                        <div class="summary-card success"><label>Exitosas</label><span style="color:#10b981">${results.filter(r => r.status === 'EXITO').length}</span></div>
+                        <div class="summary-card error"><label>Fallidas</label><span style="color:#ef4444">${results.filter(r => r.status === 'FALLIDO').length}</span></div>
                     </div>
                 </div>
 
                 ${results.map((r, index) => {
-                    const pics = [
-                        { id: 'antes_de_cobrar', title: '01. Carga de Pre-Factura' },
-                        { id: 'modal_efectivo', title: '02. Ingreso de Pago' },
-                        { id: 'post_pago', title: '03. Transacción Registrada' },
-                        { id: 'comprobante_emitido', title: '04. Voucher en Documentos' },
-                        { id: 'error_flujo', title: '⚠️ Evidencia de Error' }
-                    ];
+                const pics = [
+                    { id: 'antes_de_cobrar', title: '01. Carga de Pre-Factura' },
+                    { id: 'modal_efectivo', title: '02. Ingreso de Pago' },
+                    { id: 'post_pago', title: '03. Transacción Registrada' },
+                    { id: 'comprobante_emitido', title: '04. Voucher en Documentos' },
+                    { id: 'error_flujo', title: '⚠️ Evidencia de Error' }
+                ];
 
-                    let evidenceHtml = '';
-                    pics.forEach(p => {
-                        const imgPath = path.join(r.runDir, p.id + '.png');
-                        if (fs.existsSync(imgPath)) {
-                            const b64 = fs.readFileSync(imgPath).toString('base64');
-                            evidenceHtml += `
+                let evidenceHtml = '';
+                pics.forEach(p => {
+                    const imgPath = path.join(r.runDir, p.id + '.png');
+                    if (fs.existsSync(imgPath)) {
+                        const b64 = fs.readFileSync(imgPath).toString('base64');
+                        evidenceHtml += `
                             <div class="evidence-item">
                                 <h4>${p.title}</h4>
                                 <div class="img-wrap"><img class="evidence-img" src="data:image/png;base64,${b64}" /></div>
                             </div>`;
-                        }
-                    });
+                    }
+                });
 
-                    return `
+                return `
                     <div class="page-break">
                         <div class="test-header">
                             <div>
                                 <span style="font-size: 10px; opacity: 0.8; display: block; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Caso de Prueba #${String(index + 1).padStart(3, '0')}</span>
                                 <h2>${r.config.tipoComprobante} - Línea de Ejecución #${index + 1}</h2>
                             </div>
-                            <div class="status-pill" style="color: ${r.status==='EXITO'?'#10b981':'#ef4444'}">
+                            <div class="status-pill" style="color: ${r.status === 'EXITO' ? '#10b981' : '#ef4444'}">
                                 ${r.status}
                             </div>
                         </div>
                         <div style="margin-bottom: 20px; font-size: 12px; color: #64748b; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9;">
-                            <b>Configuración:</b> ${JSON.stringify(r.config.pagos.map(p=>p.tipo).join(' + '))} | <b>Resultado:</b> ${r.result}
+                            <b>Configuración:</b> ${JSON.stringify(r.config.pagos.map(p => p.tipo).join(' + '))} | <b>Resultado:</b> ${r.result}
                         </div>
 
                         <!-- Métricas de Negocio -->
@@ -535,7 +536,7 @@ app.post('/api/run-batch', async (req, res) => {
                             ${evidenceHtml}
                         </div>
                     </div>`;
-                }).join('')}
+            }).join('')}
 
                 </div>
             </body>
@@ -556,10 +557,10 @@ app.post('/api/run-batch', async (req, res) => {
             `;
 
             await page.setContent(html);
-            await page.pdf({ 
-                path: globalPdfPath, 
-                format: 'A4', 
-                printBackground: true, 
+            await page.pdf({
+                path: globalPdfPath,
+                format: 'A4',
+                printBackground: true,
                 displayHeaderFooter: true,
                 headerTemplate: headerTemplate,
                 footerTemplate: footerTemplate,
@@ -570,7 +571,7 @@ app.post('/api/run-batch', async (req, res) => {
         };
 
         processNext(); // Iniciar la primera tanda de tareas en cola
-    } catch(error) {
+    } catch (error) {
         console.error(error);
         sendLog('orchestrator', 'error', `Error crítico en el orquestador: ${error.message}`);
         res.end();
@@ -586,7 +587,7 @@ app.post('/api/open-pdf', async (req, res) => {
         // pdfUrl viene como /evidence/run-202X-XX/Reporte.pdf
         const relativeUrl = pdfUrl.startsWith('/evidence') ? pdfUrl.replace('/evidence', 'evidence') : pdfUrl;
         const absolutePath = path.join(rootDir, relativeUrl);
-        
+
         console.log(`[OPEN-PDF] Intento de abrir ruta absoluta nativa: ${absolutePath}`);
 
         if (fs.existsSync(absolutePath)) {

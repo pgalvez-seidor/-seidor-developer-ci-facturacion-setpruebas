@@ -39,7 +39,8 @@ En la raíz del proyecto, ejecuta:
 npm start
 ```
 
-_(Se abrirá automáticamente el Dashboard en `http://localhost:5173`)_
+_(Este comando limpiará automáticamente los puertos 3001 y 5173 antes de iniciar el Dashboard)_. 
+Dashboard disponible en: `http://localhost:5173`
 
 ### Paso 3: Apagar Correctamente
 
