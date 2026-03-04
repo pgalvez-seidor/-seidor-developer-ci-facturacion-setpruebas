@@ -282,14 +282,24 @@ app.post('/api/run-batch', async (req, res) => {
 
                 sendLog(taskId, 'log', `Iniciando tarea ${taskId}...`);
 
-                let preId = null;
-                try {
-                    const user = config.usuarioCajero || "PGALVEZ3";
-                    const centro = config.codigoCentro || "4";
-                    preId = await createPrefactura(user, centro);
-                    sendLog(taskId, 'log', `✅ PRE-FACTURA emitida vía API: ${preId}`);
-                } catch (e) {
-                    sendLog(taskId, 'log', `⚠️ Advertencia: no se pudo emitir PRE-FACTURA vía API.`);
+                let preId = config.prefacturaId || null;
+                const isFacturacion = (file || '').includes('boleta') || (file || '').includes('factura');
+                if (isFacturacion && !preId) {
+                    try {
+                        const user = config.usuarioCajero || "PGALVEZ3";
+                        const centro = config.codigoCentro || "4";
+                        preId = await createPrefactura(user, centro);
+                        sendLog(taskId, 'log', `✅ PRE-FACTURA emitida vía API: ${preId}`);
+                    } catch (e) {
+                        sendLog(taskId, 'business_error', e.message);
+                        sendLog(taskId, 'error', `Falló la generación de Pre-Factura: ${e.message}`);
+                        runningCount--;
+                        resolve();
+                        processNext();
+                        return;
+                    }
+                } else if (preId) {
+                    sendLog(taskId, 'log', `📋 Usando Pre-Factura manual: ${preId}`);
                 }
 
                 const cmdArgs = ['playwright', 'test', `scripts/${file || 'caso1-boleta.spec.js'}`, '--reporter=line'];
@@ -521,7 +531,7 @@ app.post('/api/run-batch', async (req, res) => {
                             </div>
                         </div>
                         <div style="margin-bottom: 20px; font-size: 12px; color: #64748b; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9;">
-                            <b>Configuración:</b> ${JSON.stringify(r.config.pagos.map(p => p.tipo).join(' + '))} | <b>Resultado:</b> ${r.result}
+                            <b>Configuración:</b> ${r.config.pagos && r.config.pagos.length > 0 ? r.config.pagos.map(p => p.tipo).join(' + ') : (r.config.area ? `Área: ${r.config.area}` : 'Horario')} | <b>Resultado:</b> ${r.result}
                         </div>
 
                         <!-- Métricas de Negocio -->
