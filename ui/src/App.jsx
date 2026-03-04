@@ -148,7 +148,8 @@ export default function App() {
     area: 'AMBULATORIA-ADMISION',
     periodo: '02-2026',
     usuarioCajero: 'PGALVEZ3',
-    codigoCentro: '4'
+    codigoCentro: '4',
+    prefacturaBase: ''
   });
 
   const [queue, setQueue] = useState([]);
@@ -234,19 +235,23 @@ export default function App() {
 
   const addToBatch = () => {
     if (activeProcess === 'facturacion') {
-      if (builderConfig.pagos.length === 0) { addToast("Agrega un medio de pago.", "error"); return; }
+      if (!builderConfig.pagos || builderConfig.pagos.length === 0) { addToast("Agrega un medio de pago.", "error"); return; }
       if (builderConfig.tipoComprobante === 'Factura' && !builderConfig.ruc.trim()) { addToast("El RUC es obligatorio para Facturas.", "error"); return; }
     }
     const newItems = [];
     const baseId = Date.now();
+    const prefBase = parseInt(builderConfig.prefacturaBase) || 0;
     for (let i = 0; i < builderConfig.iteraciones; i++) {
+      const cfg = JSON.parse(JSON.stringify({ ...builderConfig, iteraciones: 1 }));
+      // Si hay número base de pre-factura, asignar N, N+1, N+2... a cada copia
+      if (prefBase > 0) cfg.prefacturaId = (prefBase + i).toString();
       newItems.push({
         taskId: `task_${baseId}_${i}`,
         status: 'idle',
         progress: 0,
         result: null,
         currentLog: '',
-        config: JSON.parse(JSON.stringify({ ...builderConfig, iteraciones: 1 }))
+        config: cfg
       });
     }
     setQueue(q => [...q, ...newItems]);
@@ -272,7 +277,7 @@ export default function App() {
     setQueue(q => q.map(t => (t.status === 'idle' || t.status === 'error') ? { ...t, status: 'running', progress: 5, result: null, currentLog: 'Iniciando...' } : t));
 
     const tasksToRun = queue.filter(t => t.status === 'idle' || t.status === 'error');
-    const processScripts = { 'facturacion': 'caso1-boleta.spec.js', 'horario_supervisor': 'caso-horario-supervisor.spec.js', 'horario_cajero': 'caso-horario-cajero.spec.js' };
+    const processScripts = { 'facturacion': 'caso1-boleta.spec.js', 'horarios': 'caso-horario-supervisor.spec.js', 'horario_supervisor': 'caso-horario-supervisor.spec.js', 'horario_cajero': 'caso-horario-cajero.spec.js' };
 
     try {
       const response = await fetch(`${API_BASE}/run-batch`, {
@@ -423,6 +428,18 @@ export default function App() {
                     <label>Código Centro</label>
                     <input type="text" maxLength="8" value={builderConfig.codigoCentro} onChange={e => setBuilderConfig({ ...builderConfig, codigoCentro: e.target.value })} placeholder="Eje: 4" />
                   </div>
+                  <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      N° Pre-Factura
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '400' }}>(opcional — si hay varias copias, se incrementa automáticamente)</span>
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Ej: 1393497298 — vacío = API lo crea sola"
+                      value={builderConfig.prefacturaBase}
+                      onChange={e => setBuilderConfig({ ...builderConfig, prefacturaBase: e.target.value })}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -456,7 +473,7 @@ export default function App() {
                   <div key={q.taskId} className="batch-item">
                     <div className="batch-item-top">
                       <span className="b-title">
-                        {idx + 1}. {q.config.tipoComprobante} - {q.config.pagos.map(p => p.tipo).join('+')}
+                        {idx + 1}. {q.config.tipoComprobante || q.config.area || 'Horario'} - {q.config.pagos && q.config.pagos.length > 0 ? q.config.pagos.map(p => p.tipo).join('+') : (q.config.periodo || q.config.semana || 'Configurado')}
                         <span style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle' }} title={q.config.headless ? "Modo Headless (Oculto)" : "Modo Headed (Visible)"}>
                           {q.config.headless ? (
                             <Zap size={14} color="var(--accent-primary)" strokeWidth={2} />

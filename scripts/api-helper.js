@@ -20,7 +20,8 @@ async function createPrefactura(user, centro = "4") {
 
     const auth = Buffer.from(`${config.user}:${config.pass}`).toString('base64');
 
-    for (let attempt = 0; attempt < 5; attempt++) {
+    let lastReason = '';
+    for (let attempt = 0; attempt < 20; attempt++) {
         const idStr = currentId.toString();
         const payload = JSON.parse(
             template
@@ -43,15 +44,24 @@ async function createPrefactura(user, centro = "4") {
                 fs.writeFileSync('./config/state.properties', `# Últimos IDs usados para pruebas\nlast_prefactura_id=${idStr}\n`);
                 return idStr;
             } else {
-                console.log(`Respuesta API: ${response.data.EPrefacturaResponse.de_info_error}`);
+                const apiMsg = response.data.EPrefacturaResponse.de_info_error || 'Rechazado por el servidor';
+                console.log(`Respuesta API: ${apiMsg}`);
+                lastReason = apiMsg;
                 currentId++;
             }
         } catch (error) {
-            console.error(`Error en API (status ${error.response?.status}): ${error.message}`);
+            const errMsg = `Error HTTP (status ${error.response?.status}): ${error.message}`;
+            console.error(errMsg);
+            lastReason = errMsg;
             currentId++;
         }
     }
-    throw new Error("No se pudo crear la pre-factura tras varios intentos.");
+
+    // Mensaje de error claro para el reporte
+    const yaExiste = lastReason && lastReason.toLowerCase().includes('ya existe');
+    throw new Error(yaExiste
+        ? `Pre-factura enviada ya existe (último PK: ${currentId - 1}). Actualiza el correlativo en state.properties.`
+        : `No se pudo crear la pre-factura tras varios intentos. Último error: ${lastReason}`);
 }
 
 module.exports = { createPrefactura };
