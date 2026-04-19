@@ -648,7 +648,25 @@ app.get('/api/evidence', (req, res) => {
     }
 });
 
-// 6. Iniciar grabación con Playwright Codegen
+// 6. Listar scripts grabados disponibles
+app.get('/api/scripts', (req, res) => {
+    try {
+        const scriptsDir = path.join(rootDir, 'scripts');
+        const files = fs.readdirSync(scriptsDir)
+            .filter(f => f.startsWith('grabacion_') && f.endsWith('.spec.js'))
+            .map(f => ({
+                file: `scripts/${f}`,
+                name: f.replace(/^grabacion_/, '').replace(/_\d+\.spec\.js$/, '').replace(/_/g, ' '),
+                created: fs.statSync(path.join(scriptsDir, f)).birthtime
+            }))
+            .sort((a, b) => b.created - a.created);
+        res.json(files);
+    } catch (e) {
+        res.status(500).json({ error: e.toString() });
+    }
+});
+
+// 8. Iniciar grabación con Playwright Codegen
 app.post('/api/record/start', (req, res) => {
     const { url, outputName, credentials = {}, extraData = [] } = req.body;
     if (!url) return res.status(400).json({ error: 'Falta la URL de inicio' });
@@ -673,14 +691,14 @@ app.post('/api/record/start', (req, res) => {
     res.json({ recordingId, outputFile: path.relative(rootDir, outputFile) });
 });
 
-// 7. Estado de grabación
+// 9. Estado de grabación
 app.get('/api/record/status/:id', (req, res) => {
     const rec = activeRecordings.get(req.params.id);
     if (!rec) return res.status(404).json({ error: 'Grabación no encontrada' });
     res.json({ done: rec.done, outputFile: path.relative(rootDir, rec.outputFile) });
 });
 
-// 8. Detener grabación y guardar escenario en SQLite
+// 10. Detener grabación y guardar escenario en SQLite
 app.post('/api/record/stop', (req, res) => {
     const { recordingId, scenarioName, clientId, processId, credentials = {}, extraData = [] } = req.body;
     const rec = activeRecordings.get(recordingId);
