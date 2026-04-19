@@ -31,6 +31,9 @@ const stripAnsi = (str) => {
     return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
 };
 
+// Sesiones de grabación activas (Playwright Codegen)
+const activeRecordings = new Map();
+
 // 1. Obtener ramas locales y remotas
 app.get('/api/branches', async (req, res) => {
     try {
@@ -635,6 +638,63 @@ app.get('/api/evidence', (req, res) => {
     } catch (e) {
         res.status(500).json({ error: e.toString() });
     }
+});
+
+// 6. Iniciar grabación con Playwright Codegen
+app.post('/api/record/start', (req, res) => {
+    const { url, outputName } = req.body;
+    if (!url) return res.status(400).json({ error: 'Falta la URL de inicio' });
+
+    const ts = Date.now();
+    const safeName = (outputName || 'grabacion').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+    const outputFile = path.join(rootDir, 'scripts', `grabacion_${safeName}_${ts}.spec.js`);
+    const recordingId = `rec_${ts}`;
+
+    const cmd = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
+    const proc = spawn(cmd, ['playwright', 'codegen', url, `--output=${outputFile}`], { cwd: rootDir });
+
+    activeRecordings.set(recordingId, { process: proc, outputFile, done: false, url });
+
+    proc.on('close', () => {
+        const rec = activeRecordings.get(recordingId);
+        if (rec) rec.done = true;
+    });
+    proc.on('error', (err) => console.error(`[RECORD] Error codegen: ${err.message}`));
+
+    console.log(`[RECORD] Iniciada grabación ${recordingId} -> ${outputFile}`);
+    res.json({ recordingId, outputFile: path.relative(rootDir, outputFile) });
+});
+
+// 7. Estado de grabación
+app.get('/api/record/status/:id', (req, res) => {
+    const rec = activeRecordings.get(req.params.id);
+    if (!rec) return res.status(404).json({ error: 'Grabación no encontrada' });
+    res.json({ done: rec.done, outputFile: path.relative(rootDir, rec.outputFile) });
+});
+
+// 8. Detener grabación y guardar escenario en SQLite
+app.post('/api/record/stop', (req, res) => {
+    const { recordingId, scenarioName, clientId, processId } = req.body;
+    const rec = activeRecordings.get(recordingId);
+    if (!rec) return res.status(404).json({ error: 'Grabación no encontrada o ya finalizó' });
+
+    try { rec.process.kill(); } catch (e) { /* ya terminó */ }
+    activeRecordings.delete(recordingId);
+
+    const relFile = path.relative(rootDir, rec.outputFile);
+    const scenarioId = `esc_rec_${Date.now()}`;
+    const config = { recordedScript: relFile, url: rec.url, headless: false, iteraciones: 1, pagos: [] };
+    const instrucciones = `Flujo grabado automáticamente desde ${rec.url}. Script: ${relFile}`;
+
+    db.run(
+        `INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia) VALUES (?, ?, ?, ?, ?)`,
+        [scenarioId, processId || 'mf_flujos', scenarioName || 'Flujo Grabado', JSON.stringify(config), instrucciones],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.toString() });
+            console.log(`[RECORD] Escenario guardado: ${scenarioName} -> ${relFile}`);
+            res.json({ success: true, scenarioId, outputFile: relFile });
+        }
+    );
 });
 
 initDb().then(() => {

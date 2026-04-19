@@ -39,9 +39,15 @@ const initDb = () => {
                 if (row.count === 0) {
                     console.log("🌱 Inicializando SQLite DB con datos semilla...");
                     seedData();
-                } else {
-                    resolve();
                 }
+            });
+
+            // 3. Asegurar cliente Medifarma (rama Medifarma — INSERT OR IGNORE es idempotente)
+            db.run(`INSERT OR IGNORE INTO clientes (id, name) VALUES ('Medifarma', 'Medifarma')`);
+            db.run(`INSERT OR IGNORE INTO procesos (id, client_id, name) VALUES ('mf_facturacion', 'Medifarma', 'Facturación')`);
+            db.run(`INSERT OR IGNORE INTO procesos (id, client_id, name) VALUES ('mf_flujos', 'Medifarma', 'Flujos Grabados')`, function (err) {
+                if (err) return reject(err);
+                resolve();
             });
         });
     });
