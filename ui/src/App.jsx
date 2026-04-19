@@ -171,6 +171,14 @@ export default function App() {
   const [recordingExtraData, setRecordingExtraData] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Asistente IA de refinamiento
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiInstruction, setAiInstruction] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState(null); // { encontrado, fragmentoActual, fragmentoPropuesto, explicacion, scriptCompleto }
+  const [aiApplied, setAiApplied] = useState(false);
+  const [aiScriptFile, setAiScriptFile] = useState('');
+
   // Asignación de script a escenario existente
   const [showScriptPicker, setShowScriptPicker] = useState(false);
   const [availableScripts, setAvailableScripts] = useState([]);
@@ -292,6 +300,47 @@ export default function App() {
         addToast("Script asignado correctamente.", "success");
       }
     } catch { addToast("Error al asignar script", "error"); }
+  };
+
+  const openAiModal = (scriptFile) => {
+    setAiScriptFile(scriptFile);
+    setAiInstruction('');
+    setAiResponse(null);
+    setAiApplied(false);
+    setShowAiModal(true);
+  };
+
+  const analyzeWithAi = async () => {
+    if (!aiInstruction.trim()) { addToast("Describe qué quieres cambiar", "error"); return; }
+    setAiLoading(true);
+    setAiResponse(null);
+    try {
+      const res = await fetch(`${API_BASE}/ai/refine`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scriptFile: aiScriptFile, instruction: aiInstruction })
+      });
+      const data = await res.json();
+      if (data.error === 'NO_API_KEY') { addToast("Configura GEMINI_API_KEY en el archivo .env", "error"); return; }
+      if (data.error) { addToast(data.error, "error"); return; }
+      setAiResponse(data);
+    } catch { addToast("Error al conectar con el asistente IA", "error"); }
+    finally { setAiLoading(false); }
+  };
+
+  const applyAiChange = async () => {
+    if (!aiResponse?.scriptCompleto) return;
+    try {
+      const res = await fetch(`${API_BASE}/ai/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scriptFile: aiScriptFile, scriptCompleto: aiResponse.scriptCompleto })
+      });
+      if ((await res.json()).success) {
+        setAiApplied(true);
+        addToast("Cambio aplicado y guardado correctamente.", "success");
+      }
+    } catch { addToast("Error al aplicar el cambio", "error"); }
   };
 
   const addExtraField = () => setRecordingExtraData(prev => [...prev, { key: '', value: '' }]);
@@ -535,6 +584,14 @@ export default function App() {
             {/* Banner: escenario sin script grabado */}
             {activeClient === 'Medifarma' && activeScenarioId && (() => {
               const esc = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === activeScenarioId);
+              if (esc?.config?.recordedScript) return (
+                <div style={{ marginBottom: '1rem', padding: '10px 14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: '700' }}>✅ Flujo grabado asignado</div>
+                  <button onClick={() => openAiModal(esc.config.recordedScript)} style={{ padding: '6px 12px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    🤖 Afinar con IA
+                  </button>
+                </div>
+              );
               if (!esc?.config?.recordedScript) return (
                 <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px' }}>
                   <div style={{ fontSize: '0.78rem', fontWeight: '800', color: '#f59e0b', marginBottom: '8px' }}>⚠️ ESCENARIO SIN FLUJO GRABADO</div>
@@ -731,6 +788,94 @@ export default function App() {
           </div>
         </main>
       </div>
+
+      {showAiModal && (
+        <div className="modal-overlay" onClick={() => !aiLoading && setShowAiModal(false)}>
+          <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div>
+                <h2 style={{ margin: 0, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>🤖 Asistente IA</h2>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>Solo responde sobre scripts de automatización Playwright</div>
+              </div>
+              {!aiLoading && <button onClick={() => setShowAiModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}><X size={20} /></button>}
+            </div>
+
+            {/* Input de instrucción */}
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '8px' }}>¿Qué quieres cambiar en el flujo?</label>
+              <textarea
+                value={aiInstruction}
+                onChange={e => { setAiInstruction(e.target.value); setAiResponse(null); setAiApplied(false); }}
+                placeholder={'Ej: "El botón Confirmar a veces demora, espera hasta 5 segundos"\n"Después del login aparece un modal, ignóralo"\n"Graba el número de documento que aparece en pantalla"'}
+                style={{ width: '100%', height: '90px', boxSizing: 'border-box', resize: 'vertical', marginTop: '0', fontFamily: 'inherit', lineHeight: '1.5' }}
+                disabled={aiLoading}
+              />
+            </div>
+
+            <button
+              onClick={analyzeWithAi}
+              disabled={aiLoading || !aiInstruction.trim()}
+              style={{ width: '100%', padding: '12px', background: aiLoading ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '10px', cursor: aiLoading ? 'not-allowed' : 'pointer', fontWeight: '700', fontSize: '0.9rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+              {aiLoading ? <><div style={{ width: '14px', height: '14px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'pulse 0.8s linear infinite' }} /> Analizando...</> : '🔍 Analizar y proponer cambio'}
+            </button>
+
+            {/* Respuesta de la IA */}
+            {aiResponse && (
+              aiResponse.fuera_de_tema ? (
+                <div style={{ padding: '1.2rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🚫</div>
+                  <p style={{ fontWeight: '700', color: '#ef4444', margin: '0 0 4px' }}>Fuera de mi área</p>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>No estoy autorizado para responder eso. Enfoquémonos en tu trabajo, gracias.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {/* Qué encontró */}
+                  <div style={{ padding: '1rem', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '12px' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>🔎 Lo que encontré</div>
+                    <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: '1.5' }}>{aiResponse.encontrado}</p>
+                  </div>
+
+                  {/* Diff: actual vs propuesto */}
+                  {aiResponse.fragmentoActual && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#ef4444', marginBottom: '6px' }}>ANTES</div>
+                        <pre style={{ margin: 0, padding: '10px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', fontSize: '0.72rem', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{aiResponse.fragmentoActual}</pre>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#10b981', marginBottom: '6px' }}>DESPUÉS</div>
+                        <pre style={{ margin: 0, padding: '10px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px', fontSize: '0.72rem', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{aiResponse.fragmentoPropuesto}</pre>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Explicación */}
+                  <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--card-border)', borderRadius: '12px' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>💡 Explicación</div>
+                    <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: '1.5', color: 'var(--text-muted)' }}>{aiResponse.explicacion}</p>
+                  </div>
+
+                  {/* Botón aplicar */}
+                  {aiResponse.fragmentoActual && !aiApplied && (
+                    <button
+                      onClick={() => { if (window.confirm('¿Aplicar este cambio al script? Se creará un backup automático.')) applyAiChange(); }}
+                      style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem' }}
+                    >
+                      ✅ Aplicar cambio al script
+                    </button>
+                  )}
+                  {aiApplied && (
+                    <div style={{ textAlign: 'center', padding: '1rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '12px', fontWeight: '700', color: '#10b981' }}>
+                      ✅ Cambio aplicado. El backup del script anterior se guardó automáticamente.
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      )}
 
       {showScriptPicker && (
         <div className="modal-overlay" onClick={() => setShowScriptPicker(false)}>

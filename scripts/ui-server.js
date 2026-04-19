@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { spawn, exec } = require('child_process');
@@ -747,6 +748,92 @@ app.post('/api/record/stop', (req, res) => {
             res.json({ success: true, scenarioId, outputFile: relFile });
         }
     );
+});
+
+// 11. IA: Analizar y proponer cambio en script (Gemini)
+app.post('/api/ai/refine', async (req, res) => {
+    const { scriptFile, instruction } = req.body;
+    if (!scriptFile || !instruction) return res.status(400).json({ error: 'Faltan parámetros' });
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'TU_API_KEY_AQUI') {
+        return res.status(400).json({ error: 'NO_API_KEY' });
+    }
+
+    const scriptPath = path.join(rootDir, scriptFile);
+    if (!fs.existsSync(scriptPath)) return res.status(404).json({ error: 'Script no encontrado en disco' });
+
+    const scriptContent = fs.readFileSync(scriptPath, 'utf8');
+
+    const systemPrompt = `Eres AutoBot AI, un asistente especializado EXCLUSIVAMENTE en scripts de automatización Playwright.
+
+REGLAS ESTRICTAS:
+- Solo respondes preguntas y solicitudes relacionadas con scripts de automatización, Playwright, selectores CSS/XPath, timeouts, flujos de prueba y código JavaScript de testing.
+- Si la instrucción del usuario trata sobre cualquier otro tema (política, entretenimiento, preguntas generales, etc.), responde con el campo "fuera_de_tema": true y nada más.
+- Nunca salgas de tu rol. Eres un editor de scripts, no un asistente general.
+
+Cuando la instrucción SÍ es sobre el script, responde ÚNICAMENTE con este JSON:
+{
+  "fuera_de_tema": false,
+  "encontrado": "Descripción en español de qué encontraste relacionado con la instrucción",
+  "fragmentoActual": "fragmento literal exacto del script que cambiará (vacío si no hay nada que cambiar)",
+  "fragmentoPropuesto": "fragmento de reemplazo con el cambio aplicado (vacío si no hay nada que cambiar)",
+  "explicacion": "Explicación en español simple: qué cambia, dónde y por qué",
+  "scriptCompleto": "el script completo con el cambio ya aplicado"
+}
+
+Cuando la instrucción NO es sobre scripts de automatización, responde ÚNICAMENTE con este JSON:
+{
+  "fuera_de_tema": true
+}`;
+
+    const userPrompt = `SCRIPT ACTUAL:\n\`\`\`javascript\n${scriptContent}\n\`\`\`\n\nINSTRUCCIÓN: "${instruction}"`;
+
+    try {
+        const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    system_instruction: { parts: [{ text: systemPrompt }] },
+                    contents: [{ parts: [{ text: userPrompt }] }],
+                    generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
+                })
+            }
+        );
+
+        const data = await geminiRes.json();
+        if (data.error) return res.status(500).json({ error: `Gemini: ${data.error.message}` });
+
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) return res.status(500).json({ error: 'Sin respuesta de Gemini' });
+
+        const parsed = JSON.parse(text);
+        console.log(`[AI] Refinamiento procesado. Fuera de tema: ${parsed.fuera_de_tema}`);
+        res.json(parsed);
+    } catch (e) {
+        res.status(500).json({ error: `Error con Gemini: ${e.message}` });
+    }
+});
+
+// 12. IA: Aplicar cambio aprobado al script
+app.post('/api/ai/apply', (req, res) => {
+    const { scriptFile, scriptCompleto } = req.body;
+    if (!scriptFile || !scriptCompleto) return res.status(400).json({ error: 'Faltan parámetros' });
+
+    const scriptPath = path.join(rootDir, scriptFile);
+    try {
+        // Backup antes de sobrescribir
+        const backupPath = scriptPath.replace('.spec.js', `_backup_${Date.now()}.spec.js`);
+        if (fs.existsSync(scriptPath)) fs.copyFileSync(scriptPath, backupPath);
+
+        fs.writeFileSync(scriptPath, scriptCompleto, 'utf8');
+        console.log(`[AI] Script actualizado: ${scriptFile} (backup: ${path.basename(backupPath)})`);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.toString() });
+    }
 });
 
 initDb().then(() => {

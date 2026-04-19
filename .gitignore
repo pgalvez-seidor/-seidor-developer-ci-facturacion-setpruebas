@@ -1,0 +1,6 @@
+.env
+node_modules/
+ui/node_modules/
+evidence/
+config/database.sqlite
+config/state.properties
