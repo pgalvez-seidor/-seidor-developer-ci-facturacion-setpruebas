@@ -205,6 +205,17 @@ export default function App() {
     fetchRegistry();
   }, [fetchRegistry]);
 
+  // Al cambiar de cliente, resetear escenario y proceso al primero disponible
+  useEffect(() => {
+    setActiveScenarioId('');
+    setNewScenarioName('');
+    setInstruccionesIa('');
+    const client = registry.find(c => c.id === activeClient);
+    if (client?.procesos?.length > 0) {
+      setActiveProcess(client.procesos[0].id);
+    }
+  }, [activeClient]);
+
   const handleBranchChange = async e => {
     const branch = e.target.value;
     if (branch === currentBranch) return;
@@ -331,12 +342,12 @@ export default function App() {
 
   const getBatchItemLabel = (q) => {
     const name = q.scenarioName || q.config.tipoComprobante || q.config.area || 'Flujo';
+    const isMedifarma = q.clientId === 'Medifarma';
     let detail = '';
     if (q.config.pagos?.length > 0) detail = q.config.pagos.map(p => p.tipo).join('+');
-    else if (q.config.periodo) detail = q.config.periodo;
-    else if (q.config.semana) detail = `Sem. ${q.config.semana}`;
+    else if (!isMedifarma && q.config.periodo) detail = q.config.periodo;
+    else if (!isMedifarma && q.config.semana) detail = `Sem. ${q.config.semana}`;
     else if (q.config.recordedScript) detail = 'Grabado';
-    else detail = '';
     return detail ? `${name} — ${detail}` : name;
   };
 
@@ -516,7 +527,7 @@ export default function App() {
                 <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>Ejecutar en Segundo Plano (Headless)</span>
               </div>
 
-              {activeProcess === 'facturacion' && (
+              {activeClient !== 'Medifarma' && activeProcess === 'facturacion' && (
                 <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--card-border)' }}>
                   <div style={{ gridColumn: 'span 2', fontSize: '0.7rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', marginBottom: '5px' }}>Destino de Pre-Factura API</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
