@@ -314,7 +314,6 @@ export default function App() {
     const prefBase = parseInt(builderConfig.prefacturaBase) || 0;
     for (let i = 0; i < builderConfig.iteraciones; i++) {
       const cfg = JSON.parse(JSON.stringify({ ...builderConfig, iteraciones: 1 }));
-      // Si hay número base de pre-factura, asignar N, N+1, N+2... a cada copia
       if (prefBase > 0) cfg.prefacturaId = (prefBase + i).toString();
       newItems.push({
         taskId: `task_${baseId}_${i}`,
@@ -322,10 +321,23 @@ export default function App() {
         progress: 0,
         result: null,
         currentLog: '',
+        scenarioName: newScenarioName || '',
+        clientId: activeClient,
         config: cfg
       });
     }
     setQueue(q => [...q, ...newItems]);
+  };
+
+  const getBatchItemLabel = (q) => {
+    const name = q.scenarioName || q.config.tipoComprobante || q.config.area || 'Flujo';
+    let detail = '';
+    if (q.config.pagos?.length > 0) detail = q.config.pagos.map(p => p.tipo).join('+');
+    else if (q.config.periodo) detail = q.config.periodo;
+    else if (q.config.semana) detail = `Sem. ${q.config.semana}`;
+    else if (q.config.recordedScript) detail = 'Grabado';
+    else detail = '';
+    return detail ? `${name} — ${detail}` : name;
   };
 
   const clearBatch = () => { if (!isBatchRunning) setQueue([]); setGlobalPdf(null); };
@@ -355,7 +367,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tasks: tasksToRun.map(t => ({ taskId: t.taskId, config: t.config, file: processScripts[activeProcess] || 'caso1-boleta.spec.js' })),
+          tasks: tasksToRun.map(t => ({ taskId: t.taskId, config: t.config, file: t.config.recordedScript || processScripts[activeProcess] || null })),
           parallel: batchConcurrency > 1,
           concurrency: batchConcurrency
         })
@@ -562,7 +574,7 @@ export default function App() {
                   <div key={q.taskId} className="batch-item">
                     <div className="batch-item-top">
                       <span className="b-title">
-                        {idx + 1}. {q.config.tipoComprobante || q.config.area || 'Horario'} - {q.config.pagos && q.config.pagos.length > 0 ? q.config.pagos.map(p => p.tipo).join('+') : (q.config.periodo || q.config.semana || 'Configurado')}
+                        {idx + 1}. {getBatchItemLabel(q)}
                         <span style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle' }} title={q.config.headless ? "Modo Headless (Oculto)" : "Modo Headed (Visible)"}>
                           {q.config.headless ? (
                             <Zap size={14} color="var(--accent-primary)" strokeWidth={2} />
