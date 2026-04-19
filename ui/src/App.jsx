@@ -585,11 +585,21 @@ export default function App() {
             {activeClient === 'Medifarma' && activeScenarioId && (() => {
               const esc = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === activeScenarioId);
               if (esc?.config?.recordedScript) return (
-                <div style={{ marginBottom: '1rem', padding: '10px 14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: '700' }}>✅ Flujo grabado asignado</div>
-                  <button onClick={() => openAiModal(esc.config.recordedScript)} style={{ padding: '6px 12px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    🤖 Afinar con IA
-                  </button>
+                <div style={{ marginBottom: '1rem', padding: '10px 14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: '700' }}>✅ Flujo grabado asignado</div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={openScriptPicker} style={{ padding: '5px 10px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.72rem' }}>
+                        🔄 Cambiar
+                      </button>
+                      <button onClick={() => openAiModal(esc.config.recordedScript)} style={{ padding: '5px 10px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        🤖 Afinar con IA
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {esc.config.recordedScript.replace('scripts/', '')}
+                  </div>
                 </div>
               );
               if (!esc?.config?.recordedScript) return (
@@ -900,7 +910,7 @@ export default function App() {
                     onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--card-border)'}
                   >
                     <div style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-main)', textTransform: 'capitalize' }}>{s.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '3px' }}>{s.file} · {new Date(s.created).toLocaleDateString('es-PE')}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '3px' }}>{s.file.replace('scripts/', '')} · {new Date(s.created).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                   </button>
                 ))}
               </div>
