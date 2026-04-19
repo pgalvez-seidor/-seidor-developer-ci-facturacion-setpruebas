@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Eye, Zap, CreditCard, Banknote, Trash2,
-  CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X
+  CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square
 } from 'lucide-react';
 import './index.css';
 
@@ -128,8 +128,8 @@ const PaymentTray = ({ pagos, medioVuelto, updatePagos, updateMedioVuelto }) => 
 
 export default function App() {
   const [registry, setRegistry] = useState([]);
-  const [activeClient, setActiveClient] = useState('CI');
-  const [activeProcess, setActiveProcess] = useState('facturacion');
+  const [activeClient, setActiveClient] = useState('Medifarma');
+  const [activeProcess, setActiveProcess] = useState('mf_flujos');
 
   const [branches, setBranches] = useState([]);
   const [currentBranch, setBranch] = useState('');
@@ -160,7 +160,15 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [showAbout, setShowAbout] = useState(false);
 
+  // Grabación de flujos (Playwright Codegen)
+  const [showRecordModal, setShowRecordModal] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingId, setRecordingId] = useState('');
+  const [recordingUrl, setRecordingUrl] = useState('');
+  const [recordingName, setRecordingName] = useState('');
+
   const CHANGELOG = [
+    { version: '1.1.0', date: '2026-04-19', changes: ['Rama Medifarma — cliente independiente', 'Grabación de flujos sin código (Playwright Codegen)', 'Botón Grabar Flujo Nuevo en dashboard', 'Flujos grabados guardados automáticamente en SQLite'] },
     { version: '1.0.0', date: '2026-03-01', changes: ['Rebranding total a AutoBot', 'Interfaz Premium Seidor Perú', 'Concurrencia dinámica (Threads)', 'Modo Turbo (Timeouts optimizados)', 'Limpieza inteligente de fragments SAP'] },
     { version: '0.9.0', date: '2026-02-28', changes: ['Integración de reportes PDF', 'Detección de errores de negocio', 'Sistema de logs SSE en tiempo real'] }
   ];
@@ -231,6 +239,48 @@ export default function App() {
       const res = await fetch(`${API_BASE}/registry/scenario/${activeScenarioId}`, { method: 'DELETE' });
       if ((await res.json()).success) { await fetchRegistry(); setActiveScenarioId(''); setNewScenarioName(''); setInstruccionesIa(''); addToast("Escenario eliminado.", "success"); }
     } catch { addToast("Error al eliminar.", "error"); }
+  };
+
+  const startRecording = async () => {
+    if (!recordingUrl.trim()) { addToast("Ingresa una URL de inicio", "error"); return; }
+    if (!recordingName.trim()) { addToast("Ingresa un nombre para el flujo", "error"); return; }
+    try {
+      const safeName = recordingName.replace(/\s+/g, '_').toLowerCase();
+      const res = await fetch(`${API_BASE}/record/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: recordingUrl, outputName: safeName })
+      });
+      const data = await res.json();
+      if (data.recordingId) {
+        setRecordingId(data.recordingId);
+        setIsRecording(true);
+      } else {
+        addToast("No se pudo iniciar la grabación", "error");
+      }
+    } catch { addToast("Error al conectar con el servidor", "error"); }
+  };
+
+  const stopRecording = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/record/stop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recordingId, scenarioName: recordingName, clientId: activeClient, processId: 'mf_flujos' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        addToast(`Flujo "${recordingName}" guardado correctamente.`, "success");
+        await fetchRegistry();
+        setIsRecording(false);
+        setShowRecordModal(false);
+        setRecordingUrl('');
+        setRecordingName('');
+        setRecordingId('');
+      } else {
+        addToast("Error al guardar el flujo grabado", "error");
+      }
+    } catch { addToast("Error al detener la grabación", "error"); }
   };
 
   const addToBatch = () => {
@@ -382,6 +432,20 @@ export default function App() {
                 <button onClick={deleteScenario} disabled={!activeScenarioId} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '10px', padding: '0 12px', cursor: 'pointer' }}>Borrar</button>
               </div>
             </div>
+
+            <button
+              onClick={() => setShowRecordModal(true)}
+              style={{
+                width: '100%', marginBottom: '1.5rem', padding: '12px',
+                background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444',
+                border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: '12px',
+                cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+              }}
+            >
+              <Circle size={14} fill="#ef4444" color="#ef4444" />
+              Grabar Flujo Nuevo
+            </button>
 
             <div className="config-form">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
@@ -558,6 +622,82 @@ export default function App() {
           </div>
         </main>
       </div>
+
+      {showRecordModal && (
+        <div className="modal-overlay" onClick={() => !isRecording && setShowRecordModal(false)}>
+          <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0, color: 'var(--accent-primary)' }}>Grabar Flujo de Prueba</h2>
+              {!isRecording && (
+                <button onClick={() => setShowRecordModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+                  <X size={20} />
+                </button>
+              )}
+            </div>
+
+            {!isRecording ? (
+              <>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+                  Se abrirá el navegador. Realiza las acciones que quieres automatizar — haz clic, llena campos, navega — y cuando termines haz clic en <strong>Detener Grabación</strong>. El flujo queda guardado automáticamente.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div>
+                    <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '8px' }}>URL de inicio</label>
+                    <input
+                      type="text"
+                      placeholder="https://sistema.medifarma.com/..."
+                      value={recordingUrl}
+                      onChange={e => setRecordingUrl(e.target.value)}
+                      style={{ width: '100%', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '8px' }}>Nombre del flujo</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Registro de Paciente Nuevo"
+                      value={recordingName}
+                      onChange={e => setRecordingName(e.target.value)}
+                      style={{ width: '100%', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </div>
+                <button
+                  className="btn-run"
+                  style={{ width: '100%', background: '#ef4444', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  onClick={startRecording}
+                >
+                  <Circle size={14} fill="white" color="white" />
+                  Iniciar Grabación
+                </button>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                <div style={{
+                  width: '20px', height: '20px', borderRadius: '50%',
+                  background: '#ef4444', margin: '0 auto 1.5rem',
+                  animation: 'pulse 1.2s ease-in-out infinite'
+                }} />
+                <p style={{ fontWeight: '800', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Grabando...</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                  Realiza las acciones en el navegador que se abrió.
+                </p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '2.5rem' }}>
+                  Flujo: <strong style={{ color: 'var(--text-main)' }}>{recordingName}</strong>
+                </p>
+                <button
+                  className="btn-run"
+                  style={{ background: '#1e293b', color: 'white', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  onClick={stopRecording}
+                >
+                  <Square size={14} fill="white" color="white" />
+                  Detener y Guardar Flujo
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {showAbout && (
         <div className="modal-overlay" onClick={() => setShowAbout(false)}>
