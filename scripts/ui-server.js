@@ -642,7 +642,7 @@ app.get('/api/evidence', (req, res) => {
 
 // 6. Iniciar grabación con Playwright Codegen
 app.post('/api/record/start', (req, res) => {
-    const { url, outputName } = req.body;
+    const { url, outputName, credentials = {}, extraData = [] } = req.body;
     if (!url) return res.status(400).json({ error: 'Falta la URL de inicio' });
 
     const ts = Date.now();
@@ -653,7 +653,7 @@ app.post('/api/record/start', (req, res) => {
     const cmd = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
     const proc = spawn(cmd, ['playwright', 'codegen', url, `--output=${outputFile}`], { cwd: rootDir });
 
-    activeRecordings.set(recordingId, { process: proc, outputFile, done: false, url });
+    activeRecordings.set(recordingId, { process: proc, outputFile, done: false, url, credentials, extraData });
 
     proc.on('close', () => {
         const rec = activeRecordings.get(recordingId);
@@ -674,7 +674,7 @@ app.get('/api/record/status/:id', (req, res) => {
 
 // 8. Detener grabación y guardar escenario en SQLite
 app.post('/api/record/stop', (req, res) => {
-    const { recordingId, scenarioName, clientId, processId } = req.body;
+    const { recordingId, scenarioName, clientId, processId, credentials = {}, extraData = [] } = req.body;
     const rec = activeRecordings.get(recordingId);
     if (!rec) return res.status(404).json({ error: 'Grabación no encontrada o ya finalizó' });
 
@@ -683,8 +683,34 @@ app.post('/api/record/stop', (req, res) => {
 
     const relFile = path.relative(rootDir, rec.outputFile);
     const scenarioId = `esc_rec_${Date.now()}`;
-    const config = { recordedScript: relFile, url: rec.url, headless: false, iteraciones: 1, pagos: [] };
-    const instrucciones = `Flujo grabado automáticamente desde ${rec.url}. Script: ${relFile}`;
+
+    // Merge credentials y extraData del stop con los del start (stop tiene prioridad)
+    const finalCredentials = { ...rec.credentials, ...credentials };
+    const finalExtraData = extraData.length > 0 ? extraData : rec.extraData;
+
+    const config = {
+        recordedScript: relFile,
+        url: rec.url,
+        headless: false,
+        iteraciones: 1,
+        pagos: [],
+        credentials: {
+            username: finalCredentials.username || '',
+            appName: finalCredentials.appName || ''
+            // Contraseña NO se guarda en texto plano en la config
+        },
+        extraData: finalExtraData
+    };
+
+    // Instrucciones legibles para el analista
+    const extraSummary = finalExtraData.filter(d => d.key).map(d => `${d.key}: ${d.value}`).join(', ');
+    const instrucciones = [
+        `Flujo grabado desde: ${rec.url}`,
+        finalCredentials.appName ? `App en portal: ${finalCredentials.appName}` : '',
+        finalCredentials.username ? `Usuario: ${finalCredentials.username}` : '',
+        extraSummary ? `Datos adicionales: ${extraSummary}` : '',
+        `Script: ${relFile}`
+    ].filter(Boolean).join('\n');
 
     db.run(
         `INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia) VALUES (?, ?, ?, ?, ?)`,

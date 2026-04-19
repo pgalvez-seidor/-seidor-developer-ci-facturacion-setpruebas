@@ -166,6 +166,9 @@ export default function App() {
   const [recordingId, setRecordingId] = useState('');
   const [recordingUrl, setRecordingUrl] = useState('');
   const [recordingName, setRecordingName] = useState('');
+  const [recordingCredentials, setRecordingCredentials] = useState({ username: '', password: '', appName: '' });
+  const [recordingExtraData, setRecordingExtraData] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
 
   const CHANGELOG = [
     { version: '1.1.0', date: '2026-04-19', changes: ['Rama Medifarma — cliente independiente', 'Grabación de flujos sin código (Playwright Codegen)', 'Botón Grabar Flujo Nuevo en dashboard', 'Flujos grabados guardados automáticamente en SQLite'] },
@@ -241,6 +244,10 @@ export default function App() {
     } catch { addToast("Error al eliminar.", "error"); }
   };
 
+  const addExtraField = () => setRecordingExtraData(prev => [...prev, { key: '', value: '' }]);
+  const removeExtraField = (i) => setRecordingExtraData(prev => prev.filter((_, idx) => idx !== i));
+  const updateExtraField = (i, field, val) => setRecordingExtraData(prev => prev.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
+
   const startRecording = async () => {
     if (!recordingUrl.trim()) { addToast("Ingresa una URL de inicio", "error"); return; }
     if (!recordingName.trim()) { addToast("Ingresa un nombre para el flujo", "error"); return; }
@@ -249,7 +256,12 @@ export default function App() {
       const res = await fetch(`${API_BASE}/record/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: recordingUrl, outputName: safeName })
+        body: JSON.stringify({
+          url: recordingUrl,
+          outputName: safeName,
+          credentials: recordingCredentials,
+          extraData: recordingExtraData
+        })
       });
       const data = await res.json();
       if (data.recordingId) {
@@ -266,7 +278,14 @@ export default function App() {
       const res = await fetch(`${API_BASE}/record/stop`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recordingId, scenarioName: recordingName, clientId: activeClient, processId: 'mf_flujos' })
+        body: JSON.stringify({
+          recordingId,
+          scenarioName: recordingName,
+          clientId: activeClient,
+          processId: 'mf_flujos',
+          credentials: recordingCredentials,
+          extraData: recordingExtraData
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -277,6 +296,8 @@ export default function App() {
         setRecordingUrl('');
         setRecordingName('');
         setRecordingId('');
+        setRecordingCredentials({ username: '', password: '', appName: '' });
+        setRecordingExtraData([]);
       } else {
         addToast("Error al guardar el flujo grabado", "error");
       }
@@ -625,7 +646,7 @@ export default function App() {
 
       {showRecordModal && (
         <div className="modal-overlay" onClick={() => !isRecording && setShowRecordModal(false)}>
-          <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+          <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ margin: 0, color: 'var(--accent-primary)' }}>Grabar Flujo de Prueba</h2>
               {!isRecording && (
@@ -637,59 +658,80 @@ export default function App() {
 
             {!isRecording ? (
               <>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: '1.6' }}>
-                  Se abrirá el navegador. Realiza las acciones que quieres automatizar — haz clic, llena campos, navega — y cuando termines haz clic en <strong>Detener Grabación</strong>. El flujo queda guardado automáticamente.
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+                  Se abrirá el navegador. Realiza las acciones que quieres automatizar y cuando termines haz clic en <strong>Detener Grabación</strong>.
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+
+                {/* Sección: Flujo */}
+                <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Flujo</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', marginBottom: '1.5rem' }}>
                   <div>
-                    <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '8px' }}>URL de inicio</label>
-                    <input
-                      type="text"
-                      placeholder="https://sistema.medifarma.com/..."
-                      value={recordingUrl}
-                      onChange={e => setRecordingUrl(e.target.value)}
-                      style={{ width: '100%', boxSizing: 'border-box' }}
-                    />
+                    <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Nombre del flujo</label>
+                    <input type="text" placeholder="Ej: Registro de Pedido Urgente" value={recordingName} onChange={e => setRecordingName(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '8px' }}>Nombre del flujo</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: Registro de Paciente Nuevo"
-                      value={recordingName}
-                      onChange={e => setRecordingName(e.target.value)}
-                      style={{ width: '100%', boxSizing: 'border-box' }}
-                    />
+                    <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>URL de inicio</label>
+                    <input type="text" placeholder="https://portal.medifarma.com/..." value={recordingUrl} onChange={e => setRecordingUrl(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Nombre de la app en el portal <span style={{ fontWeight: '400', color: 'var(--text-muted)' }}>(opcional)</span></label>
+                    <input type="text" placeholder="Ej: Gestión de Pedidos / Fiori Launchpad" value={recordingCredentials.appName} onChange={e => setRecordingCredentials(p => ({ ...p, appName: e.target.value }))} style={{ width: '100%', boxSizing: 'border-box' }} />
                   </div>
                 </div>
-                <button
-                  className="btn-run"
-                  style={{ width: '100%', background: '#ef4444', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                  onClick={startRecording}
-                >
+
+                {/* Sección: Credenciales */}
+                <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Credenciales del Portal</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.9rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--card-border)' }}>
+                  <div>
+                    <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Usuario</label>
+                    <input type="text" placeholder="Ej: JPEREZ" value={recordingCredentials.username} onChange={e => setRecordingCredentials(p => ({ ...p, username: e.target.value.toUpperCase() }))} style={{ width: '100%', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Contraseña</label>
+                    <div style={{ position: 'relative' }}>
+                      <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={recordingCredentials.password} onChange={e => setRecordingCredentials(p => ({ ...p, password: e.target.value }))} style={{ width: '100%', boxSizing: 'border-box', paddingRight: '36px' }} />
+                      <button onClick={() => setShowPassword(p => !p)} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+                        <Eye size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sección: Datos adicionales */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Datos Adicionales</div>
+                  <button onClick={addExtraField} style={{ fontSize: '0.75rem', fontWeight: '700', background: 'rgba(var(--accent-primary-rgb, 0,74,153), 0.1)', color: 'var(--accent-primary)', border: '1px solid rgba(var(--accent-primary-rgb, 0,74,153), 0.25)', borderRadius: '8px', padding: '4px 10px', cursor: 'pointer' }}>+ Agregar dato</button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '1.5rem', minHeight: recordingExtraData.length === 0 ? '0' : 'auto' }}>
+                  {recordingExtraData.length === 0 && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px dashed var(--card-border)', textAlign: 'center' }}>
+                      Ej: Número de Lote, Número de Documento, Centro de Costo...
+                    </div>
+                  )}
+                  {recordingExtraData.map((field, i) => (
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px', alignItems: 'center' }}>
+                      <input type="text" placeholder="Nombre (ej: N° Lote)" value={field.key} onChange={e => updateExtraField(i, 'key', e.target.value)} style={{ boxSizing: 'border-box' }} />
+                      <input type="text" placeholder="Valor (ej: LOT-001)" value={field.value} onChange={e => updateExtraField(i, 'value', e.target.value)} style={{ boxSizing: 'border-box' }} />
+                      <button onClick={() => removeExtraField(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}><X size={14} /></button>
+                    </div>
+                  ))}
+                </div>
+
+                <button className="btn-run" style={{ width: '100%', background: '#ef4444', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={startRecording}>
                   <Circle size={14} fill="white" color="white" />
                   Iniciar Grabación
                 </button>
               </>
             ) : (
               <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                <div style={{
-                  width: '20px', height: '20px', borderRadius: '50%',
-                  background: '#ef4444', margin: '0 auto 1.5rem',
-                  animation: 'pulse 1.2s ease-in-out infinite'
-                }} />
+                <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#ef4444', margin: '0 auto 1.5rem', animation: 'pulse 1.2s ease-in-out infinite' }} />
                 <p style={{ fontWeight: '800', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Grabando...</p>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
-                  Realiza las acciones en el navegador que se abrió.
-                </p>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '2.5rem' }}>
-                  Flujo: <strong style={{ color: 'var(--text-main)' }}>{recordingName}</strong>
-                </p>
-                <button
-                  className="btn-run"
-                  style={{ background: '#1e293b', color: 'white', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-                  onClick={stopRecording}
-                >
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Realiza las acciones en el navegador que se abrió.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Flujo: <strong style={{ color: 'var(--text-main)' }}>{recordingName}</strong></p>
+                {recordingCredentials.username && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '2rem' }}>Usuario: <strong style={{ color: 'var(--text-main)' }}>{recordingCredentials.username}</strong></p>
+                )}
+                <button className="btn-run" style={{ background: '#1e293b', color: 'white', display: 'inline-flex', alignItems: 'center', gap: '8px' }} onClick={stopRecording}>
                   <Square size={14} fill="white" color="white" />
                   Detener y Guardar Flujo
                 </button>
