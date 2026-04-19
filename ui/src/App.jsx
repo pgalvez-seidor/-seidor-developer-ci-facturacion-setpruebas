@@ -470,20 +470,22 @@ export default function App() {
 
             <div className="config-form">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label>Tipo Comprobante</label>
-                  <select value={builderConfig.tipoComprobante} onChange={e => setBuilderConfig({ ...builderConfig, tipoComprobante: e.target.value })}>
-                    <option value="Boleta">Boleta</option>
-                    <option value="Factura">Factura</option>
-                  </select>
-                </div>
+                {activeClient !== 'Medifarma' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label>Tipo Comprobante</label>
+                    <select value={builderConfig.tipoComprobante} onChange={e => setBuilderConfig({ ...builderConfig, tipoComprobante: e.target.value })}>
+                      <option value="Boleta">Boleta</option>
+                      <option value="Factura">Factura</option>
+                    </select>
+                  </div>
+                )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label>Iteraciones</label>
                   <input type="number" min="1" value={builderConfig.iteraciones} onChange={e => setBuilderConfig({ ...builderConfig, iteraciones: parseInt(e.target.value) || 1 })} />
                 </div>
               </div>
 
-              {builderConfig.tipoComprobante === 'Factura' && (
+              {activeClient !== 'Medifarma' && builderConfig.tipoComprobante === 'Factura' && (
                 <div style={{ marginTop: '1rem', background: 'rgba(52, 152, 219, 0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(52, 152, 219, 0.2)' }}>
                   <label style={{ color: '#3498db', fontWeight: '800', fontSize: '0.7rem', display: 'block', marginBottom: '8px' }}>DATOS FISCALES OBLIGATORIOS</label>
                   <input
@@ -528,7 +530,9 @@ export default function App() {
                 </div>
               )}
 
-              <PaymentTray pagos={builderConfig.pagos} medioVuelto={builderConfig.medioVuelto} updatePagos={p => setBuilderConfig({ ...builderConfig, pagos: p })} updateMedioVuelto={v => setBuilderConfig({ ...builderConfig, medioVuelto: v })} />
+              {activeClient !== 'Medifarma' && (
+                <PaymentTray pagos={builderConfig.pagos} medioVuelto={builderConfig.medioVuelto} updatePagos={p => setBuilderConfig({ ...builderConfig, pagos: p })} updateMedioVuelto={v => setBuilderConfig({ ...builderConfig, medioVuelto: v })} />
+              )}
 
               <div style={{ marginTop: '1rem' }}>
                 <label>Nombre del Escenario</label>
