@@ -7,10 +7,18 @@ module.exports = defineConfig({
         timeout: 15000,       // 15s para assertions
     },
     use: {
-        actionTimeout: 30000, // 30s por acción (click, fill, etc.)
-        navigationTimeout: 60000, // 60s para navegaciones
+        actionTimeout: 30000,
+        navigationTimeout: 60000,
         video: 'off',
         screenshot: 'off',
+        locale: 'es-PE',
+        timezoneId: 'America/Lima',
+        extraHTTPHeaders: {
+            'Accept-Language': 'es-PE,es;q=0.9,en;q=0.1'
+        },
+        launchOptions: {
+            args: ['--lang=es-PE']  // Fuerza idioma a nivel del proceso Chromium
+        },
     },
     workers: 1,               // Por defecto 1 worker (se controla desde el servidor)
     retries: 0,

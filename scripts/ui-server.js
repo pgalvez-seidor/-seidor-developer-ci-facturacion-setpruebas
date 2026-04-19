@@ -253,7 +253,8 @@ app.post('/api/run-batch', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    const cmd = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
+    // Usar binario local directamente para evitar problemas con npx como grandchild process
+    const playwrightBin = path.join(rootDir, 'node_modules', '.bin', /^win/.test(process.platform) ? 'playwright.cmd' : 'playwright');
 
     const sendLog = (taskId, type, message, docData = null) => {
         const payload = JSON.stringify({ taskId, type, message: message.toString(), docData, timestamp: new Date().toISOString() });
@@ -266,9 +267,21 @@ app.post('/api/run-batch', async (req, res) => {
     let pendingTasks = [...tasks];
     let runningCount = 0;
     let batchResults = []; // Almacenar resultados para reporte global
+    let intentionalEnd = false;
 
-    req.on('close', () => {
-        activeProcesses.forEach(p => p.kill());
+    // Keepalive ping cada 20s para que el SSE no se cierre por timeout del browser
+    const keepAliveInterval = setInterval(() => {
+        try { res.write(': ping\n\n'); } catch (e) { /* stream ya cerrado */ }
+    }, 20000);
+
+    // res.on('close') = cliente se desconectó (tab cerrado, etc.)
+    // req.on('close') se dispara cuando el body del request termina de leerse — NO usar para detectar desconexión
+    res.on('close', () => {
+        clearInterval(keepAliveInterval);
+        if (!intentionalEnd) {
+            console.log('[SSE] Cliente desconectado, cancelando procesos activos.');
+            activeProcesses.forEach(p => p.kill());
+        }
     });
 
     try {
@@ -314,7 +327,7 @@ app.post('/api/run-batch', async (req, res) => {
                     return;
                 }
                 const scriptPath = file.startsWith('scripts/') ? file : `scripts/${file}`;
-                const cmdArgs = ['playwright', 'test', scriptPath, '--reporter=line'];
+                const cmdArgs = ['test', scriptPath, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
@@ -324,10 +337,13 @@ app.post('/api/run-batch', async (req, res) => {
                 };
                 if (preId) testEnv.PREFACTURA_ID = preId;
 
-                const workerProcess = spawn(cmd, cmdArgs, {
+                console.log(`[WORKER] Spawning: ${playwrightBin} ${cmdArgs.join(' ')}`);
+                const workerProcess = spawn(playwrightBin, cmdArgs, {
                     cwd: rootDir,
-                    env: testEnv
+                    env: testEnv,
+                    stdio: ['ignore', 'pipe', 'pipe']
                 });
+                console.log(`[WORKER] PID: ${workerProcess.pid}`);
                 activeProcesses.push(workerProcess);
 
                 workerProcess.stdout.on('data', (data) => {
@@ -371,10 +387,16 @@ app.post('/api/run-batch', async (req, res) => {
                 workerProcess.stderr.on('data', (data) => {
                     sendLog(taskId, 'log', `[ERROR] ` + stripAnsi(data.toString()));
                 });
-                workerProcess.on('close', (code) => {
+                workerProcess.on('error', (err) => {
+                    sendLog(taskId, 'error', `❌ No se pudo lanzar Playwright: ${err.message}`);
+                });
+                workerProcess.on('close', (code, signal) => {
                     runningCount--;
                     const isSuccess = code === 0;
-                    const resultMsg = isSuccess ? 'Finalizado con éxito' : `Finalizado con código ${code}`;
+                    let resultMsg;
+                    if (isSuccess) resultMsg = 'Finalizado con éxito';
+                    else if (code !== null) resultMsg = `Test fallido (código ${code}) — revisa el log arriba`;
+                    else resultMsg = `Proceso interrumpido por señal ${signal || 'desconocida'} — puede ser timeout del sistema o crash de Chromium`;
                     sendLog(taskId, isSuccess ? 'done' : 'error', resultMsg);
 
                     // Guardar para el reporte global (incluyendo ruta de evidencias para consolidar)
@@ -406,10 +428,14 @@ app.post('/api/run-batch', async (req, res) => {
                     const relativeUrl = globalPdfPath.replace(rootDir, '').replace(/\\/g, '/');
                     sendLog('orchestrator', 'pdf_global', 'Reporte Global de Lote Listo', relativeUrl);
                     sendLog('orchestrator', 'done', 'Todas las tareas del lote han finalizado.');
+                    clearInterval(keepAliveInterval);
+                    intentionalEnd = true;
                     res.end();
                 }).catch(err => {
                     console.error("Error generando reporte global:", err);
                     sendLog('orchestrator', 'done', 'Finalizado (con error en reporte global).');
+                    clearInterval(keepAliveInterval);
+                    intentionalEnd = true;
                     res.end();
                 });
             }
@@ -600,6 +626,8 @@ app.post('/api/run-batch', async (req, res) => {
     } catch (error) {
         console.error(error);
         sendLog('orchestrator', 'error', `Error crítico en el orquestador: ${error.message}`);
+        clearInterval(keepAliveInterval);
+        intentionalEnd = true;
         res.end();
     }
 });
@@ -655,12 +683,16 @@ app.get('/api/scripts', (req, res) => {
         const scriptsDir = path.join(rootDir, 'scripts');
         const files = fs.readdirSync(scriptsDir)
             .filter(f => f.startsWith('grabacion_') && f.endsWith('.spec.js'))
-            .map(f => ({
-                file: `scripts/${f}`,
-                name: f.replace(/^grabacion_/, '').replace(/_\d+\.spec\.js$/, '').replace(/_/g, ' '),
-                created: fs.statSync(path.join(scriptsDir, f)).birthtime
-            }))
-            .sort((a, b) => b.created - a.created);
+            .map(f => {
+                const tsMatch = f.match(/_(\d{13})\.spec\.js$/);
+                const created = tsMatch ? new Date(parseInt(tsMatch[1])) : fs.statSync(path.join(scriptsDir, f)).birthtime;
+                return {
+                    file: `scripts/${f}`,
+                    name: f.replace(/^grabacion_/, '').replace(/_\d+\.spec\.js$/, '').replace(/_/g, ' '),
+                    created
+                };
+            })
+            .sort((a, b) => new Date(b.created) - new Date(a.created));
         res.json(files);
     } catch (e) {
         res.status(500).json({ error: e.toString() });
@@ -711,12 +743,54 @@ app.post('/api/record/stop', (req, res) => {
     // Convertir ESM import → CommonJS require (codegen genera ESM, el proyecto usa CJS)
     if (fs.existsSync(rec.outputFile)) {
         let content = fs.readFileSync(rec.outputFile, 'utf8');
+
+        // 1. ESM → CJS
         content = content.replace(
             /^import\s*\{\s*([^}]+)\}\s*from\s*['"]@playwright\/test['"]\s*;?/m,
             (_, imports) => `const { ${imports.trim()} } = require('@playwright/test');`
         );
+
+        // 2. Reemplazar primera URL de OAuth2 (tokens de sesión ya expirados) con la URL original del portal
+        if (rec.url) {
+            content = content.replace(
+                /await page\.goto\('https?:\/\/[^']*[?&](?:code_challenge|response_type=code)[^']*'\)/,
+                `await page.goto('${rec.url}')`
+            );
+        }
+
+        // 3. Normalizar login SAP IAS: selectores de idioma → atributos HTML universales
+        //    Elimina clicks redundantes, botón "Mostrar contraseña" y adapta a inglés/español
+        const emailFill = content.match(/\.fill\('([^']+@[^']+)'\)/)?.[1];
+        const passFill  = content.match(/getByRole\('textbox',\s*\{\s*name:\s*'(?:Contraseña|Password|Kennwort)'\s*\}\)\.fill\('([^']+)'\)/)?.[1];
+        if (emailFill) {
+            // Quitar todas las líneas del campo email (clicks + fill) y reemplazar por una sola
+            content = content.replace(
+                /(\s*await page\.getByRole\('textbox',\s*\{\s*name:\s*'(?:Correo electrónico o nombre|Email or User Name|Benutzername)[^']*'\s*\}\)\.(?:click|fill)\([^)]*\);?\n?)+/g,
+                `\n  await page.locator('input[type="email"], input[type="text"]').first().fill('${emailFill}');\n`
+            );
+        }
+        if (passFill) {
+            // Quitar todas las líneas del campo contraseña (clicks + fill) y reemplazar por una sola
+            // + añadir click en botón submit (Iniciar sesión / Sign In) que Codegen no captura correctamente
+            content = content.replace(
+                /(\s*await page\.getByRole\('textbox',\s*\{\s*name:\s*'(?:Contraseña|Password|Kennwort)'\s*\}\)\.(?:click|fill)\([^)]*\);?\n?)+/g,
+                `\n  await page.locator('input[type="password"]').first().fill('${passFill}');\n  await page.locator('button[type="submit"]').first().click();\n  await page.waitForLoadState('networkidle').catch(() => {});\n`
+            );
+        }
+        // Eliminar clics en "Mostrar contraseña" / "Show Password" (ruido innecesario)
+        content = content.replace(
+            /\s*await page\.getByRole\('button',\s*\{\s*name:\s*'(?:Mostrar contraseña|Show Password|Passwort anzeigen)'\s*\}\)\.click\(\);?\n?/g,
+            ''
+        );
+        // Quitar el goto redundante al portal que viene justo después del login
+        // (la redirección post-login ya lleva al portal automáticamente)
+        content = content.replace(
+            /\n  await page\.goto\('https?:\/\/[^']*\.hana\.ondemand\.com[^']*'\);\n  await page\.waitForLoadState[^\n]*\n  await page\.goto\('https?:\/\/[^']*\.hana\.ondemand\.com[^']*'\);/,
+            (match) => match.split('\n  await page.goto(').slice(0, 2).join('\n  await page.goto(')
+        );
+
         fs.writeFileSync(rec.outputFile, content, 'utf8');
-        console.log(`[RECORD] Script convertido a CommonJS: ${path.basename(rec.outputFile)}`);
+        console.log(`[RECORD] Script normalizado: CJS + OAuth URL + selectores universales`);
     }
 
     const relFile = path.relative(rootDir, rec.outputFile);
