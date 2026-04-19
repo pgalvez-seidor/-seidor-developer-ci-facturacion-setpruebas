@@ -305,7 +305,15 @@ app.post('/api/run-batch', async (req, res) => {
                     sendLog(taskId, 'log', `📋 Usando Pre-Factura manual: ${preId}`);
                 }
 
-                const cmdArgs = ['playwright', 'test', `scripts/${file || 'caso1-boleta.spec.js'}`, '--reporter=line'];
+                if (!file) {
+                    sendLog(taskId, 'error', '❌ Sin script asignado. Graba primero el flujo desde el botón "Grabar Flujo Nuevo".');
+                    runningCount--;
+                    resolve();
+                    processNext();
+                    return;
+                }
+                const scriptPath = file.startsWith('scripts/') ? file : `scripts/${file}`;
+                const cmdArgs = ['playwright', 'test', scriptPath, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
