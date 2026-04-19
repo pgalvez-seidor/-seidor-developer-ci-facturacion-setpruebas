@@ -838,7 +838,7 @@ export default function App() {
             )}
 
             {/* ── STEP 2: FORMULARIO ── */}
-            {recordingStep === 'form' && !isRecording ? (
+            {recordingStep === 'form' && !isRecording && (
               <>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.6' }}>
                   Se abrirá el navegador. Realiza las acciones que quieres automatizar y cuando termines haz clic en <strong>Detener Grabación</strong>.
