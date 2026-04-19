@@ -708,6 +708,17 @@ app.post('/api/record/stop', (req, res) => {
     try { rec.process.kill(); } catch (e) { /* ya terminó */ }
     activeRecordings.delete(recordingId);
 
+    // Convertir ESM import → CommonJS require (codegen genera ESM, el proyecto usa CJS)
+    if (fs.existsSync(rec.outputFile)) {
+        let content = fs.readFileSync(rec.outputFile, 'utf8');
+        content = content.replace(
+            /^import\s*\{\s*([^}]+)\}\s*from\s*['"]@playwright\/test['"]\s*;?/m,
+            (_, imports) => `const { ${imports.trim()} } = require('@playwright/test');`
+        );
+        fs.writeFileSync(rec.outputFile, content, 'utf8');
+        console.log(`[RECORD] Script convertido a CommonJS: ${path.basename(rec.outputFile)}`);
+    }
+
     const relFile = path.relative(rootDir, rec.outputFile);
     const scenarioId = `esc_rec_${Date.now()}`;
 
