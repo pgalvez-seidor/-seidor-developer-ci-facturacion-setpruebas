@@ -162,6 +162,7 @@ export default function App() {
 
   // Grabación de flujos (Playwright Codegen)
   const [showRecordModal, setShowRecordModal] = useState(false);
+  const [recordingStep, setRecordingStep] = useState('intro'); // 'intro' | 'form' | 'recording'
   const [isRecording, setIsRecording] = useState(false);
   const [recordingId, setRecordingId] = useState('');
   const [recordingUrl, setRecordingUrl] = useState('');
@@ -169,6 +170,10 @@ export default function App() {
   const [recordingCredentials, setRecordingCredentials] = useState({ username: '', password: '', appName: '' });
   const [recordingExtraData, setRecordingExtraData] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Asignación de script a escenario existente
+  const [showScriptPicker, setShowScriptPicker] = useState(false);
+  const [availableScripts, setAvailableScripts] = useState([]);
 
   const CHANGELOG = [
     { version: '1.1.0', date: '2026-04-19', changes: ['Rama Medifarma — cliente independiente', 'Grabación de flujos sin código (Playwright Codegen)', 'Botón Grabar Flujo Nuevo en dashboard', 'Flujos grabados guardados automáticamente en SQLite'] },
@@ -255,6 +260,40 @@ export default function App() {
     } catch { addToast("Error al eliminar.", "error"); }
   };
 
+  const openRecordModal = (prefilledName = '') => {
+    setRecordingStep('intro');
+    setRecordingName(prefilledName);
+    setShowRecordModal(true);
+  };
+
+  const openScriptPicker = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/scripts`);
+      const data = await res.json();
+      setAvailableScripts(data);
+      setShowScriptPicker(true);
+    } catch { addToast("Error al cargar scripts disponibles", "error"); }
+  };
+
+  const assignScript = async (scriptFile) => {
+    if (!activeScenarioId) { addToast("Selecciona un escenario primero", "error"); return; }
+    const sData = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === activeScenarioId);
+    if (!sData) return;
+    const updatedConfig = { ...sData.config, recordedScript: scriptFile };
+    try {
+      const res = await fetch(`${API_BASE}/registry/scenario`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: activeClient, processId: activeProcess, scenario: { ...sData, config: updatedConfig } })
+      });
+      if ((await res.json()).success) {
+        await fetchRegistry();
+        setShowScriptPicker(false);
+        addToast("Script asignado correctamente.", "success");
+      }
+    } catch { addToast("Error al asignar script", "error"); }
+  };
+
   const addExtraField = () => setRecordingExtraData(prev => [...prev, { key: '', value: '' }]);
   const removeExtraField = (i) => setRecordingExtraData(prev => prev.filter((_, idx) => idx !== i));
   const updateExtraField = (i, field, val) => setRecordingExtraData(prev => prev.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
@@ -278,6 +317,7 @@ export default function App() {
       if (data.recordingId) {
         setRecordingId(data.recordingId);
         setIsRecording(true);
+        setRecordingStep('recording');
       } else {
         addToast("No se pudo iniciar la grabación", "error");
       }
@@ -304,6 +344,7 @@ export default function App() {
         await fetchRegistry();
         setIsRecording(false);
         setShowRecordModal(false);
+        setRecordingStep('intro');
         setRecordingUrl('');
         setRecordingName('');
         setRecordingId('');
@@ -478,9 +519,9 @@ export default function App() {
             </div>
 
             <button
-              onClick={() => setShowRecordModal(true)}
+              onClick={() => openRecordModal()}
               style={{
-                width: '100%', marginBottom: '1.5rem', padding: '12px',
+                width: '100%', marginBottom: '1rem', padding: '12px',
                 background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444',
                 border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: '12px',
                 cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem',
@@ -490,6 +531,26 @@ export default function App() {
               <Circle size={14} fill="#ef4444" color="#ef4444" />
               Grabar Flujo Nuevo
             </button>
+
+            {/* Banner: escenario sin script grabado */}
+            {activeClient === 'Medifarma' && activeScenarioId && (() => {
+              const esc = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === activeScenarioId);
+              if (!esc?.config?.recordedScript) return (
+                <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: '800', color: '#f59e0b', marginBottom: '8px' }}>⚠️ ESCENARIO SIN FLUJO GRABADO</div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 12px' }}>Este escenario aún no tiene un flujo grabado. Puedes grabarlo ahora o asignar uno existente.</p>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => openRecordModal(esc.name)} style={{ flex: 1, padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.78rem' }}>
+                      ● Grabar ahora
+                    </button>
+                    <button onClick={openScriptPicker} style={{ flex: 1, padding: '8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.78rem' }}>
+                      📂 Usar existente
+                    </button>
+                  </div>
+                </div>
+              );
+              return null;
+            })()}
 
             <div className="config-form">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
@@ -671,19 +732,113 @@ export default function App() {
         </main>
       </div>
 
+      {showScriptPicker && (
+        <div className="modal-overlay" onClick={() => setShowScriptPicker(false)}>
+          <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0, color: 'var(--accent-primary)' }}>📂 Seleccionar Script Grabado</h2>
+              <button onClick={() => setShowScriptPicker(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}><X size={20} /></button>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              Selecciona un flujo grabado previamente para asignarlo a <strong>{registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === activeScenarioId)?.name}</strong>.
+            </p>
+            {availableScripts.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', border: '2px dashed var(--card-border)', borderRadius: '12px' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</div>
+                <p style={{ margin: 0 }}>No hay flujos grabados todavía.<br/>Usa "Grabar Flujo Nuevo" para crear uno.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {availableScripts.map((s, i) => (
+                  <button key={i} onClick={() => assignScript(s.file)} style={{ textAlign: 'left', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--card-border)', borderRadius: '10px', cursor: 'pointer', transition: 'border-color 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--card-border)'}
+                  >
+                    <div style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-main)', textTransform: 'capitalize' }}>{s.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '3px' }}>{s.file} · {new Date(s.created).toLocaleDateString('es-PE')}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {showRecordModal && (
-        <div className="modal-overlay" onClick={() => !isRecording && setShowRecordModal(false)}>
+        <div className="modal-overlay" onClick={() => recordingStep !== 'recording' && setShowRecordModal(false)}>
           <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0, color: 'var(--accent-primary)' }}>Grabar Flujo de Prueba</h2>
-              {!isRecording && (
+              <h2 style={{ margin: 0, color: 'var(--accent-primary)' }}>
+                {recordingStep === 'intro' ? '¿Cómo funciona?' : recordingStep === 'recording' ? 'Grabando...' : 'Configurar Grabación'}
+              </h2>
+              {recordingStep !== 'recording' && (
                 <button onClick={() => setShowRecordModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
                   <X size={20} />
                 </button>
               )}
             </div>
 
-            {!isRecording ? (
+            {/* ── STEP 1: INTRO ANIMADA ── */}
+            {recordingStep === 'intro' && (
+              <div>
+                {/* Mockup animado de navegador */}
+                <div style={{ animation: 'browserSlideIn 0.5s ease forwards', background: '#1e293b', borderRadius: '12px', overflow: 'hidden', marginBottom: '1.8rem', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
+                  {/* Barra del navegador */}
+                  <div style={{ background: '#0f172a', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }} />
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }} />
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }} />
+                    </div>
+                    <div style={{ flex: 1, background: '#1e293b', borderRadius: '6px', padding: '4px 10px', fontSize: '0.7rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#10b981' }}>🔒</span> portal.medifarma.com
+                    </div>
+                  </div>
+                  {/* Contenido del navegador con cursor animado */}
+                  <div style={{ height: '130px', position: 'relative', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', overflow: 'hidden' }}>
+                    {/* Elementos de UI simulados */}
+                    <div style={{ position: 'absolute', top: '20px', left: '20px', right: '20px', height: '10px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px' }} />
+                    <div style={{ position: 'absolute', top: '40px', left: '20px', width: '120px', height: '8px', background: 'rgba(255,255,255,0.04)', borderRadius: '4px' }} />
+                    <div style={{ position: 'absolute', top: '55px', left: '20px', width: '80px', height: '8px', background: 'rgba(255,255,255,0.04)', borderRadius: '4px' }} />
+                    <div style={{ position: 'absolute', top: '38px', right: '20px', width: '60px', height: '24px', background: 'rgba(0,74,153,0.5)', borderRadius: '6px', border: '1px solid rgba(0,74,153,0.8)' }} />
+                    <div style={{ position: 'absolute', top: '72px', right: '20px', width: '60px', height: '24px', background: 'rgba(16,185,129,0.2)', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.4)' }} />
+                    {/* Cursor animado */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, animation: 'cursorMove 3s ease-in-out infinite', fontSize: '18px', pointerEvents: 'none', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
+                      🖱️
+                    </div>
+                    {/* Indicador REC */}
+                    <div style={{ position: 'absolute', bottom: '10px', right: '12px', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239,68,68,0.15)', padding: '4px 8px', borderRadius: '20px', border: '1px solid rgba(239,68,68,0.3)' }}>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', animation: 'recordingPulse 1.5s ease infinite' }} />
+                      <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: '800', letterSpacing: '1px' }}>GRABANDO</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pasos */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '2rem' }}>
+                  {[
+                    { num: '1', icon: '🌐', title: 'Se abre un navegador', desc: 'Apuntando directo a la URL de tu portal. Sin configurar nada.' },
+                    { num: '2', icon: '🖱️', title: 'Haces el flujo normalmente', desc: 'Haz clic, llena campos, navega — exactamente como lo harías tú.' },
+                    { num: '3', icon: '⏹️', title: 'Vuelves aquí y guardas', desc: 'Haz clic en Detener. El flujo queda grabado y listo para replicar.' },
+                  ].map((s, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', animation: `stepFadeIn 0.4s ease ${i * 0.15}s both` }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '800', fontSize: '0.8rem', flexShrink: 0 }}>{s.num}</div>
+                      <div>
+                        <div style={{ fontWeight: '700', fontSize: '0.9rem', marginBottom: '2px' }}>{s.icon} {s.title}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>{s.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button className="btn-run" style={{ width: '100%', background: 'var(--accent-primary)', color: 'white', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => setRecordingStep('form')}>
+                  Entendido — Configurar grabación →
+                </button>
+              </div>
+            )}
+
+            {/* ── STEP 2: FORMULARIO ── */}
+            {recordingStep === 'form' && !isRecording ? (
               <>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.6' }}>
                   Se abrirá el navegador. Realiza las acciones que quieres automatizar y cuando termines haz clic en <strong>Detener Grabación</strong>.
@@ -749,7 +904,10 @@ export default function App() {
                   Iniciar Grabación
                 </button>
               </>
-            ) : (
+            )}
+
+            {/* ── STEP 3: GRABANDO ── */}
+            {recordingStep === 'recording' && (
               <div style={{ textAlign: 'center', padding: '2rem 0' }}>
                 <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#ef4444', margin: '0 auto 1.5rem', animation: 'pulse 1.2s ease-in-out infinite' }} />
                 <p style={{ fontWeight: '800', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Grabando...</p>
