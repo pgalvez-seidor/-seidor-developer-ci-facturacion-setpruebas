@@ -3,7 +3,7 @@ import {
   Eye, Zap, CreditCard, Banknote, Trash2,
   CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square
 } from 'lucide-react';
-import './index.css';
+import './index-a.css';
 
 const API_BASE = 'http://localhost:3001/api';
 
@@ -159,6 +159,7 @@ export default function App() {
 
   const [toasts, setToasts] = useState([]);
   const [showAbout, setShowAbout] = useState(false);
+  const [addedFlash, setAddedFlash] = useState(false);
 
   // Grabación de flujos (Playwright Codegen)
   const [showRecordModal, setShowRecordModal] = useState(false);
@@ -197,8 +198,11 @@ export default function App() {
 
   const addToast = (msg, type = 'error') => {
     const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, msg, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 8000);
+    setToasts(prev => [...prev, { id, msg, type, exiting: false }]);
+    setTimeout(() => {
+      setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t));
+      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 220);
+    }, 5000);
   };
 
   const handleOpenPdf = async (pdfUrl) => {
@@ -466,6 +470,8 @@ export default function App() {
       });
     }
     setQueue(q => [...q, ...newItems]);
+    setAddedFlash(true);
+    setTimeout(() => setAddedFlash(false), 1400);
   };
 
   const getBatchItemLabel = (q) => {
@@ -732,11 +738,54 @@ export default function App() {
 
                 <label style={{ marginTop: '1.2rem', display: 'block' }}>Instrucciones Detalladas</label>
                 <textarea placeholder="Describe el flujo para la bitácora..." value={instruccionesIa} onChange={e => setInstruccionesIa(e.target.value)} style={{ width: '100%', height: '80px', boxSizing: 'border-box', marginTop: '8px' }} />
-
-                <button className="btn-run" style={{ width: '100%', marginTop: '1rem', background: 'white', color: 'var(--text-main)', border: '1px solid var(--card-border)', boxShadow: 'none' }} onClick={saveScenario}>Guardar Configuración Permanente</button>
               </div>
 
-              <button className="btn-run" style={{ marginTop: '1.5rem', background: 'var(--accent-success)', color: 'white', fontSize: '1.1rem', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }} onClick={addToBatch}>＋ Añadir al Lote de Pruebas</button>
+              {/* ── Botonera de acción ── */}
+              {(() => {
+                const isMedifarmaFlow = activeClient === 'Medifarma';
+                const hasName = !!newScenarioName.trim();
+                const hasScript = !!builderConfig.recordedScript;
+                const hasPayment = (builderConfig.pagos?.length ?? 0) > 0;
+                const validFiscal = builderConfig.tipoComprobante !== 'Factura' || !!builderConfig.ruc?.trim();
+                const canAdd = hasName && (isMedifarmaFlow ? hasScript : (hasPayment && validFiscal));
+                const disabledReason = !hasName
+                  ? 'Ingresa un nombre para el escenario'
+                  : isMedifarmaFlow && !hasScript
+                  ? 'Asigna un flujo grabado primero'
+                  : !isMedifarmaFlow && !hasPayment
+                  ? 'Agrega un método de pago'
+                  : !isMedifarmaFlow && !validFiscal
+                  ? 'Ingresa el RUC de la factura'
+                  : null;
+
+                return (
+                  <div style={{ marginTop: '1.25rem', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button
+                      className="btn-secondary"
+                      onClick={saveScenario}
+                      disabled={!hasName}
+                    >
+                      Guardar
+                    </button>
+                    <div style={{ flex: 1 }} />
+                    {disabledReason && !addedFlash && (
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', maxWidth: '150px', textAlign: 'right', lineHeight: 1.3 }}>
+                        {disabledReason}
+                      </span>
+                    )}
+                    <button
+                      className={`btn-add${addedFlash ? ' btn-add-success' : ''}`}
+                      onClick={addToBatch}
+                      disabled={!canAdd || addedFlash}
+                    >
+                      {addedFlash
+                        ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{animation:'popIn 300ms cubic-bezier(0.34,1.56,0.64,1)'}}><polyline points="20 6 9 17 4 12"/></svg> Añadido</>
+                        : '+ Añadir al lote'
+                      }
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -751,7 +800,7 @@ export default function App() {
                 <div style={{ border: '2px dashed var(--card-border)', borderRadius: '16px', padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>El lote está vacío. Configura un caso y añádelo.</div>
               ) : (
                 queue.map((q, idx) => (
-                  <div key={q.taskId} className="batch-item">
+                  <div key={q.taskId} className={`batch-item${q.status === 'success' ? ' status-success' : q.status === 'error' ? ' status-error' : ''}`}>
                     <div className="batch-item-top">
                       <span className="b-title">
                         {idx + 1}. {getBatchItemLabel(q)}
@@ -1193,15 +1242,17 @@ export default function App() {
         </div>
       )}
 
-      <div style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
         {toasts.map(t => (
-          <div key={t.id} style={{
-            background: 'white', color: 'var(--text-main)', padding: '16px 24px', borderRadius: '16px',
-            border: `1px solid ${t.type === 'error' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
-            boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '400px', fontSize: '0.9rem'
-          }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: t.type === 'error' ? '#ef4444' : '#10b981' }} />
-            <span style={{ flex: 1 }}>{t.msg}</span>
+          <div key={t.id} className={`toast${t.exiting ? ' exiting' : ''}`}>
+            <div className={`toast-icon ${t.type}`}>
+              {t.type === 'success'
+                ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              }
+            </div>
+            <span className="toast-msg">{t.msg}</span>
+            <div className={`toast-progress ${t.type}`} />
           </div>
         ))}
       </div>
