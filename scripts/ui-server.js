@@ -536,7 +536,8 @@ app.post('/api/run-batch', async (req, res) => {
                 </div>
 
                 ${results.map((r, index) => {
-                const pics = [
+                // Leer capturas: scripts CI tienen nombres fijos; scripts grabados tienen 01_accion.png etc.
+                const fixedPics = [
                     { id: 'antes_de_cobrar', title: '01. Carga de Pre-Factura' },
                     { id: 'modal_efectivo', title: '02. Ingreso de Pago' },
                     { id: 'post_pago', title: '03. Transacción Registrada' },
@@ -545,9 +546,12 @@ app.post('/api/run-batch', async (req, res) => {
                 ];
 
                 let evidenceHtml = '';
-                pics.forEach(p => {
+                // Primero intenta los nombres fijos (scripts CI)
+                let foundFixed = false;
+                fixedPics.forEach(p => {
                     const imgPath = path.join(r.runDir, p.id + '.png');
                     if (fs.existsSync(imgPath)) {
+                        foundFixed = true;
                         const b64 = fs.readFileSync(imgPath).toString('base64');
                         evidenceHtml += `
                             <div class="evidence-item">
@@ -556,6 +560,21 @@ app.post('/api/run-batch', async (req, res) => {
                             </div>`;
                     }
                 });
+                // Si no hay nombres fijos, leer capturas automáticas de scripts grabados (01_xxx.png)
+                if (!foundFixed && fs.existsSync(r.runDir)) {
+                    const autoShots = fs.readdirSync(r.runDir)
+                        .filter(f => /^\d{2}_.*\.png$/.test(f))
+                        .sort();
+                    autoShots.forEach(f => {
+                        const label = f.replace(/^\d{2}_/, '').replace(/_/g, ' ').replace(/\.png$/, '');
+                        const b64 = fs.readFileSync(path.join(r.runDir, f)).toString('base64');
+                        evidenceHtml += `
+                            <div class="evidence-item">
+                                <h4>${label}</h4>
+                                <div class="img-wrap"><img class="evidence-img" src="data:image/png;base64,${b64}" /></div>
+                            </div>`;
+                    });
+                }
 
                 return `
                     <div class="page-break">
@@ -699,6 +718,70 @@ app.get('/api/scripts', (req, res) => {
     }
 });
 
+// Helper: inyecta shot() y capturas automáticas en scripts grabados
+function injectScreenshots(content) {
+    const shotHelper = `
+  // --- Helper de capturas automáticas (inyectado por AutoBot) ---
+  const _fs = require('fs');
+  const _path = require('path');
+  const _evidenceDir = process.env.EVIDENCE_DIR || _path.join(__dirname, '..', 'evidence');
+  if (!_fs.existsSync(_evidenceDir)) _fs.mkdirSync(_evidenceDir, { recursive: true });
+  let _shotN = 0;
+  const shot = async (label) => {
+    await page.waitForTimeout(600);
+    await page.waitForSelector('.sapMBusyIndicator,.sapUiLocalBusyIndicator,.sapMBlockLayer',
+      { state: 'hidden', timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(300);
+    const _name = String(++_shotN).padStart(2,'0') + '_' + label.replace(/[^a-zA-Z0-9_-]/g,'_');
+    const _p = _path.join(_evidenceDir, _name + '.png');
+    await page.screenshot({ path: _p, fullPage: true });
+    console.log('📸 ' + _name + '.png');
+  };
+  // --- Fin helper ---
+`;
+
+    // Insertar helper al inicio del cuerpo del test (después de "async ({ page }) => {")
+    content = content.replace(
+        /(test\([^)]*,\s*async\s*\(\{\s*page\s*\}\)\s*=>\s*\{)/,
+        `$1\n${shotHelper}`
+    );
+
+    // Inyectar shot() después de cada acción clave (goto, click), excepto clicks de login (botón submit)
+    let stepN = 0;
+    const lines = content.split('\n');
+    const result = [];
+    let inHelper = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        result.push(line);
+
+        // No inyectar dentro del helper mismo
+        if (line.includes('Helper de capturas')) inHelper = true;
+        if (line.includes('Fin helper')) { inHelper = false; continue; }
+        if (inHelper) continue;
+
+        const isGoto = /await page\.goto\(/.test(line);
+        const isClick = /\.click\(\)/.test(line) && !/button\[type="submit"\]/.test(line);
+        const isWaitForLoad = /waitForLoadState/.test(line);
+        const isWhereToEnd = /\}$/.test(line) && lines[i-1]?.includes('waitForLoadState');
+
+        if ((isGoto || isClick) && !isWaitForLoad) {
+            stepN++;
+            const label = isGoto ? `navegacion_${stepN}` : `accion_${stepN}`;
+            result.push(`  await shot('${label}');`);
+        }
+    }
+
+    // Añadir captura final antes del cierre del test
+    const lastBrace = result.lastIndexOf('});');
+    if (lastBrace !== -1) {
+        result.splice(lastBrace, 0, `  await shot('resultado_final');`);
+    }
+
+    return result.join('\n');
+}
+
 // 8. Iniciar grabación con Playwright Codegen
 app.post('/api/record/start', (req, res) => {
     const { url, outputName, credentials = {}, extraData = [] } = req.body;
@@ -771,10 +854,20 @@ app.post('/api/record/stop', (req, res) => {
         }
         if (passFill) {
             // Quitar todas las líneas del campo contraseña (clicks + fill) y reemplazar por una sola
-            // + añadir click en botón submit (Iniciar sesión / Sign In) que Codegen no captura correctamente
+            // + añadir click en botón submit + manejo de pantalla "Where To?" de SAP BTP
+            const portalUrl = rec.url || '';
+            const whereTo = `
+  await page.locator('input[type="password"]').first().fill('${passFill}');
+  await page.locator('button[type="submit"]').first().click();
+  await page.waitForLoadState('networkidle').catch(() => {});
+  // SAP BTP a veces muestra "Where To?" post-login — recargar resuelve
+  if (page.url().includes('where_to') || await page.locator('text=/Where To/i').isVisible().catch(() => false)) {
+    await page.goto('${portalUrl}');
+    await page.waitForLoadState('networkidle').catch(() => {});
+  }`;
             content = content.replace(
                 /(\s*await page\.getByRole\('textbox',\s*\{\s*name:\s*'(?:Contraseña|Password|Kennwort)'\s*\}\)\.(?:click|fill)\([^)]*\);?\n?)+/g,
-                `\n  await page.locator('input[type="password"]').first().fill('${passFill}');\n  await page.locator('button[type="submit"]').first().click();\n  await page.waitForLoadState('networkidle').catch(() => {});\n`
+                whereTo + '\n'
             );
         }
         // Eliminar clics en "Mostrar contraseña" / "Show Password" (ruido innecesario)
@@ -789,8 +882,11 @@ app.post('/api/record/stop', (req, res) => {
             (match) => match.split('\n  await page.goto(').slice(0, 2).join('\n  await page.goto(')
         );
 
+        // 6. Inyectar helper shot() y capturas automáticas antes/después de cada acción clave
+        content = injectScreenshots(content);
+
         fs.writeFileSync(rec.outputFile, content, 'utf8');
-        console.log(`[RECORD] Script normalizado: CJS + OAuth URL + selectores universales`);
+        console.log(`[RECORD] Script normalizado: CJS + OAuth URL + selectores universales + screenshots`);
     }
 
     const relFile = path.relative(rootDir, rec.outputFile);
@@ -876,7 +972,7 @@ Cuando la instrucción NO es sobre scripts de automatización, responde ÚNICAME
 
     try {
         const geminiRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
