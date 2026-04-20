@@ -346,9 +346,19 @@ app.post('/api/run-batch', async (req, res) => {
                 console.log(`[WORKER] PID: ${workerProcess.pid}`);
                 activeProcesses.push(workerProcess);
 
+                let lastError = ''; // Captura el último error relevante del test
+
                 workerProcess.stdout.on('data', (data) => {
                     const text = stripAnsi(data.toString());
                     sendLog(taskId, 'log', text);
+
+                    // Capturar línea de error de Playwright para mensaje final
+                    const timeoutMatch = text.match(/TimeoutError:\s*(.+?)(?:\n|$)/);
+                    const errorMatch = text.match(/Error:\s*(.+?)(?:\n|$)/);
+                    const failMatch = text.match(/✘.+›\s*(.+?)(?:\s*\([\d.]+s\))?$/m);
+                    if (timeoutMatch) lastError = `Timeout: ${timeoutMatch[1].trim().substring(0, 120)}`;
+                    else if (failMatch) lastError = failMatch[1].trim().substring(0, 120);
+                    else if (errorMatch) lastError = errorMatch[1].trim().substring(0, 120);
 
                     // Extraer Resultado Final si el script de Playwright lo imprime
                     const match = text.match(/\\[RESULT\\] (Prefactura: .+ \\| Doc: .+)/);
@@ -359,14 +369,13 @@ app.post('/api/run-batch', async (req, res) => {
                     // Extraer Error de Negocio para globo
                     const errorNegocioMatch = text.match(/❌ Error de Negocio Detectado:\s*(.+)/);
                     if (errorNegocioMatch) {
-                        // Enviar tipo 'business_error'
                         sendLog(taskId, 'business_error', errorNegocioMatch[1]);
                     }
 
                     // Extraer Métricas [METRIC] name: value
                     const metricMatch = text.match(/\[METRIC\]\s+(\w+):\s+([\d\.]+)s/);
                     if (metricMatch) {
-                        if (!config.metrics) config.metrics = {}; // Usemos el objeto config de la tarea para guardar temporalmente
+                        if (!config.metrics) config.metrics = {};
                         config.metrics[metricMatch[1]] = metricMatch[2];
                         sendLog(taskId, 'log', `📊 Métrica capturada -> ${metricMatch[1]}: ${metricMatch[2]}s`);
                     }
@@ -385,7 +394,11 @@ app.post('/api/run-batch', async (req, res) => {
                     }
                 });
                 workerProcess.stderr.on('data', (data) => {
-                    sendLog(taskId, 'log', `[ERROR] ` + stripAnsi(data.toString()));
+                    const text = stripAnsi(data.toString());
+                    // Capturar errores de stderr también
+                    const errLine = text.match(/Error:\s*(.+?)(?:\n|$)/);
+                    if (errLine) lastError = errLine[1].trim().substring(0, 120);
+                    sendLog(taskId, 'log', `[stderr] ` + text);
                 });
                 workerProcess.on('error', (err) => {
                     sendLog(taskId, 'error', `❌ No se pudo lanzar Playwright: ${err.message}`);
@@ -394,9 +407,15 @@ app.post('/api/run-batch', async (req, res) => {
                     runningCount--;
                     const isSuccess = code === 0;
                     let resultMsg;
-                    if (isSuccess) resultMsg = 'Finalizado con éxito';
-                    else if (code !== null) resultMsg = `Test fallido (código ${code}) — revisa el log arriba`;
-                    else resultMsg = `Proceso interrumpido por señal ${signal || 'desconocida'} — puede ser timeout del sistema o crash de Chromium`;
+                    if (isSuccess) {
+                        resultMsg = 'Finalizado con éxito';
+                    } else if (code !== null) {
+                        resultMsg = lastError
+                            ? `❌ ${lastError}`
+                            : `Test fallido (código ${code})`;
+                    } else {
+                        resultMsg = `Proceso interrumpido por señal ${signal || 'desconocida'}`;
+                    }
                     sendLog(taskId, isSuccess ? 'done' : 'error', resultMsg);
 
                     // Guardar para el reporte global (incluyendo ruta de evidencias para consolidar)
