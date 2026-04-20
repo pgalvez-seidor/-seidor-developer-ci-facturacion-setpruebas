@@ -19,18 +19,34 @@ if ! command -v node &> /dev/null; then
   exit 1
 fi
 
-# Instalar dependencias si faltan
-if [ ! -d "node_modules" ]; then
-  echo "📦 Primera vez — instalando dependencias del servidor..."
-  npm install
-fi
-
-if [ ! -d "ui/node_modules" ]; then
-  echo "📦 Primera vez — instalando dependencias del dashboard..."
-  cd ui && npm install && cd ..
-fi
-
+echo "✅ Node.js $(node -v) detectado"
 echo ""
+
+# Instalar dependencias del servidor si faltan
+if [ ! -d "node_modules" ]; then
+  echo "📦 Instalando dependencias del servidor (primera vez)..."
+  npm install
+  echo ""
+fi
+
+# Instalar dependencias del dashboard si faltan
+if [ ! -d "ui/node_modules" ]; then
+  echo "📦 Instalando dependencias del dashboard (primera vez)..."
+  cd ui && npm install && cd ..
+  echo ""
+fi
+
+# Verificar e instalar Playwright Chromium (siempre valida, solo instala si falta)
+echo "🔍 Verificando Playwright Chromium..."
+PLAYWRIGHT_BIN="$DIR/node_modules/.bin/playwright"
+if "$PLAYWRIGHT_BIN" install chromium --dry-run 2>&1 | grep -q "chromium.*is not installed\|will be installed"; then
+  echo "📥 Instalando Chromium (esto toma unos minutos la primera vez)..."
+  "$PLAYWRIGHT_BIN" install chromium
+else
+  echo "✅ Chromium ya está instalado"
+fi
+echo ""
+
 echo "🚀 Iniciando AutoBot..."
 echo "   Dashboard: http://localhost:5173"
 echo "   Backend:   http://localhost:3001"
@@ -38,8 +54,8 @@ echo ""
 echo "   Cierra esta ventana para detener AutoBot."
 echo ""
 
-# Abrir el navegador automáticamente después de 3 segundos
-(sleep 3 && open "http://localhost:5173") &
+# Abrir el navegador automáticamente después de 4 segundos
+(sleep 4 && open "http://localhost:5173") &
 
 # Lanzar servidor + UI
 npm start

@@ -19,18 +19,35 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-:: Instalar dependencias si faltan
-if not exist "node_modules\" (
-    echo [INFO] Primera vez - instalando dependencias del servidor...
-    call npm install
-)
-
-if not exist "ui\node_modules\" (
-    echo [INFO] Primera vez - instalando dependencias del dashboard...
-    cd ui && call npm install && cd ..
-)
-
+for /f "tokens=*" %%v in ('node -v') do set NODE_VERSION=%%v
+echo [OK] Node.js %NODE_VERSION% detectado
 echo.
+
+:: Instalar dependencias del servidor si faltan
+if not exist "node_modules\" (
+    echo [INFO] Instalando dependencias del servidor ^(primera vez^)...
+    call npm install
+    echo.
+)
+
+:: Instalar dependencias del dashboard si faltan
+if not exist "ui\node_modules\" (
+    echo [INFO] Instalando dependencias del dashboard ^(primera vez^)...
+    cd ui && call npm install && cd ..
+    echo.
+)
+
+:: Verificar e instalar Playwright Chromium (siempre valida, solo instala si falta)
+echo [INFO] Verificando Playwright Chromium...
+node_modules\.bin\playwright install chromium --dry-run 2>&1 | findstr /i "is not installed\|will be installed" >nul
+if %ERRORLEVEL% equ 0 (
+    echo [INFO] Instalando Chromium ^(esto toma unos minutos la primera vez^)...
+    call node_modules\.bin\playwright install chromium
+) else (
+    echo [OK] Chromium ya esta instalado
+)
+echo.
+
 echo [OK] Iniciando AutoBot...
 echo      Dashboard: http://localhost:5173
 echo      Backend:   http://localhost:3001
@@ -38,8 +55,8 @@ echo.
 echo      Cierra esta ventana para detener AutoBot.
 echo.
 
-:: Abrir navegador despues de 3 segundos
-start "" /b cmd /c "timeout /t 3 >nul && start http://localhost:5173"
+:: Abrir navegador después de 4 segundos
+start "" /b cmd /c "timeout /t 4 >nul && start http://localhost:5173"
 
 :: Lanzar servidor + UI
 call npm start
