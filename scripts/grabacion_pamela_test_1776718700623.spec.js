@@ -1,0 +1,34 @@
+import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('https://ao1k9k5jk.accounts.ondemand.com/oauth2/authorize?client_id=2fad98f3-610b-4304-bf84-83187c448577&response_type=code&redirect_uri=https%3A%2F%2Fmedifarma-portal-qa-63shgxes.authentication.us10.hana.ondemand.com%2Flogin%2Fcallback%2Fsap.custom&state=4Bucmd3dZ5&code_challenge=hDtOVnfVyNWB1PlI8lMjnaUwRJOUpE2PXyB2ZdIYhhg&code_challenge_method=S256&scope=email+openid+profile&nonce=G28kBYHzMbM6');
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).fill('2040196');
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).dblclick();
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).fill('');
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).fill('pierre.galvez@seidor.com');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('Pavilion2371126.@');
+  await page.locator('div').filter({ hasText: 'Correo electrónico o nombre' }).nth(2).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.getByRole('link', { name: 'Registro de Manufactura' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).fill('2040196');
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).press('Enter');
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).press('Enter');
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('button', { name: 'Ir' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('gridcell', { name: '1020' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('gridcell', { name: 'Navegación' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByLabel('Opciones de selección').click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByText('1', { exact: true }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('button', { name: 'Confirmar' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().locator('[id="__box7-__table5-5"]').click();
+  await page.getByRole('button', { name: 'Perfil de Pierre Galvez' }).click();
+  await page.locator('[id="__list0-5-logoutBtn-img"]').click();
+  await page.getByRole('button', { name: 'OK' }).click();
+});

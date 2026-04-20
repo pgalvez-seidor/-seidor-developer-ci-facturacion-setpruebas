@@ -5,10 +5,19 @@
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
-echo "╔══════════════════════════════════════╗"
-echo "║         AutoBot v1.1.0               ║"
-echo "║         Seidor Perú                  ║"
-echo "╚══════════════════════════════════════╝"
+echo "----------------------------------------"
+echo "         AutoBot v1.1.0"
+echo "         Seidor Perú"
+echo "----------------------------------------"
+echo ""
+
+# Sincronizar con el repositorio (Git Pull)
+echo "🔄 Sincronizando scripts con el servidor..."
+git fetch --all >/dev/null 2>&1
+git pull
+if [ $? -ne 0 ]; then
+  echo "⚠️  No se pudo sincronizar con Git. Usando versión local..."
+fi
 echo ""
 
 # Verificar que Node.js esté instalado
