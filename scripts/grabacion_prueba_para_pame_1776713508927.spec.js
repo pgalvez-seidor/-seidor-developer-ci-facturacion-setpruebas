@@ -1,0 +1,36 @@
+import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('https://ao1k9k5jk.accounts.ondemand.com/oauth2/authorize?client_id=2fad98f3-610b-4304-bf84-83187c448577&response_type=code&redirect_uri=https%3A%2F%2Fmedifarma-portal-qa-63shgxes.authentication.us10.hana.ondemand.com%2Flogin%2Fcallback%2Fsap.custom&state=ULWgIEUi8w&code_challenge=3V6i-f4bjmyQJWG0DbdyMWECh522RfEWAvO4bfKqSsc&code_challenge_method=S256&scope=email+openid+profile&nonce=HQ4OnjQSk4ym');
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico o nombre' }).fill('pierre.galvez@seidor.com');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('Pavilion2371126.@');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.goto('https://medifarma-portal-qa-63shgxes.cpp.cfapps.us10.hana.ondemand.com/site/portalqas#Shell-home');
+  await page.getByRole('link', { name: 'Registro de Manufactura' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).fill('2040196');
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).dblclick();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).fill('2040196');
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Lote' }).press('Enter');
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('button', { name: 'Ir' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('button', { name: 'Ir' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('button', { name: 'Ir' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('gridcell', { name: '1020' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('gridcell', { name: 'Navegación' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByLabel('Opciones de selección').click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByText('1', { exact: true }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('button', { name: 'Confirmar' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().locator('[id="__box7-__table5-5"]').click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Ingrese el motivo de' }).click();
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('textbox', { name: 'Ingrese el motivo de' }).fill('no desea');
+  await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('button', { name: 'Confirmar' }).click();
+  await page.getByRole('button', { name: 'Logotipo de SAP' }).click();
+  await page.getByRole('button', { name: 'Perfil de Pierre Galvez' }).click();
+  await page.getByText('Salir').click();
+  await page.getByRole('button', { name: 'OK' }).click();
+  await page.goto('https://medifarma-portal-qa-63shgxes.cpp.cfapps.us10.hana.ondemand.com/logoff.html?siteAlias=portalqas&sap-language=es-ES');
+});

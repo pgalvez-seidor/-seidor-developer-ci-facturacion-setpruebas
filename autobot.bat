@@ -1,14 +1,23 @@
 @echo off
-chcp 65001 >nul
+:: AutoBot — Sincronización e Inicio
 title AutoBot v1.1.0 — Seidor Peru
 
-echo ╔══════════════════════════════════════╗
-echo ║         AutoBot v1.1.0               ║
-echo ║         Seidor Peru                  ║
-echo ╚══════════════════════════════════════╝
+echo ----------------------------------------
+echo          AutoBot v1.1.0
+echo          Seidor Peru
+echo ----------------------------------------
 echo.
 
 cd /d "%~dp0"
+
+:: Sincronizar con el repositorio (Git Pull)
+echo [INFO] Sincronizando scripts con el servidor...
+git fetch --all >nul 2>&1
+git pull
+if %ERRORLEVEL% neq 0 (
+    echo [WARN] No se pudo sincronizar con Git. Continuando con la version local...
+)
+echo.
 
 :: Verificar Node.js
 where node >nul 2>nul
