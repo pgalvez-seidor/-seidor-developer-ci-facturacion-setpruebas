@@ -183,6 +183,12 @@ export default function App() {
   const [showScriptPicker, setShowScriptPicker] = useState(false);
   const [availableScripts, setAvailableScripts] = useState([]);
 
+  // Editor manual de script
+  const [showScriptEditor, setShowScriptEditor] = useState(false);
+  const [scriptEditorFile, setScriptEditorFile] = useState('');
+  const [scriptEditorContent, setScriptEditorContent] = useState('');
+  const [scriptEditorSaving, setScriptEditorSaving] = useState(false);
+
   const CHANGELOG = [
     { version: '1.1.0', date: '2026-04-19', changes: ['Rama Medifarma — cliente independiente', 'Grabación de flujos sin código (Playwright Codegen)', 'Botón Grabar Flujo Nuevo en dashboard', 'Flujos grabados guardados automáticamente en SQLite'] },
     { version: '1.0.0', date: '2026-03-01', changes: ['Rebranding total a AutoBot', 'Interfaz Premium Seidor Perú', 'Concurrencia dinámica (Threads)', 'Modo Turbo (Timeouts optimizados)', 'Limpieza inteligente de fragments SAP'] },
@@ -308,6 +314,38 @@ export default function App() {
     setAiResponse(null);
     setAiApplied(false);
     setShowAiModal(true);
+  };
+
+  const openScriptEditor = async (scriptFile) => {
+    setScriptEditorFile(scriptFile);
+    setScriptEditorContent('');
+    setShowScriptEditor(true);
+    try {
+      const res = await fetch(`${API_BASE}/script/content?file=${encodeURIComponent(scriptFile)}`);
+      const data = await res.json();
+      if (data.content) setScriptEditorContent(data.content);
+      else addToast("No se pudo cargar el script", "error");
+    } catch { addToast("Error al cargar el script", "error"); }
+  };
+
+  const saveScriptEditor = async () => {
+    if (!scriptEditorFile || !scriptEditorContent.trim()) return;
+    setScriptEditorSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/ai/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scriptFile: scriptEditorFile, scriptCompleto: scriptEditorContent }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        addToast("Script guardado correctamente.", "success");
+        setShowScriptEditor(false);
+      } else {
+        addToast(data.error || "Error al guardar", "error");
+      }
+    } catch { addToast("Error al guardar el script", "error"); }
+    finally { setScriptEditorSaving(false); }
   };
 
   const analyzeWithAi = async () => {
@@ -591,6 +629,9 @@ export default function App() {
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button onClick={openScriptPicker} style={{ padding: '5px 10px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.72rem' }}>
                         🔄 Cambiar
+                      </button>
+                      <button onClick={() => openScriptEditor(esc.config.recordedScript)} style={{ padding: '5px 10px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.72rem' }}>
+                        📝 Ver/Editar
                       </button>
                       <button onClick={() => openAiModal(esc.config.recordedScript)} style={{ padding: '5px 10px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         🤖 Afinar con IA
@@ -915,6 +956,37 @@ export default function App() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {showScriptEditor && (
+        <div className="modal-overlay" onClick={() => setShowScriptEditor(false)}>
+          <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '780px', width: '95vw' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1rem' }}>📝 Editor de Script</h2>
+              <button onClick={() => setShowScriptEditor(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}><X size={20} /></button>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem', wordBreak: 'break-all' }}>{scriptEditorFile}</div>
+            <textarea
+              value={scriptEditorContent}
+              onChange={e => setScriptEditorContent(e.target.value)}
+              spellCheck={false}
+              style={{
+                width: '100%', height: '60vh', fontFamily: 'monospace', fontSize: '0.8rem',
+                background: 'rgba(0,0,0,0.3)', color: '#e2e8f0', border: '1px solid var(--card-border)',
+                borderRadius: '8px', padding: '12px', resize: 'vertical', boxSizing: 'border-box',
+                outline: 'none', lineHeight: '1.5',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '1rem' }}>
+              <button onClick={() => setShowScriptEditor(false)} style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
+                Cancelar
+              </button>
+              <button onClick={saveScriptEditor} disabled={scriptEditorSaving} style={{ padding: '8px 20px', background: scriptEditorSaving ? '#555' : 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none', borderRadius: '8px', cursor: scriptEditorSaving ? 'not-allowed' : 'pointer', fontWeight: '700' }}>
+                {scriptEditorSaving ? 'Guardando...' : '💾 Guardar'}
+              </button>
+            </div>
           </div>
         </div>
       )}

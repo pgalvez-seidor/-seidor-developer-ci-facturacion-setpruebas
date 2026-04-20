@@ -35,8 +35,40 @@ test('test', async ({ page }) => {
   await page.locator('iframe[title="Aplicación"], iframe[title="Application"]').first().contentFrame().getByRole('textbox', { name: 'Lote' }).click();
   await shot('accion_4');
   await page.locator('iframe[title="Aplicación"], iframe[title="Application"]').first().contentFrame().getByRole('textbox', { name: 'Lote' }).fill('2040196');
-  await page.locator('iframe[title="Aplicación"], iframe[title="Application"]').first().contentFrame().getByRole('button', { name: 'Ir' }).click();
-  await shot('accion_5');
+
+  const iframeLocator = page.locator('iframe[title="Aplicación"], iframe[title="Application"]').first().contentFrame();
+  const irButton = iframeLocator.getByRole('button', { name: 'Ir' });
+  const gridCellLocator = iframeLocator.getByRole('gridcell'); // Selector para verificar si hay resultados en la tabla
+
+  let attempts = 0;
+  const maxAttempts = 3;
+  let resultsFound = false;
+
+  while (attempts < maxAttempts && !resultsFound) {
+    attempts++;
+    console.log(`Intento ${attempts} de hacer clic en el botón 'Ir'.`);
+    await irButton.click();
+
+    // Esperar a que los indicadores de carga desaparezcan dentro del iframe
+    await iframeLocator.waitForSelector('.sapMBusyIndicator,.sapUiLocalBusyIndicator,.sapMBlockLayer',
+      { state: 'hidden', timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(500); // Pequeña espera después del indicador de carga
+
+    // Verificar si los resultados (celdas de la tabla) son visibles
+    const firstGridCell = gridCellLocator.first();
+    resultsFound = await firstGridCell.isVisible().catch(() => false);
+
+    if (!resultsFound && attempts < maxAttempts) {
+      console.log(`No se encontraron resultados después del intento ${attempts}. Reintentando en 2 segundos...`);
+      await page.waitForTimeout(2000); // Esperar 2 segundos antes del siguiente intento
+    } else if (resultsFound) {
+      console.log(`Resultados encontrados después del intento ${attempts}.`);
+    } else {
+      console.log(`No se encontraron resultados después de ${maxAttempts} intentos. El script continuará.`);
+    }
+  }
+  await shot('accion_5'); // Captura de pantalla después de intentar cargar los resultados
+
   await page.locator('iframe[title="Aplicación"], iframe[title="Application"]').first().contentFrame().getByRole('button', { name: 'Ir' }).click();
   await shot('accion_6');
   await page.locator('iframe[title="Aplicación"], iframe[title="Application"]').first().contentFrame().getByRole('gridcell', { name: '1020' }).click();

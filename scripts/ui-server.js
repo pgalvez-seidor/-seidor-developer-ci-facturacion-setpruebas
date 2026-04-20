@@ -1018,6 +1018,15 @@ Cuando la instrucción NO es sobre scripts de automatización, responde ÚNICAME
 });
 
 // 12. IA: Aplicar cambio aprobado al script
+// Leer contenido de un script grabado
+app.get('/api/script/content', (req, res) => {
+    const { file } = req.query;
+    if (!file) return res.status(400).json({ error: 'Falta parámetro file' });
+    const scriptPath = path.join(rootDir, file);
+    if (!fs.existsSync(scriptPath)) return res.status(404).json({ error: 'Script no encontrado' });
+    res.json({ content: fs.readFileSync(scriptPath, 'utf8') });
+});
+
 app.post('/api/ai/apply', (req, res) => {
     const { scriptFile, scriptCompleto } = req.body;
     if (!scriptFile || !scriptCompleto) return res.status(400).json({ error: 'Faltan parámetros' });
