@@ -24,13 +24,12 @@ const Sidebar = ({
 }) => {
   return (
     <aside className="sidebar">
-      <div style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+      <div style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         <img
-          src="/seidor-logo.png"
-          alt="Seidor Peru"
-          style={{ width: '90%', height: 'auto', objectFit: 'contain', marginLeft: '-5px' }}
+          src="/logo-full.png"
+          alt="AutoBot"
+          style={{ width: '100%', height: 'auto', objectFit: 'contain' }}
         />
-        <span style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.05em', color: 'var(--accent-primary)', alignSelf: 'flex-end', paddingRight: '15px' }}>AutoBot</span>
       </div>
 
       <div className="sidebar-section">

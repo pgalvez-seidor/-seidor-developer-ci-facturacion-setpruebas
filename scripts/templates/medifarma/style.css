@@ -124,3 +124,83 @@ body {
   border-top: 1px solid var(--border-color);
   padding-top: 20px;
 }
+
+/* ── COVER PAGE ── */
+.cover-page {
+  height: 25cm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 40px;
+  border-left: 15px solid var(--primary-color);
+  background: white;
+}
+
+.cover-subtitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 15px;
+}
+
+.cover-title {
+  font-size: 52px;
+  line-height: 1.1;
+  font-weight: 900;
+  margin: 0;
+  color: #1a1a1a;
+  max-width: 800px;
+}
+
+.cover-desc {
+  font-size: 18px;
+  color: #666;
+  margin: 30px 0 50px 0;
+  max-width: 600px;
+}
+
+.cover-meta {
+  font-size: 16px;
+  color: #444;
+}
+
+.meta-item {
+  margin-bottom: 10px;
+}
+
+.cover-stats {
+  margin-top: 100px;
+  display: flex;
+  gap: 20px;
+}
+
+.stat-card {
+  background: #f8f9fa;
+  padding: 25px;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  flex: 1;
+}
+
+.stat-card label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #999;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.stat-val {
+  font-size: 28px;
+  font-weight: 900;
+  color: #1a1a1a;
+}
+
+.stat-val.success { color: #10b981; }
+.stat-val.failed { color: #ef4444; }
+
+.page-break {
+  page-break-after: always;
+}

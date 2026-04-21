@@ -84,42 +84,46 @@ async function generatePdf(runDir) {
         <style>${cssContent}</style>
     </head>
     <body>
-        <div class="header">
-            <div class="logo">
-                <div style="font-weight: 900; font-size: 28px; color: #0056b3;">SEIDOR</div>
-                <div style="font-size: 12px; color: #666; letter-spacing: 2px;">PERU - AUTOBOT</div>
+        <div class="cover-page">
+            <div style="position: absolute; top: 40px; right: 40px;">
+                <img src="data:image/png;base64,${fs.readFileSync(path.join(__dirname, 'templates', 'medifarma', 'logo-report.png')).toString('base64')}" style="height: 50px; width: auto;">
             </div>
-            <div class="title-box">
-                <h1>Dossier Técnico de Evidencias</h1>
-                <div style="color: #666; font-size: 12px;">Generado con AutoBot AI Vision</div>
+            <div class="cover-content">
+                <div class="cover-subtitle">Informe de Ejecución</div>
+                <h1 class="cover-title">Evidencia de Certificación Automatizada</h1>
+                <p class="cover-desc">Reporte detallado generado por AutoBot AI Vision para la validación de flujos de procesos técnicos y de negocio.</p>
+                
+                <div class="cover-meta">
+                    <div class="meta-item"><strong>Proyecto:</strong> ${client}</div>
+                    <div class="meta-item"><strong>Tester:</strong> ${result.tester || 'PIERRE GALVEZ'}</div>
+                    <div class="meta-item"><strong>Fecha:</strong> ${new Date(result.timestamp).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+            </div>
+            
+            <div class="cover-stats">
+                <div class="stat-card">
+                    <label>ESCENARIO</label>
+                    <div class="stat-val" style="font-size: 16px;">${result.nombre || 'Prueba General'}</div>
+                </div>
+                <div class="stat-card">
+                    <label>ESTADO FINAL</label>
+                    <div class="stat-val ${result.status}">${result.status === 'success' ? 'EXITOSO' : 'FALLIDO'}</div>
+                </div>
             </div>
         </div>
 
-        <table class="metadata-table">
-            <tr>
-                <td class="label">Escenario de Prueba</td>
-                <td>${result.nombre || result.caso}</td>
-                <td class="label">Cliente</td>
-                <td>${client}</td>
-            </tr>
-            <tr>
-                <td class="label">USUARIO</td>
-                <td>${result.tester || 'PIERRE GALVEZ'}</td>
-                <td class="label">Fecha de Ejecución</td>
-                <td>${new Date(result.timestamp).toLocaleString()}</td>
-            </tr>
-            <tr>
-                <td class="label">Ambiente</td>
-                <td>${result.env}</td>
-                <td class="label">Estado Final</td>
-                <td style="color: ${result.status === 'success' ? 'green' : 'red'}; font-weight: bold;">
-                    ${result.status === 'success' ? 'EXITOSO' : 'FALLIDO'}
-                </td>
-            </tr>
-        </table>
+        <div class="page-break"></div>
 
-        <h2>Detalle de Ejecución Inteligente</h2>
-        
+        <div class="header">
+            <div class="logo">
+                <img src="data:image/png;base64,${fs.readFileSync(path.join(__dirname, 'templates', 'medifarma', 'logo-report.png')).toString('base64')}" style="height: 60px; width: auto;">
+            </div>
+            <div class="title-box">
+                <h1>Detalle de Evidencias</h1>
+                <div style="color: #666; font-size: 12px;">AutoBot AI Vision</div>
+            </div>
+        </div>
+
         ${stepsData.map((step, index) => `
             <div class="step-container">
                 <div class="step-header">
