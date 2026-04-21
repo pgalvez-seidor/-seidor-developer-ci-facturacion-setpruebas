@@ -4,6 +4,7 @@
     "description": "Set de pruebas automatizadas para Facturación - Seidor",
     "main": "scripts/runner.js",
     "dependencies": {
+        "@google/generative-ai": "^0.24.1",
         "@playwright/test": "^1.40.0",
         "axios": "^1.6.0",
         "cors": "^2.8.6",
