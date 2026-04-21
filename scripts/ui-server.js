@@ -447,6 +447,18 @@ app.post('/api/run-batch', async (req, res) => {
                     }
                     sendLog(taskId, isSuccess ? 'done' : 'error', resultMsg);
 
+                    // Crear result.json para el generador de reportes
+                    const resultData = {
+                        nombre: config.scenarioName || taskId,
+                        tester: req.body.metadata?.tester || 'USUARIO DESCONOCIDO',
+                        cliente: req.body.metadata?.project || 'PROYECTO DESCONOCIDO',
+                        timestamp: new Date().toISOString(),
+                        status: isSuccess ? 'success' : 'failed',
+                        env: config.env || 'QAS',
+                        metrics: config.metrics || {}
+                    };
+                    fs.writeFileSync(path.join(runDir, 'result.json'), JSON.stringify(resultData, null, 2));
+
                     // Generar Dossier Técnico PDF automáticamente (Antes/Después)
                     try {
                         const { generatePdf } = require('./report-generator');
@@ -468,7 +480,8 @@ app.post('/api/run-batch', async (req, res) => {
                         status: isSuccess ? 'EXITO' : 'FALLIDO',
                         result: resultMsg,
                         metrics: config.metrics || {},
-                        timestamp: new Date().toLocaleString()
+                        timestamp: new Date().toLocaleString(),
+                        metadata: req.body.metadata
                     });
 
                     activeProcesses = activeProcesses.filter(p => p !== workerProcess);
@@ -735,8 +748,6 @@ function injectScreenshots(content) {
             result.push(line);
         }
     }
-    return result.join('\n');
-}
 
     // Añadir captura final antes del cierre del test
     const lastBrace = result.lastIndexOf('});');
