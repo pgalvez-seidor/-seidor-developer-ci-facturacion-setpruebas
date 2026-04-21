@@ -63,8 +63,8 @@ echo ""
 echo "   Cierra esta ventana para detener AutoBot."
 echo ""
 
-# Abrir el navegador automáticamente después de 4 segundos
-(sleep 4 && open "http://localhost:5173") &
+# Abrir Google Chrome automáticamente después de 4 segundos
+(sleep 4 && open -a "Google Chrome" "http://localhost:5173") &
 
 # Lanzar servidor + UI
 npm start

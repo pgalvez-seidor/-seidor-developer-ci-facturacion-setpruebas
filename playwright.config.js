@@ -10,6 +10,7 @@ module.exports = defineConfig({
         timeout: 15000,       // 15s para assertions
     },
     use: {
+        channel: 'chrome',        // FUERZA GOOGLE CHROME
         actionTimeout: 30000,
         navigationTimeout: 60000,
         video: 'off',

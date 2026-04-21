@@ -79,8 +79,8 @@ echo.
 echo      Cierra esta ventana para detener AutoBot.
 echo.
 
-:: Abrir navegador después de 4 segundos
-start "" /b cmd /c "timeout /t 4 >nul & start http://localhost:5173"
+:: Abrir Google Chrome automáticamente después de 4 segundos
+start "" /b cmd /c "timeout /t 4 >nul & start chrome http://localhost:5173"
 
 :: Lanzar servidor + UI
 call npm start
