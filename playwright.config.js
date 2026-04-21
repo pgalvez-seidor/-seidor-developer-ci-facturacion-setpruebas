@@ -1,8 +1,11 @@
 // @ts-check
 const { defineConfig } = require('@playwright/test');
+const path = require('path');
+const os = require('os');
 
 module.exports = defineConfig({
     timeout: 180000,          // 3 minutos por test (SAP BTP es lento)
+    outputDir: path.join(os.tmpdir(), 'autobot-test-results'),
     expect: {
         timeout: 15000,       // 15s para assertions
     },

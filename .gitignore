@@ -1,6 +1,13 @@
 .env
 node_modules/
 ui/node_modules/
+package-lock.json
+ui/package-lock.json
+npm-debug.log*
+yarn-error.log*
 evidence/
 config/database.sqlite
 config/state.properties
+test-results/
+app.log
+*.log

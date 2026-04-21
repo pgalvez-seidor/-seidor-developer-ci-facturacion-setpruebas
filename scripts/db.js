@@ -8,6 +8,11 @@ if (!fs.existsSync(configDir)) fs.mkdirSync(configDir);
 const dbPath = path.join(configDir, 'database.sqlite');
 const db = new sqlite3.Database(dbPath);
 
+// Configuraciones de robustez para Windows/OneDrive
+db.run("PRAGMA journal_mode = WAL");
+db.run("PRAGMA synchronous = NORMAL");
+db.configure("busyTimeout", 5000);
+
 const initDb = () => {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
