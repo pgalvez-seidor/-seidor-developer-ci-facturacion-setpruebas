@@ -17,6 +17,7 @@ const Sidebar = ({
   registry, activeClient, setActiveClient,
   activeProcess, setActiveProcess,
   currentBranch, branches, handleBranchChange,
+  onGitSync,
   setShowAbout
 }) => {
   return (
@@ -36,6 +37,21 @@ const Sidebar = ({
           <option value="">-- seleccionar --</option>
           {branches.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
+        
+        <button 
+          onClick={onGitSync} 
+          className="btn-sync-git"
+          style={{
+            marginTop: '10px', width: '100%', padding: '8px',
+            background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1',
+            border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '8px',
+            fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+          }}
+        >
+          <Zap size={14} fill="#6366f1" />
+          Subir cambios a Git
+        </button>
       </div>
 
       <div className="sidebar-section" style={{ flex: 1, marginTop: '2rem' }}>
@@ -586,6 +602,18 @@ export default function App() {
     finally { setIsBatchRunning(false); }
   };
 
+  const handleGitSync = async () => {
+    addToast("Iniciando sincronización con Git...", "success");
+    try {
+      const res = await fetch(`${API_BASE}/git/sync`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) addToast(data.message, "success");
+      else addToast(data.error || "Error en sincronización", "error");
+    } catch {
+      addToast("Error de conexión al sincronizar Git", "error");
+    }
+  };
+
   return (
     <div className="app">
       <div className="body">
@@ -593,6 +621,7 @@ export default function App() {
           registry={registry} activeClient={activeClient} setActiveClient={setActiveClient}
           activeProcess={activeProcess} setActiveProcess={setActiveProcess}
           currentBranch={currentBranch} branches={branches} handleBranchChange={handleBranchChange}
+          onGitSync={handleGitSync}
           setShowAbout={setShowAbout}
         />
 

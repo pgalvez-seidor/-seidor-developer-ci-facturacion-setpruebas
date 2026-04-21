@@ -17,13 +17,25 @@ git fetch --all >nul 2>nul
 git pull
 echo.
 
-:: Verificar Node.js
+::# Verificar que Node.js esté instalado
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
-    echo [ERROR] Node.js no esta instalado.
-    echo         Descargalo en: https://nodejs.org (Version LTS recomendada)
-    pause
-    exit /b 1
+  echo 🔍 Node.js no detectado. Intentando instalar vía winget...
+  where winget >nul 2>nul
+  if %ERRORLEVEL% eq 0 (
+    echo 📦 Instalando Node.js (OpenJS.NodeJS)...
+    winget install OpenJS.NodeJS --silent --accept-package-agreements --accept-source-agreements
+    if %ERRORLEVEL% eq 0 (
+      echo ✅ Node.js instalado con éxito. 
+      echo ⚠️ IMPORTANTE: Debes CERRAR esta ventana y VOLVER ABRIR autobot.bat para que Windows reconozca Node.
+      pause
+      exit /b 0
+    )
+  )
+  echo ❌ No se pudo instalar Node.js automáticamente.
+  echo    Por favor, descárgalo manualmente en: https://nodejs.org
+  pause
+  exit /b 1
 )
 
 :: Verificar version minima para Vite (20.19.0)
