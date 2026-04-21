@@ -32,6 +32,19 @@ const stripAnsi = (str) => {
     return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
 };
 
+// 0. Utilidad para matar procesos de forma recursiva en Windows (evita procesos huérfanos)
+const killProcessTree = (pid) => {
+    if (!pid) return;
+    if (/^win/.test(process.platform)) {
+        exec(`taskkill /pid ${pid} /T /F`, (err) => {
+            if (err) console.error(`[KILL] Error matando proceso ${pid}:`, err.message);
+            else console.log(`[KILL] Árbol de proceso ${pid} eliminado.`);
+        });
+    } else {
+        process.kill(pid, 'SIGKILL');
+    }
+};
+
 // Sesiones de grabación activas (Playwright Codegen)
 const activeRecordings = new Map();
 
@@ -162,9 +175,8 @@ app.post('/api/run-test', async (req, res) => {
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    const cmd = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
+    const _npx = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
+    const cmd = /^win/.test(process.platform) ? '"' + _npx + '"' : _npx;
     const iterations = config.iteraciones || 1;
     const isHeadless = config.headless || false;
 
@@ -177,7 +189,8 @@ app.post('/api/run-test', async (req, res) => {
 
     let activeProcesses = [];
     req.on('close', () => {
-        activeProcesses.forEach(p => p.kill());
+        console.log('[SSE] Cliente desconectado en run-test, limpiando procesos...');
+        activeProcesses.forEach(p => killProcessTree(p.pid));
     });
 
     try {
@@ -201,7 +214,8 @@ app.post('/api/run-test', async (req, res) => {
         sendLog('info', `🚀 Fase 2: Ejecutando ${iterations} hilos en paralelo (Headless: ${isHeadless})...`);
         const runWorker = (preId, index) => {
             return new Promise((resolve) => {
-                const cmdArgs = ['playwright', 'test', `scripts/${file}`];
+                const absScriptPath = path.join(rootDir, 'scripts', file);
+                const cmdArgs = ['playwright', 'test', `"${absScriptPath}"`];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
@@ -212,7 +226,9 @@ app.post('/api/run-test', async (req, res) => {
 
                 const workerProcess = spawn(cmd, cmdArgs, {
                     cwd: rootDir,
-                    env: testEnv
+                    env: testEnv,
+                    shell: true,
+                    windowsVerbatimArguments: false
                 });
                 activeProcesses.push(workerProcess);
 
@@ -254,7 +270,8 @@ app.post('/api/run-batch', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     // Usar binario local directamente para evitar problemas con npx como grandchild process
-    const playwrightBin = path.join(rootDir, 'node_modules', '.bin', /^win/.test(process.platform) ? 'playwright.cmd' : 'playwright');
+    const _pwBin = path.join(rootDir, 'node_modules', '.bin', /^win/.test(process.platform) ? 'playwright.cmd' : 'playwright');
+    const playwrightBin = /^win/.test(process.platform) ? '"' + _pwBin + '"' : _pwBin;
 
     const sendLog = (taskId, type, message, docData = null) => {
         const payload = JSON.stringify({ taskId, type, message: message.toString(), docData, timestamp: new Date().toISOString() });
@@ -279,8 +296,8 @@ app.post('/api/run-batch', async (req, res) => {
     res.on('close', () => {
         clearInterval(keepAliveInterval);
         if (!intentionalEnd) {
-            console.log('[SSE] Cliente desconectado, cancelando procesos activos.');
-            activeProcesses.forEach(p => p.kill());
+            console.log('[SSE] Cliente desconectado en run-batch, limpiando procesos...');
+            activeProcesses.forEach(p => killProcessTree(p.pid));
         }
     });
 
@@ -326,8 +343,8 @@ app.post('/api/run-batch', async (req, res) => {
                     processNext();
                     return;
                 }
-                const scriptPath = file.startsWith('scripts/') ? file : `scripts/${file}`;
-                const cmdArgs = ['test', scriptPath, '--reporter=line'];
+                const absScriptPath = path.join(rootDir, file.startsWith('scripts/') ? file : `scripts/${file}`);
+                const cmdArgs = ['test', `"${absScriptPath}"`, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
@@ -341,7 +358,9 @@ app.post('/api/run-batch', async (req, res) => {
                 const workerProcess = spawn(playwrightBin, cmdArgs, {
                     cwd: rootDir,
                     env: testEnv,
-                    stdio: ['ignore', 'pipe', 'pipe']
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                    shell: true,
+                    windowsVerbatimArguments: false
                 });
                 console.log(`[WORKER] PID: ${workerProcess.pid}`);
                 activeProcesses.push(workerProcess);
@@ -737,6 +756,88 @@ app.get('/api/scripts', (req, res) => {
     }
 });
 
+/**
+ * Normaliza un script de Playwright: ESM -> CJS, URL de OAuth, Login SAP IAS y Screenshots
+ */
+function normalizeScript(content, portalUrl) {
+    // 1. ESM -> CJS
+    content = content.replace(
+        /^import\s*\{\s*([^}]+)\}\s*from\s*['"]@playwright\/test['"]\s*;?/m,
+        (_, imports) => `const { ${imports.trim()} } = require('@playwright/test');`
+    );
+
+    // 2. Reemplazar primera URL de OAuth2 (tokens de sesión ya expirados) con la URL original del portal
+    if (portalUrl) {
+        content = content.replace(
+            /await page\.goto\('https?:\/\/[^']*[?&](?:code_challenge|response_type=code)[^']*'\)/,
+            `await page.goto('${portalUrl}')`
+        );
+    }
+
+    // 3. Normalizar login SAP IAS: selectores de idioma -> atributos HTML universales
+    //    Elimina clicks redundantes, botón "Mostrar contraseña" y adapta a inglés/español
+    const emailFill = content.match(/\.fill\('([^']+@[^']+)'\)/)?.[1];
+    const passFill  = content.match(/getByRole\('textbox',\s*\{\s*name:\s*'(?:Contraseña|Password|Kennwort)'\s*\}\)\.fill\('([^']+)'\)/)?.[1];
+    
+    if (emailFill) {
+        // Quitar todas las líneas del campo email (clicks + fill) y reemplazar por una sola
+        content = content.replace(
+            /(\s*await page\.getByRole\('textbox',\s*\{\s*name:\s*'(?:Correo electrónico o nombre|Email or User Name|Benutzername)[^']*'\s*\}\)\.(?:click|fill)\([^)]*\);?\n?)+/g,
+            `\n  await page.locator('input[type="email"], input[type="text"]').first().fill('${emailFill}');\n`
+        );
+    }
+    
+    if (passFill) {
+        // Quitar todas las líneas del campo contraseña (clicks + fill) y reemplazar por una sola
+        // + añadir click en botón submit + manejo de pantalla "Where To?" de SAP BTP
+        const whereTo = `
+  await page.locator('input[type="password"]').first().fill('${passFill}');
+  await page.locator('button[type="submit"]').first().click();
+  await page.waitForLoadState('networkidle').catch(() => {});
+  // SAP BTP a veces muestra "Where To?" post-login — recargar resuelve
+  if (page.url().includes('where_to') || await page.locator('text=/Where To/i').isVisible().catch(() => false)) {
+    await page.goto('${portalUrl}');
+    await page.waitForLoadState('networkidle').catch(() => {});
+  }`;
+        content = content.replace(
+            /(\s*await page\.getByRole\('textbox',\s*\{\s*name:\s*'(?:Contraseña|Password|Kennwort)'\s*\}\)\.(?:click|fill)\([^)]*\);?\n?)+/g,
+            whereTo + '\n'
+        );
+    }
+
+    // Eliminar clics en "Mostrar contraseña" / "Show Password" (ruido innecesario)
+    content = content.replace(
+        /\s*await page\.getByRole\('button',\s*\{\s*name:\s*'(?:Mostrar contraseña|Show Password|Passwort anzeigen)'\s*\}\)\.click\(\);?\n?/g,
+        ''
+    );
+
+    // Quitar el goto redundante al portal que viene justo después del login
+    // (la redirección post-login ya lleva al portal automáticamente)
+    content = content.replace(
+        /\n  await page\.goto\('https?:\/\/[^']*\.hana\.ondemand\.com[^']*'\);\n  await page\.waitForLoadState[^\n]*\n  await page\.goto\('https?:\/\/[^']*\.hana\.ondemand\.com[^']*'\);/,
+        (match) => match.split('\n  await page.goto(').slice(0, 2).join('\n  await page.goto(')
+    );
+
+    // 4. Inyectar helper shot() y capturas automáticas antes/después de cada acción clave
+    content = injectScreenshots(content);
+
+    // 5. Normalización de Búsqueda SAP (Botón "Ir" / "Search")
+    // Detecta clics en botones de búsqueda de SAP y aplica la estrategia de sincronización + 2s de espera
+    const sapSearchPattern = /await\s+(frame|page)\.getByRole\('button',\s*{\s*name:\s*['"]Ir['"]\s*}\)\.click\(\);/g;
+    content = content.replace(sapSearchPattern, (match, context) => {
+        return `
+  // --- Normalización SAP Search (AutoBot) ---
+  console.log('🚀 Sincronizando modelo SAP antes de búsqueda...');
+  await ${context}.locator('button').filter({ hasText: /^Ir$/ }).first().focus();
+  await page.keyboard.press('Enter'); // Disparador primario
+  await page.waitForTimeout(2000);   // Pausa de sincronización UI5
+  await ${context}.locator('button').filter({ hasText: /^Ir$/ }).first().click({ force: true }).catch(() => {});
+  // -------------------------------------------`;
+    });
+
+    return content;
+}
+
 // Helper: inyecta shot() y capturas automáticas en scripts grabados
 function injectScreenshots(content) {
     const shotHelper = `
@@ -809,9 +910,8 @@ app.post('/api/record/start', (req, res) => {
     const ts = Date.now();
     const safeName = (outputName || 'grabacion').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
     const outputFile = path.join(rootDir, 'scripts', `grabacion_${safeName}_${ts}.spec.js`);
-    const recordingId = `rec_${ts}`;
-
-    const cmd = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
+    const _npx = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
+    const cmd = /^win/.test(process.platform) ? '"' + _npx + '"' : _npx;
     const proc = spawn(cmd, ['playwright', 'codegen', url, `--output=${outputFile}`], { cwd: rootDir });
 
     activeRecordings.set(recordingId, { process: proc, outputFile, done: false, url, credentials, extraData });
@@ -846,66 +946,10 @@ app.post('/api/record/stop', (req, res) => {
     if (fs.existsSync(rec.outputFile)) {
         let content = fs.readFileSync(rec.outputFile, 'utf8');
 
-        // 1. ESM → CJS
-        content = content.replace(
-            /^import\s*\{\s*([^}]+)\}\s*from\s*['"]@playwright\/test['"]\s*;?/m,
-            (_, imports) => `const { ${imports.trim()} } = require('@playwright/test');`
-        );
-
-        // 2. Reemplazar primera URL de OAuth2 (tokens de sesión ya expirados) con la URL original del portal
-        if (rec.url) {
-            content = content.replace(
-                /await page\.goto\('https?:\/\/[^']*[?&](?:code_challenge|response_type=code)[^']*'\)/,
-                `await page.goto('${rec.url}')`
-            );
-        }
-
-        // 3. Normalizar login SAP IAS: selectores de idioma → atributos HTML universales
-        //    Elimina clicks redundantes, botón "Mostrar contraseña" y adapta a inglés/español
-        const emailFill = content.match(/\.fill\('([^']+@[^']+)'\)/)?.[1];
-        const passFill  = content.match(/getByRole\('textbox',\s*\{\s*name:\s*'(?:Contraseña|Password|Kennwort)'\s*\}\)\.fill\('([^']+)'\)/)?.[1];
-        if (emailFill) {
-            // Quitar todas las líneas del campo email (clicks + fill) y reemplazar por una sola
-            content = content.replace(
-                /(\s*await page\.getByRole\('textbox',\s*\{\s*name:\s*'(?:Correo electrónico o nombre|Email or User Name|Benutzername)[^']*'\s*\}\)\.(?:click|fill)\([^)]*\);?\n?)+/g,
-                `\n  await page.locator('input[type="email"], input[type="text"]').first().fill('${emailFill}');\n`
-            );
-        }
-        if (passFill) {
-            // Quitar todas las líneas del campo contraseña (clicks + fill) y reemplazar por una sola
-            // + añadir click en botón submit + manejo de pantalla "Where To?" de SAP BTP
-            const portalUrl = rec.url || '';
-            const whereTo = `
-  await page.locator('input[type="password"]').first().fill('${passFill}');
-  await page.locator('button[type="submit"]').first().click();
-  await page.waitForLoadState('networkidle').catch(() => {});
-  // SAP BTP a veces muestra "Where To?" post-login — recargar resuelve
-  if (page.url().includes('where_to') || await page.locator('text=/Where To/i').isVisible().catch(() => false)) {
-    await page.goto('${portalUrl}');
-    await page.waitForLoadState('networkidle').catch(() => {});
-  }`;
-            content = content.replace(
-                /(\s*await page\.getByRole\('textbox',\s*\{\s*name:\s*'(?:Contraseña|Password|Kennwort)'\s*\}\)\.(?:click|fill)\([^)]*\);?\n?)+/g,
-                whereTo + '\n'
-            );
-        }
-        // Eliminar clics en "Mostrar contraseña" / "Show Password" (ruido innecesario)
-        content = content.replace(
-            /\s*await page\.getByRole\('button',\s*\{\s*name:\s*'(?:Mostrar contraseña|Show Password|Passwort anzeigen)'\s*\}\)\.click\(\);?\n?/g,
-            ''
-        );
-        // Quitar el goto redundante al portal que viene justo después del login
-        // (la redirección post-login ya lleva al portal automáticamente)
-        content = content.replace(
-            /\n  await page\.goto\('https?:\/\/[^']*\.hana\.ondemand\.com[^']*'\);\n  await page\.waitForLoadState[^\n]*\n  await page\.goto\('https?:\/\/[^']*\.hana\.ondemand\.com[^']*'\);/,
-            (match) => match.split('\n  await page.goto(').slice(0, 2).join('\n  await page.goto(')
-        );
-
-        // 6. Inyectar helper shot() y capturas automáticas antes/después de cada acción clave
-        content = injectScreenshots(content);
-
+        // Normalizar script (CJS + OAuth URL + selectores universales + screenshots)
+        content = normalizeScript(content, rec.url);
         fs.writeFileSync(rec.outputFile, content, 'utf8');
-        console.log(`[RECORD] Script normalizado: CJS + OAuth URL + selectores universales + screenshots`);
+        console.log(`[RECORD] Script normalizado: ${rec.outputFile}`);
     }
 
     const relFile = path.relative(rootDir, rec.outputFile);
@@ -1040,6 +1084,24 @@ app.post('/api/ai/apply', (req, res) => {
         fs.writeFileSync(scriptPath, scriptCompleto, 'utf8');
         console.log(`[AI] Script actualizado: ${scriptFile} (backup: ${path.basename(backupPath)})`);
         res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.toString() });
+    }
+});
+
+// 13. Normalizar un script existente en disco
+app.post('/api/script/normalize', (req, res) => {
+    const { file, portalUrl } = req.body;
+    if (!file) return res.status(400).json({ error: 'Falta parámetro file' });
+
+    const scriptPath = path.join(rootDir, file);
+    if (!fs.existsSync(scriptPath)) return res.status(404).json({ error: 'Script no encontrado' });
+
+    try {
+        let content = fs.readFileSync(scriptPath, 'utf8');
+        content = normalizeScript(content, portalUrl);
+        fs.writeFileSync(scriptPath, content, 'utf8');
+        res.json({ success: true, message: 'Script normalizado correctamente' });
     } catch (e) {
         res.status(500).json({ error: e.toString() });
     }

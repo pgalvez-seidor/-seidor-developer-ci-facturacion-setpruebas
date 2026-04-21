@@ -1,5 +1,6 @@
 @echo off
-:: AutoBot — Sincronización e Inicio
+:: AutoBot — Sincronización e Inicio (Optimizado para Windows)
+chcp 65001 >nul
 title AutoBot v1.1.0 — Seidor Peru
 
 echo ----------------------------------------
@@ -12,49 +13,50 @@ cd /d "%~dp0"
 
 :: Sincronizar con el repositorio (Git Pull)
 echo [INFO] Sincronizando scripts con el servidor...
-git fetch --all >nul 2>&1
+git fetch --all >nul 2>nul
 git pull
-if %ERRORLEVEL% neq 0 (
-    echo [WARN] No se pudo sincronizar con Git. Continuando con la version local...
-)
 echo.
 
 :: Verificar Node.js
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Node.js no esta instalado.
-    echo         Descargalo en: https://nodejs.org
+    echo         Descargalo en: https://nodejs.org (Version LTS recomendada)
     pause
     exit /b 1
 )
 
-for /f "tokens=*" %%v in ('node -v') do set NODE_VERSION=%%v
-echo [OK] Node.js %NODE_VERSION% detectado
+:: Verificar version minima para Vite (20.19.0)
+for /f "tokens=2 del soul" %%v in ('node -v') do set FULL_VERSION=%%v
+:: (Simplificado: solo avisar si hay problemas detectados)
+echo [OK] Node.js detectado. 
+echo      Nota: Si el Dashboard falla, asegúrate de tener Node v20.19 o superior.
 echo.
 
 :: Instalar dependencias del servidor si faltan
 if not exist "node_modules\" (
-    echo [INFO] Instalando dependencias del servidor ^(primera vez^)...
+    echo [INFO] Instalando dependencias del servidor (primera vez)...
     call npm install
-    echo.
 )
 
 :: Instalar dependencias del dashboard si faltan
 if not exist "ui\node_modules\" (
-    echo [INFO] Instalando dependencias del dashboard ^(primera vez^)...
-    cd ui && call npm install && cd ..
-    echo.
+    echo [INFO] Instalando dependencias del dashboard (primera vez)...
+    cd ui
+    call npm install
+    cd ..
 )
 
-:: Verificar e instalar Playwright Chromium (siempre valida, solo instala si falta)
-echo [INFO] Verificando Playwright Chromium...
-node_modules\.bin\playwright install chromium --dry-run 2>&1 | findstr /i "is not installed\|will be installed" >nul
-if %ERRORLEVEL% equ 0 (
-    echo [INFO] Instalando Chromium ^(esto toma unos minutos la primera vez^)...
-    call node_modules\.bin\playwright install chromium
-) else (
-    echo [OK] Chromium ya esta instalado
+:: --- SOLUCION AL ERROR EPERM / VITE CACHE ---
+echo [INFO] Limpiando cache de interfaz...
+if exist "ui\node_modules\.vite" (
+    rmdir /s /q "ui\node_modules\.vite" >nul 2>nul
 )
+
+:: Verificar e instalar Playwright Chromium
+echo [INFO] Verificando Playwright Chromium...
+:: Playwright es idempotente, lo ejecutamos directamente para asegurar que las dependencias esten OK en Windows
+call node_modules\.bin\playwright.cmd install chromium
 echo.
 
 echo [OK] Iniciando AutoBot...
@@ -65,7 +67,7 @@ echo      Cierra esta ventana para detener AutoBot.
 echo.
 
 :: Abrir navegador después de 4 segundos
-start "" /b cmd /c "timeout /t 4 >nul && start http://localhost:5173"
+start "" /b cmd /c "timeout /t 4 >nul & start http://localhost:5173"
 
 :: Lanzar servidor + UI
 call npm start
