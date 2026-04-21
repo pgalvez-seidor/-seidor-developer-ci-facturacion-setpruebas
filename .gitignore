@@ -11,3 +11,5 @@ config/state.properties
 test-results/
 app.log
 *.log
+*.sqlite-wal
+*.sqlite-shm
