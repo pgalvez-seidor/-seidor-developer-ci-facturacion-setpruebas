@@ -447,6 +447,19 @@ app.post('/api/run-batch', async (req, res) => {
                     }
                     sendLog(taskId, isSuccess ? 'done' : 'error', resultMsg);
 
+                    // Generar Dossier Técnico PDF automáticamente (Antes/Después)
+                    try {
+                        const { generatePdf } = require('./report-generator');
+                        generatePdf(runDir).then(pdfPath => {
+                            const pdfName = path.basename(pdfPath);
+                            sendLog(taskId, 'log', `📄 Dossier Técnico generado: ${pdfName}`);
+                        }).catch(e => {
+                            console.error(`[Dossier] Error: ${e.message}`);
+                        });
+                    } catch (e) {
+                        console.error('[Dossier] Error importando generador:', e.message);
+                    }
+
                     // Guardar para el reporte global (incluyendo ruta de evidencias para consolidar)
                     batchResults.push({
                         taskId,
@@ -858,32 +871,32 @@ function normalizeScript(content, portalUrl) {
 // Helper: inyecta shot() y capturas automáticas en scripts grabados
 function injectScreenshots(content) {
     const shotHelper = `
-  // --- Helper de capturas automáticas (inyectado por AutoBot) ---
+  // --- Helper de Dossier Técnico (inyectado por AutoBot) ---
   const _fs = require('fs');
   const _path = require('path');
   const _evidenceDir = process.env.EVIDENCE_DIR || _path.join(__dirname, '..', 'evidence');
   if (!_fs.existsSync(_evidenceDir)) _fs.mkdirSync(_evidenceDir, { recursive: true });
-  let _shotN = 0;
+  
   const shot = async (label) => {
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(500);
+    // Esperar a que desaparezcan indicadores de carga de SAP
     await page.waitForSelector('.sapMBusyIndicator,.sapUiLocalBusyIndicator,.sapMBlockLayer',
-      { state: 'hidden', timeout: 15000 }).catch(() => {});
-    await page.waitForTimeout(300);
-    const _name = String(++_shotN).padStart(2,'0') + '_' + label.replace(/[^a-zA-Z0-9_-]/g,'_');
-    const _p = _path.join(_evidenceDir, _name + '.png');
+      { state: 'hidden', timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(500);
+    
+    const _p = _path.join(_evidenceDir, label + '.png');
     await page.screenshot({ path: _p, fullPage: true });
-    console.log('📸 ' + _name + '.png');
+    console.log('📸 Captura guardada: ' + label + '.png');
   };
   // --- Fin helper ---
 `;
 
-    // Insertar helper al inicio del cuerpo del test (después de "async ({ page }) => {")
+    // Insertar helper al inicio del cuerpo del test
     content = content.replace(
         /(test\([^)]*,\s*async\s*\(\{\s*page\s*\}\)\s*=>\s*\{)/,
         `$1\n${shotHelper}`
     );
 
-    // Inyectar shot() después de cada acción clave (goto, click), excepto clicks de login (botón submit)
     let stepN = 0;
     const lines = content.split('\n');
     const result = [];
@@ -891,24 +904,27 @@ function injectScreenshots(content) {
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        result.push(line);
 
-        // No inyectar dentro del helper mismo
-        if (line.includes('Helper de capturas')) inHelper = true;
-        if (line.includes('Fin helper')) { inHelper = false; continue; }
-        if (inHelper) continue;
+        if (line.includes('Helper de capturas') || line.includes('Helper de Dossier')) inHelper = true;
+        if (line.includes('Fin helper')) { inHelper = false; result.push(line); continue; }
+        if (inHelper) { result.push(line); continue; }
 
-        const isGoto = /await page\.goto\(/.test(line);
-        const isClick = /\.click\(\)/.test(line) && !/button\[type="submit"\]/.test(line);
-        const isWaitForLoad = /waitForLoadState/.test(line);
-        const isWhereToEnd = /\}$/.test(line) && lines[i-1]?.includes('waitForLoadState');
+        // Acciones que disparan captura dual (Antes/Después)
+        const isAction = /await\s+(page|frame|iframe)\.(click|fill|goto|selectOption|press|type|focus|hover)\(/.test(line);
+        const isLogin = /button\[type="submit"\]/.test(line) || /logon/.test(line) || /Iniciando sesión/.test(line);
 
-        if ((isGoto || isClick) && !isWaitForLoad) {
+        if (isAction && !isLogin && !line.trim().startsWith('//')) {
             stepN++;
-            const label = isGoto ? `navegacion_${stepN}` : `accion_${stepN}`;
-            result.push(`  await shot('${label}');`);
+            const stepLabel = `paso_${String(stepN).padStart(2, '0')}`;
+            result.push(`  await shot('${stepLabel}_antes');`);
+            result.push(line);
+            result.push(`  await shot('${stepLabel}_despues');`);
+        } else {
+            result.push(line);
         }
     }
+    return result.join('\n');
+}
 
     // Añadir captura final antes del cierre del test
     const lastBrace = result.lastIndexOf('});');
