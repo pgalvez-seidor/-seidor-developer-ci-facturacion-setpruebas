@@ -18,12 +18,19 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function describeStepWithAI(stepName, imgBase64) {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const prompt = `Analiza esta captura de pantalla de un sistema SAP/Fiori. 
-        El USUARIO realizó la acción: "${stepName.replace(/_/g, ' ')}". 
-        Describe en una sola frase profesional y clara qué está sucediendo en la imagen, mencionando datos relevantes si se ven (como números de lote, documentos o mensajes de éxito). 
-        Habla siempre en tercera persona del singular (ej: "El USUARIO ingresa...", "El sistema muestra..."). 
-        Sé conciso y directo para un reporte técnico.`;
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        const prompt = `Actúa como un experto en control de calidad (QA) especializado en SAP Fiori. 
+        Analiza detalladamente esta captura de pantalla.
+        
+        INSTRUCCIONES CRÍTICAS:
+        1. IGNORA el nombre técnico del paso (${stepName}) si es genérico como "ACCION" o "PASO".
+        2. REALIZA UN ANÁLISIS VISUAL: Identifica títulos de diálogos, etiquetas de botones (ej: "Logout", "Continuar"), nombres de aplicaciones y textos destacados (ej: "Motivo de Modificación").
+        3. REDACCIÓN: Describe la acción de negocio que se está realizando. 
+           Ejemplo: "El usuario completa el campo 'Motivo de Modificación' en el diálogo de seguridad" o "Se procede con el cierre de sesión (Logout) del sistema".
+        4. FORMATO: Usa un tono profesional, en tercera persona. Si hay varios elementos, lístalos (1. ..., 2. ...).
+        5. DATOS: Si ves números de orden, lotes o nombres de usuario, inclúyelos.
+        
+        Sé muy preciso. Si ves un botón de 'Logout', menciónalo. Si ves un campo de texto con valor, menciónalo.`;
 
         const result = await model.generateContent([
             prompt,
@@ -32,7 +39,10 @@ async function describeStepWithAI(stepName, imgBase64) {
         return result.response.text().trim();
     } catch (e) {
         console.error(`[AI] Error describiendo paso ${stepName}:`, e.message);
-        return `El USUARIO ejecutó la acción ${stepName.replace(/_/g, ' ')}.`;
+        const errorMsg = e.message.includes('429') || e.message.includes('quota') 
+            ? "(IA: Límite de cuota excedido, usando descripción básica)" 
+            : "(IA: Error de interpretación visual)";
+        return `${errorMsg} El usuario ejecutó la acción ${stepName.replace(/_/g, ' ')} de manera exitosa.`;
     }
 }
 
@@ -53,23 +63,35 @@ async function generatePdf(runDir) {
     console.log("🤖 AutoBot AI: Analizando capturas para descripción inteligente...");
 
     const stepsData = [];
-    const screenshotFiles = fs.readdirSync(runDir).filter(f => f.endsWith('.png'));
-    const baseNames = [...new Set(screenshotFiles.map(f => f.replace(/(_antes|_despues)\.png$/, '')))].sort();
+    const screenshotFiles = fs.readdirSync(runDir).filter(f => f.endsWith('.png') && !f.includes('logo')).sort();
     
-    for (const name of baseNames) {
-        const antesFile = screenshotFiles.find(f => f === `${name}_antes.png`) || screenshotFiles.find(f => f === `${name}.png`);
-        const despuesFile = screenshotFiles.find(f => f === `${name}_despues.png`);
+    // Agrupamos por nombre base si existen pares antes/despues, si no, tomamos cada imagen como un paso
+    const processedFiles = new Set();
+
+    for (const file of screenshotFiles) {
+        if (processedFiles.has(file)) continue;
+
+        const baseName = file.replace(/(_antes|_despues)\.png$/, '');
+        const antesFile = screenshotFiles.find(f => f === `${baseName}_antes.png`) || (file.includes('_antes') ? file : null);
+        const despuesFile = screenshotFiles.find(f => f === `${baseName}_despues.png`) || (file.includes('_despues') ? file : (!file.includes('_antes') ? file : null));
+
+        if (antesFile) processedFiles.add(antesFile);
+        if (despuesFile) processedFiles.add(despuesFile);
+        if (!antesFile && !despuesFile) processedFiles.add(file);
+
+        const displayName = baseName.replace(/\.png$/i, '').replace(/_/g, ' ').toUpperCase();
         
         const imgAntesBase64 = antesFile ? fs.readFileSync(path.join(runDir, antesFile)).toString('base64') : null;
         const imgDespuesBase64 = despuesFile ? fs.readFileSync(path.join(runDir, despuesFile)).toString('base64') : null;
 
-        // Usamos la imagen del "después" para que la IA vea el resultado de la acción
-        const aiDescription = imgDespuesBase64 
-            ? await describeStepWithAI(name, imgDespuesBase64)
-            : `El USUARIO ejecutó la acción ${name.replace(/_/g, ' ')}.`;
+        // Si no hay imagen de "después", usamos la única que tengamos para la IA
+        const aiImgBase64 = imgDespuesBase64 || imgAntesBase64;
+        const aiDescription = aiImgBase64 
+            ? await describeStepWithAI(displayName, aiImgBase64)
+            : `Ejecución del paso ${displayName}.`;
 
         stepsData.push({
-            name: name.replace(/_/g, ' ').toUpperCase(),
+            name: displayName,
             description: aiDescription,
             imgAntes: imgAntesBase64 ? `data:image/png;base64,${imgAntesBase64}` : null,
             imgDespues: imgDespuesBase64 ? `data:image/png;base64,${imgDespuesBase64}` : null
@@ -133,14 +155,10 @@ async function generatePdf(runDir) {
                 <div class="step-description">
                     ${step.description}
                 </div>
-                <div class="screenshots-grid">
+                <div class="screenshots-single">
                     <div class="screenshot-item">
-                        ${step.imgAntes ? `<img src="${step.imgAntes}">` : '<div style="height: 100px; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">Sin captura inicial</div>'}
-                        <div class="screenshot-label">Estado Inicial (Antes)</div>
-                    </div>
-                    <div class="screenshot-item">
-                        ${step.imgDespues ? `<img src="${step.imgDespues}">` : (step.imgAntes ? `<img src="${step.imgAntes}">` : '<div style="height: 100px; background: #eee;">Sin captura final</div>')}
-                        <div class="screenshot-label">Resultado Final (Después)</div>
+                        ${step.imgDespues ? `<img src="${step.imgDespues}">` : (step.imgAntes ? `<img src="${step.imgAntes}">` : '<div style="height: 100px; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">Sin captura de evidencia</div>')}
+                        <div class="screenshot-label">Evidencia de Resultado Final</div>
                     </div>
                 </div>
             </div>
