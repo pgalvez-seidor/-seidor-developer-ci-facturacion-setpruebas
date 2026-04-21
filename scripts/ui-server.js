@@ -270,8 +270,9 @@ app.post('/api/run-batch', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     // Usar binario local directamente para evitar problemas con npx como grandchild process
+    // Se envuelve en comillas para manejar espacios en rutas (importante en Mac/Windows)
     const _pwBin = path.join(rootDir, 'node_modules', '.bin', /^win/.test(process.platform) ? 'playwright.cmd' : 'playwright');
-    const playwrightBin = /^win/.test(process.platform) ? '"' + _pwBin + '"' : _pwBin;
+    const playwrightBin = '"' + _pwBin + '"';
 
     const sendLog = (taskId, type, message, docData = null) => {
         const payload = JSON.stringify({ taskId, type, message: message.toString(), docData, timestamp: new Date().toISOString() });
@@ -344,9 +345,14 @@ app.post('/api/run-batch', async (req, res) => {
                     return;
                 }
                 const absScriptPath = path.join(rootDir, file.startsWith('scripts/') ? file : `scripts/${file}`);
-                // En Mac/Linux, asegurar que el binario de playwright sea ejecutable (prevenir código 126)
+                // En Mac/Linux, asegurar que los binarios sean ejecutables (prevenir código 126)
                 if (process.platform !== 'win32') {
-                    try { const { execSync } = require('child_process'); execSync('chmod +x node_modules/.bin/playwright', { cwd: rootDir }); } catch (e) {}
+                    try { 
+                        const { execSync } = require('child_process'); 
+                        execSync('chmod -R +x node_modules/.bin/', { cwd: rootDir }); 
+                    } catch (e) {
+                        console.error('[Permissions] Error fijando chmod:', e.message);
+                    }
                 }
                 const cmdArgs = ['test', `"${absScriptPath}"`, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
