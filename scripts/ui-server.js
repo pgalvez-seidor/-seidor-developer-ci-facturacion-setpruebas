@@ -1107,6 +1107,35 @@ app.post('/api/script/normalize', (req, res) => {
     }
 });
 
+
+// 15. GIT: Sincronización automática (Commit & Push)
+app.post('/api/git/sync', (req, res) => {
+    console.log('🚀 Iniciando sincronización automática con Git...');
+    try {
+        const timestamp = new Date().toLocaleString();
+        const branch = execSync('git branch --show-current').toString().trim() || 'Medifarma';
+        
+        execSync('git add .', { stdio: 'inherit' });
+        try {
+            execSync(`git commit -m "update(auto): sincronización desde AutoBot UI - ${timestamp}"`, { stdio: 'inherit' });
+        } catch (e) {
+            // Si falla el commit, probablemente es porque no hay cambios
+            if (e.message.includes('nothing to commit')) {
+                console.log('ℹ️ No hay cambios para commitear.');
+            } else {
+                throw e;
+            }
+        }
+        execSync(`git push origin ${branch}`, { stdio: 'inherit' });
+        
+        console.log('✅ Sincronización completada con éxito.');
+        res.json({ success: true, message: 'Cambios subidos al repositorio correctamente.' });
+    } catch (e) {
+        console.error('❌ Error en sincronización Git:', e.message);
+        res.status(500).json({ error: `Fallo en Git: ${e.message}` });
+    }
+});
+
 initDb().then(() => {
     app.listen(PORT, () => {
         console.log(`✅ UI Backend API Server running at http://localhost:${PORT}`);
