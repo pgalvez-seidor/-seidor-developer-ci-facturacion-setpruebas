@@ -749,13 +749,27 @@ function injectScreenshots(content) {
         }
     }
 
-    // Añadir captura final antes del cierre del test
-    const lastBrace = result.lastIndexOf('});');
-    if (lastBrace !== -1) {
-        result.splice(lastBrace, 0, `  await shot('resultado_final');`);
+    // Limpieza agresiva: si hay un logout, eliminar cualquier shot posterior
+    let finalLines = content.split('\n');
+    let firstLogoutIndex = -1;
+    for (let i = 0; i < finalLines.length; i++) {
+        const line = finalLines[i].toLowerCase();
+        if (line.includes('logout') || line.includes('cerrar_sesion') || line.includes('logoutbtn')) {
+            firstLogoutIndex = i;
+            break;
+        }
     }
-
-    return result.join('\n');
+    
+    if (firstLogoutIndex !== -1) {
+        // Eliminar cualquier shot que ocurra después del logout detectado
+        finalLines = finalLines.filter((line, index) => {
+            if (index > firstLogoutIndex && line.includes('shot(')) return false;
+            return true;
+        });
+        content = finalLines.join('\n');
+    }
+    
+    return content;
 }
 
 // 8. Iniciar grabación con Playwright Codegen

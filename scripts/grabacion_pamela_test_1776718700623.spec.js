@@ -103,5 +103,4 @@ test('test', async ({ page }) => {
   await page.getByRole('button', { name: 'Perfil de Pierre Galvez' }).click();
   await page.locator('[id="__list0-5-logoutBtn-img"]').click();
   await page.getByRole('button', { name: 'OK' }).click();
-  await shot('resultado_final');
 });
