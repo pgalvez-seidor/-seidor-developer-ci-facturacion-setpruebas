@@ -344,6 +344,10 @@ app.post('/api/run-batch', async (req, res) => {
                     return;
                 }
                 const absScriptPath = path.join(rootDir, file.startsWith('scripts/') ? file : `scripts/${file}`);
+                // En Mac/Linux, asegurar que el binario de playwright sea ejecutable (prevenir código 126)
+                if (process.platform !== 'win32') {
+                    try { const { execSync } = require('child_process'); execSync('chmod +x node_modules/.bin/playwright', { cwd: rootDir }); } catch (e) {}
+                }
                 const cmdArgs = ['test', `"${absScriptPath}"`, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
 
@@ -833,6 +837,13 @@ function normalizeScript(content, portalUrl) {
   await page.waitForTimeout(2000);   // Pausa de sincronización UI5
   await ${context}.locator('button').filter({ hasText: /^Ir$/ }).first().click({ force: true }).catch(() => {});
   // -------------------------------------------`;
+    });
+
+    // 6. Inteligencia de Checkboxes (AutoBot)
+    // Convierte .click() en .setChecked(true) para evitar desmarcar accidentalmente
+    const checkboxPattern = /await\s+(frame|page)\.getByRole\('(checkbox|radio)',\s*([^)]+)\)\.click\(\);/g;
+    content = content.replace(checkboxPattern, (match, context, role, options) => {
+        return `await ${context}.getByRole('${role}', ${options}).setChecked(true);`;
     });
 
     return content;
