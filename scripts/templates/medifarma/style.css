@@ -1,0 +1,126 @@
+:root {
+  --primary-color: #0056b3; /* Azul Medifarma */
+  --secondary-color: #f8f9fa;
+  --text-main: #333;
+  --text-muted: #666;
+  --border-color: #dee2e6;
+  --success-color: #28a745;
+}
+
+@page {
+  margin: 2cm;
+  @bottom-right {
+    content: "Página " counter(page) " de " counter(pages);
+    font-size: 10px;
+  }
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-main);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+.header {
+  border-bottom: 3px solid var(--primary-color);
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  max-width: 200px;
+}
+
+.title-box {
+  text-align: right;
+}
+
+.title-box h1 {
+  margin: 0;
+  font-size: 24px;
+  color: var(--primary-color);
+}
+
+.metadata-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+.metadata-table td {
+  padding: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.metadata-table .label {
+  background-color: var(--secondary-color);
+  font-weight: bold;
+  width: 30%;
+}
+
+.step-container {
+  margin-bottom: 40px;
+  page-break-inside: avoid;
+}
+
+.step-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 5px 5px 0 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.step-description {
+  background-color: var(--secondary-color);
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.screenshots-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  background-color: white;
+}
+
+.screenshot-item {
+  text-align: center;
+}
+
+.screenshot-item img {
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.screenshot-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 5px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.footer {
+  margin-top: 50px;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
