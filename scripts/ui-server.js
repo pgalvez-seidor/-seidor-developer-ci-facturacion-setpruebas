@@ -973,7 +973,7 @@ app.post('/api/git/sync', (req, res) => {
         
         execSync('git add .', { stdio: 'inherit' });
         try {
-            execSync(`git commit -m "update(auto): sincronización desde AutoBot UI - ${timestamp}"`, { stdio: 'inherit' });
+            execSync(`git commit -m "autobot: sincronización automática desde Dashboard UI - ${timestamp}"`, { stdio: 'inherit' });
         } catch (e) {
             // Si falla el commit, probablemente es porque no hay cambios
             if (e.message.includes('nothing to commit')) {
@@ -990,6 +990,22 @@ app.post('/api/git/sync', (req, res) => {
         console.error('❌ Error en sincronización Git:', e.message);
         res.status(500).json({ error: `Fallo en Git: ${e.message}` });
     }
+});
+
+// 16. SYSTEM: Shutdown local server
+app.post('/api/system/shutdown', (req, res) => {
+    console.log('🛑 Recibida solicitud de apagado. Limpiando procesos...');
+    
+    // Matar procesos activos de Playwright/Workers
+    activeProcesses.forEach(proc => {
+        try { proc.kill(); } catch(e) {}
+    });
+    
+    res.json({ success: true, message: 'AutoBot se está apagando...' });
+    
+    setTimeout(() => {
+        process.exit(0);
+    }, 1500);
 });
 
 initDb().then(() => {

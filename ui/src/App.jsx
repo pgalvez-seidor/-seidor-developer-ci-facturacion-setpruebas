@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Eye, Zap, CreditCard, Banknote, Trash2,
-  CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square
+  CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power
 } from 'lucide-react';
 import './index-a.css';
 
@@ -178,8 +178,8 @@ export default function App() {
   const [activeScenarioId, setActiveScenarioId] = useState('');
   const [newScenarioName, setNewScenarioName] = useState('');
   const [instruccionesIa, setInstruccionesIa] = useState('');
-  const [testerName, setTesterName] = useState('PIERRE GALVEZ');
-  const [projectName, setProjectName] = useState('Facturación Clínica Internacional');
+  const [testerName, setTesterName] = useState('');
+  const [projectName, setProjectName] = useState('');
 
   const [builderConfig, setBuilderConfig] = useState({
     iteraciones: 1,
@@ -197,7 +197,9 @@ export default function App() {
 
   const [queue, setQueue] = useState([]);
   const [isBatchRunning, setIsBatchRunning] = useState(false);
-  const [batchConcurrency, setBatchConcurrency] = useState(5);
+  const [batchConcurrency, setBatchConcurrency] = useState(1);
+  const [runSequential, setRunSequential] = useState(false);
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
   const [globalPdf, setGlobalPdf] = useState(null);
 
   const [toasts, setToasts] = useState([]);
@@ -531,20 +533,32 @@ export default function App() {
   const clearBatch = () => { if (!isBatchRunning) setQueue([]); setGlobalPdf(null); };
 
   const removeTask = (taskId) => {
-    if (isBatchRunning) {
-      addToast("No se puede eliminar tareas mientras el lote está en ejecución.", "error");
-      return;
-    }
-    if (window.confirm("¿Estás seguro de que deseas eliminar esta tarea del lote?")) {
-      setQueue(prev => prev.filter(t => t.taskId !== taskId));
-    }
+    setQueue(prev => prev.filter(t => t.taskId !== taskId));
+  };
+
+  // --- Lógica de Drag & Drop ---
+  const handleDragStart = (index) => {
+    setDraggedItemIndex(index);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault(); // Permitir el drop
+  };
+
+  const handleDrop = (index) => {
+    if (draggedItemIndex === null || draggedItemIndex === index) return;
+    const newQueue = [...queue];
+    const [movedItem] = newQueue.splice(draggedItemIndex, 1);
+    newQueue.splice(index, 0, movedItem);
+    setQueue(newQueue);
+    setDraggedItemIndex(null);
   };
 
   const runBatch = async () => {
     if (queue.length === 0 || isBatchRunning) return;
     
     if (!testerName.trim() || !projectName.trim()) {
-      addToast("El nombre del Tester y del Proyecto son obligatorios para generar el reporte.", "error");
+      addToast("⚠️ Debes ingresar el nombre del PROYECTO y del TESTER antes de ejecutar.", "error");
       return;
     }
 
@@ -562,8 +576,8 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tasks: tasksToRun.map(t => ({ taskId: t.taskId, config: t.config, file: t.config.recordedScript || processScripts[activeProcess] || null })),
-          parallel: batchConcurrency > 1,
-          concurrency: batchConcurrency,
+          parallel: !runSequential,
+          concurrency: runSequential ? 1 : batchConcurrency,
           metadata: {
             tester: testerName,
             project: projectName
@@ -639,6 +653,20 @@ export default function App() {
     finally { setIsBatchRunning(false); }
   };
 
+  const handleShutdown = async () => {
+    if (window.confirm("¿Estás seguro de que deseas APAGAR AutoBot? Esto cerrará todos los procesos y el servidor local.")) {
+      try {
+        await fetch(`${API_BASE}/system/shutdown`, { method: 'POST' });
+        addToast("Apagando sistema...", "success");
+        setTimeout(() => {
+          window.location.href = "about:blank";
+        }, 2000);
+      } catch {
+        addToast("Error al intentar apagar el servidor.", "error");
+      }
+    }
+  };
+
   const handleGitSync = async () => {
     addToast("Iniciando sincronización con Git...", "success");
     try {
@@ -668,7 +696,22 @@ export default function App() {
 
         <main className="main split-layout">
           <div className="config-panel">
-            <h2>Configuración del Escenario</h2>
+            <header className="main-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ margin: 0 }}>Configuración del Escenario</h2>
+              <button 
+                onClick={handleShutdown}
+                title="Apagar AutoBot"
+                className="power-off-btn"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '50%',
+                  width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', transition: '0.3s'
+                }}
+              >
+                <Power size={18} />
+              </button>
+            </header>
 
             <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--card-border)', padding: '1.2rem', borderRadius: '16px', marginBottom: '1.5rem' }}>
               <label>Escenario Guardado</label>
@@ -870,10 +913,24 @@ export default function App() {
                 <div style={{ border: '2px dashed var(--card-border)', borderRadius: '16px', padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>El lote está vacío. Configura un caso y añádelo.</div>
               ) : (
                 queue.map((q, idx) => (
-                  <div key={q.taskId} className={`batch-item${q.status === 'success' ? ' status-success' : q.status === 'error' ? ' status-error' : ''}`}>
-                    <div className="batch-item-top">
-                      <span className="b-title">
-                        {idx + 1}. {getBatchItemLabel(q)}
+                  <div
+                    key={q.taskId}
+                    className={`batch-task-card ${q.status} ${draggedItemIndex === idx ? 'dragging' : ''}`}
+                    draggable={!isBatchRunning}
+                    onDragStart={() => handleDragStart(idx)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(idx)}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '15px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {!isBatchRunning && (
+                          <div style={{ cursor: 'grab', color: 'var(--text-muted)', display: 'flex' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+                          </div>
+                        )}
+                        <span className="b-task-name">
+                          {idx + 1}. {getBatchItemLabel(q)}
+                        </span>
                         <span style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle' }} title={q.config.headless ? "Modo Headless (Oculto)" : "Modo Headed (Visible)"}>
                           {q.config.headless ? (
                             <Zap size={14} color="var(--accent-primary)" strokeWidth={2} />
@@ -927,25 +984,47 @@ export default function App() {
 
             {queue.length > 0 && (
               <div className="batch-footer">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Hilos en Paralelo</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <input
-                      type="range" min="1" max="50" step="1"
-                      value={batchConcurrency}
-                      onChange={(e) => setBatchConcurrency(parseInt(e.target.value))}
-                      disabled={isBatchRunning}
-                      style={{ flex: 1, accentColor: 'var(--accent-primary)' }}
-                    />
-                    <input
-                      type="number" min="1" max="100"
-                      value={batchConcurrency}
-                      onChange={(e) => setBatchConcurrency(parseInt(e.target.value) || 1)}
-                      disabled={isBatchRunning}
-                      className="concurrency-input"
-                    />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.05)', padding: '14px', borderRadius: '14px', border: '1px solid rgba(0,0,0,0.1)' }}>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main, #1a1a1a)' }}>Modo de Ejecución</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted, #666)', fontWeight: '600' }}>{runSequential ? 'Paso a paso (Secuencial)' : 'Multi-hilo (Paralelo)'}</div>
+                  </div>
+                  <div
+                    onClick={() => !isBatchRunning && setRunSequential(!runSequential)}
+                    style={{
+                      width: '50px', height: '26px', background: runSequential ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                      borderRadius: '20px', position: 'relative', cursor: isBatchRunning ? 'not-allowed' : 'pointer', transition: '0.3s'
+                    }}
+                  >
+                    <div style={{
+                      width: '20px', height: '20px', background: 'white', borderRadius: '50%',
+                      position: 'absolute', top: '3px', left: runSequential ? '27px' : '3px', transition: '0.3s',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                    }} />
                   </div>
                 </div>
+
+                {!runSequential && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Hilos en Paralelo</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <input
+                        type="range" min="1" max="50" step="1"
+                        value={batchConcurrency}
+                        onChange={(e) => setBatchConcurrency(parseInt(e.target.value))}
+                        disabled={isBatchRunning}
+                        style={{ flex: 1, accentColor: 'var(--accent-primary)' }}
+                      />
+                      <input
+                        type="number" min="1" max="100"
+                        value={batchConcurrency}
+                        onChange={(e) => setBatchConcurrency(parseInt(e.target.value) || 1)}
+                        disabled={isBatchRunning}
+                        className="concurrency-input"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '1.5rem' }}>
                   {globalPdf && <button className="btn-run-all" onClick={() => handleOpenPdf(globalPdf)} style={{ background: 'var(--text-main)', color: 'white' }}>📄 REPORTE GLOBAL</button>}

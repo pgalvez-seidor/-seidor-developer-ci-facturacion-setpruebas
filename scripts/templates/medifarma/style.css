@@ -97,6 +97,14 @@ body {
   background-color: white;
 }
 
+.screenshots-single {
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  background-color: white;
+  text-align: center;
+}
+
 .screenshot-item {
   text-align: center;
 }
