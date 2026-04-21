@@ -459,34 +459,35 @@ app.post('/api/run-batch', async (req, res) => {
                     };
                     fs.writeFileSync(path.join(runDir, 'result.json'), JSON.stringify(resultData, null, 2));
 
-                    // Generar Dossier Técnico PDF automáticamente (Antes/Después)
-                    try {
-                        const { generatePdf } = require('./report-generator');
-                        generatePdf(runDir).then(pdfPath => {
-                            const pdfName = path.basename(pdfPath);
-                            sendLog(taskId, 'log', `📄 Dossier Técnico generado: ${pdfName}`);
-                        }).catch(e => {
+                    const generateDossier = async () => {
+                        try {
+                            const { generatePdf } = require('./report-generator');
+                            const pdfPath = await generatePdf(runDir);
+                            const relativeUrl = pdfPath.replace(rootDir, '').replace(/\\/g, '/');
+                            sendLog(taskId, 'pdf', relativeUrl);
+                            sendLog(taskId, 'log', `📄 Dossier Técnico generado: ${path.basename(pdfPath)}`);
+                        } catch (e) {
                             console.error(`[Dossier] Error: ${e.message}`);
+                        }
+                    };
+
+                    generateDossier().then(() => {
+                        // Guardar para el reporte global (incluyendo ruta de evidencias para consolidar)
+                        batchResults.push({
+                            taskId,
+                            config,
+                            runDir, // Importante para recuperar fotos
+                            status: isSuccess ? 'EXITO' : 'FALLIDO',
+                            result: resultMsg,
+                            metrics: config.metrics || {},
+                            timestamp: new Date().toLocaleString(),
+                            metadata: req.body.metadata
                         });
-                    } catch (e) {
-                        console.error('[Dossier] Error importando generador:', e.message);
-                    }
 
-                    // Guardar para el reporte global (incluyendo ruta de evidencias para consolidar)
-                    batchResults.push({
-                        taskId,
-                        config,
-                        runDir, // Importante para recuperar fotos
-                        status: isSuccess ? 'EXITO' : 'FALLIDO',
-                        result: resultMsg,
-                        metrics: config.metrics || {},
-                        timestamp: new Date().toLocaleString(),
-                        metadata: req.body.metadata
+                        activeProcesses = activeProcesses.filter(p => p !== workerProcess);
+                        resolve();
+                        processNext(); // Solo avanzar cuando el PDF esté listo
                     });
-
-                    activeProcesses = activeProcesses.filter(p => p !== workerProcess);
-                    resolve();
-                    processNext(); // Intentar lanzar la siguiente tarea en cola
                 });
             });
         };
@@ -516,13 +517,18 @@ app.post('/api/run-batch', async (req, res) => {
         };
 
         const generateGlobalReport = async (results) => {
-            console.log(`🤖 AutoBot: Orquestando Dossier Técnico Profesional...`);
-            const { generatePdf } = require('./report-generator');
-            const lastRunDir = results[results.length - 1].runDir;
+            console.log(`🤖 AutoBot: Orquestando Dossier Técnico Profesional Consolidado...`);
+            const { generateBatchPdf } = require('./report-generator');
+            const runDirs = results.map(r => r.runDir);
+            const batchInfo = {
+                proyecto: projectName,
+                tester: testerName,
+                cliente: results[0].cliente || 'General'
+            };
             try {
-                return await generatePdf(lastRunDir);
+                return await generateBatchPdf(runDirs, batchInfo);
             } catch (e) {
-                console.error("❌ Error en generador de Dossier AI:", e.message);
+                console.error("❌ Error en generador de Dossier AI Consolidado:", e.message);
                 throw e;
             }
         };

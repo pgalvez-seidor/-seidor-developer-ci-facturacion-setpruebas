@@ -197,4 +197,127 @@ if (require.main === module) {
     });
 }
 
-module.exports = { generatePdf };
+async function generateBatchPdf(runDirs, batchInfo) {
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    
+    // Recopilamos datos de todas las pruebas
+    const allTestsData = [];
+    const client = batchInfo.cliente || 'Medifarma';
+    const templateDir = path.join(__dirname, 'templates', 'medifarma');
+    const cssContent = fs.readFileSync(path.join(templateDir, 'style.css'), 'utf8');
+
+    for (let i = 0; i < runDirs.length; i++) {
+        const runDir = runDirs[i];
+        const resultPath = path.join(runDir, 'result.json');
+        if (!fs.existsSync(resultPath)) continue;
+
+        const result = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
+        const screenshotFiles = fs.readdirSync(runDir).filter(f => f.endsWith('.png') && !f.includes('logo')).sort();
+        
+        const stepsData = [];
+        const processedFiles = new Set();
+        for (const file of screenshotFiles) {
+            if (processedFiles.has(file)) continue;
+            const baseName = file.replace(/(_antes|_despues)\.png$/, '');
+            const despuesFile = screenshotFiles.find(f => f === `${baseName}_despues.png`) || (!file.includes('_antes') ? file : null);
+            if (despuesFile) processedFiles.add(despuesFile);
+            const imgDespuesBase64 = despuesFile ? fs.readFileSync(path.join(runDir, despuesFile)).toString('base64') : null;
+            
+            stepsData.push({
+                name: baseName.replace(/\.png$/i, '').replace(/_/g, ' ').toUpperCase(),
+                imgDespues: imgDespuesBase64 ? `data:image/png;base64,${imgDespuesBase64}` : null
+            });
+        }
+
+        allTestsData.push({
+            index: i + 1,
+            nombre: result.nombre || `Prueba ${i + 1}`,
+            status: result.status,
+            tester: result.tester,
+            steps: stepsData
+        });
+    }
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            ${cssContent}
+            .batch-summary { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; margin: 40px; }
+            .test-header { background: #0056b3; color: white; padding: 15px 25px; border-radius: 10px; margin: 40px 0 20px 0; font-size: 18px; font-weight: bold; }
+            .success-row { color: #10b981; }
+            .error-row { color: #ef4444; }
+        </style>
+    </head>
+    <body>
+        <div class="cover-page">
+            <div style="position: absolute; top: 40px; right: 40px;">
+                <img src="data:image/png;base64,${fs.readFileSync(path.join(templateDir, 'logo-report.png')).toString('base64')}" style="height: 50px;">
+            </div>
+            <div class="cover-content">
+                <div class="cover-subtitle">Dossier Consolidado de Lote</div>
+                <h1 class="cover-title">Reporte General de Certificación</h1>
+                <p class="cover-desc">Este documento agrupa la ejecución secuencial de múltiples escenarios de prueba.</p>
+                <div class="cover-meta">
+                    <div class="meta-item"><strong>Proyecto:</strong> ${batchInfo.proyecto || 'General'}</div>
+                    <div class="meta-item"><strong>Tester Responsable:</strong> ${batchInfo.tester || 'AutoBot AI'}</div>
+                    <div class="meta-item"><strong>Total Pruebas:</strong> ${allTestsData.length}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-break"></div>
+
+        <div class="batch-summary">
+            <h2 style="margin-top: 0;">Índice de Ejecución</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                ${allTestsData.map(t => `
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px 0;"><strong>Prueba ${t.index}:</strong> ${t.nombre}</td>
+                        <td style="text-align: right; font-weight: bold;" class="${t.status === 'success' ? 'success-row' : 'error-row'}">
+                            ${t.status === 'success' ? 'PASS' : 'FAIL'}
+                        </td>
+                    </tr>
+                `).join('')}
+            </table>
+        </div>
+
+        ${allTestsData.map(test => `
+            <div class="test-header">Prueba ${test.index}: ${test.nombre}</div>
+            ${test.steps.map((step, sIdx) => `
+                <div class="step-container" style="page-break-inside: avoid;">
+                    <div class="step-header">
+                        <span>Paso ${sIdx + 1}: ${step.name}</span>
+                        <span>ESTADO: OK</span>
+                    </div>
+                    <div class="screenshots-single">
+                        <div class="screenshot-item">
+                            ${step.imgDespues ? `<img src="${step.imgDespues}">` : '<div style="height: 100px; background: #eee;">Sin evidencia</div>'}
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+            <div class="page-break"></div>
+        `).join('')}
+
+        <div class="batch-summary" style="text-align: center; background: #0056b3; color: white;">
+            <h1 style="margin: 0;">Resultado General</h1>
+            <div style="font-size: 24px; margin-top: 10px; font-weight: bold;">
+                ${allTestsData.filter(t => t.status === 'success').length} de ${allTestsData.length} Exitosas
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    await page.setContent(htmlContent);
+    const globalPdfPath = path.join(runDirs[0], '..', `Reporte_Global_Batch_${Date.now()}.pdf`);
+    await page.pdf({ path: globalPdfPath, format: 'A4', printBackground: true });
+    await browser.close();
+    return globalPdfPath;
+}
+
+module.exports = { generatePdf, generateBatchPdf };
