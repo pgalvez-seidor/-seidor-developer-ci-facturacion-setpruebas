@@ -12,9 +12,11 @@ echo.
 cd /d "%~dp0"
 
 :: Sincronizar con el repositorio (Git Pull)
-echo [INFO] Sincronizando scripts con el servidor...
-git fetch --all >nul 2>nul
-git pull
+echo [INFO] Detectando rama actual...
+for /f "tokens=*" %%b in ('git branch --show-current') do set CURRENT_BRANCH=%%b
+echo [INFO] Rama detectada: %CURRENT_BRANCH%
+echo [INFO] Sincronizando scripts desde el servidor...
+git pull origin %CURRENT_BRANCH%
 echo.
 
 ::# Verificar que Node.js esté instalado
@@ -39,9 +41,8 @@ if %ERRORLEVEL% neq 0 (
 )
 
 :: Verificar version minima para Vite (20.19.0)
-for /f "tokens=2 del soul" %%v in ('node -v') do set FULL_VERSION=%%v
-:: (Simplificado: solo avisar si hay problemas detectados)
-echo [OK] Node.js detectado. 
+for /f "delims=v" %%v in ('node -v') do set FULL_VERSION=%%v
+echo [OK] Node.js detectado (v%FULL_VERSION%).
 echo      Nota: Si el Dashboard falla, asegúrate de tener Node v20.19 o superior.
 echo.
 
