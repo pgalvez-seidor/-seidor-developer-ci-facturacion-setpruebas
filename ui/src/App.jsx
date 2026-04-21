@@ -18,7 +18,9 @@ const Sidebar = ({
   activeProcess, setActiveProcess,
   currentBranch, branches, handleBranchChange,
   onGitSync,
-  setShowAbout
+  setShowAbout,
+  testerName, setTesterName,
+  projectName, setProjectName
 }) => {
   return (
     <aside className="sidebar">
@@ -29,6 +31,30 @@ const Sidebar = ({
           style={{ width: '90%', height: 'auto', objectFit: 'contain', marginLeft: '-5px' }}
         />
         <span style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.05em', color: 'var(--accent-primary)', alignSelf: 'flex-end', paddingRight: '15px' }}>AutoBot</span>
+      </div>
+
+      <div className="sidebar-section">
+        <div className="sidebar-label">Metadata del Reporte</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '-5px' }}>PROYECTO</div>
+          <input 
+            type="text" 
+            className="branch-select" 
+            value={projectName} 
+            onChange={e => setProjectName(e.target.value)}
+            placeholder="Ej: Medifarma - SAP Fiori"
+            style={{ fontSize: '0.75rem' }}
+          />
+          <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '-5px' }}>USUARIO (TESTER)</div>
+          <input 
+            type="text" 
+            className="branch-select" 
+            value={testerName} 
+            onChange={e => setTesterName(e.target.value)}
+            placeholder="Tu nombre completo"
+            style={{ fontSize: '0.75rem' }}
+          />
+        </div>
       </div>
 
       <div className="sidebar-section">
@@ -153,6 +179,8 @@ export default function App() {
   const [activeScenarioId, setActiveScenarioId] = useState('');
   const [newScenarioName, setNewScenarioName] = useState('');
   const [instruccionesIa, setInstruccionesIa] = useState('');
+  const [testerName, setTesterName] = useState('PIERRE GALVEZ');
+  const [projectName, setProjectName] = useState('Facturación Clínica Internacional');
 
   const [builderConfig, setBuilderConfig] = useState({
     iteraciones: 1,
@@ -515,6 +543,12 @@ export default function App() {
 
   const runBatch = async () => {
     if (queue.length === 0 || isBatchRunning) return;
+    
+    if (!testerName.trim() || !projectName.trim()) {
+      addToast("El nombre del Tester y del Proyecto son obligatorios para generar el reporte.", "error");
+      return;
+    }
+
     setIsBatchRunning(true);
     setGlobalPdf(null);
 
@@ -530,7 +564,11 @@ export default function App() {
         body: JSON.stringify({
           tasks: tasksToRun.map(t => ({ taskId: t.taskId, config: t.config, file: t.config.recordedScript || processScripts[activeProcess] || null })),
           parallel: batchConcurrency > 1,
-          concurrency: batchConcurrency
+          concurrency: batchConcurrency,
+          metadata: {
+            tester: testerName,
+            project: projectName
+          }
         })
       });
 
@@ -623,6 +661,10 @@ export default function App() {
           currentBranch={currentBranch} branches={branches} handleBranchChange={handleBranchChange}
           onGitSync={handleGitSync}
           setShowAbout={setShowAbout}
+          testerName={testerName}
+          setTesterName={setTesterName}
+          projectName={projectName}
+          setProjectName={setProjectName}
         />
 
         <main className="main split-layout">
