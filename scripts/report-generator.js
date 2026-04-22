@@ -24,7 +24,7 @@ async function describeStepWithAI(stepName, imgBase64) {
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
         const prompt = `Actúa como un experto en control de calidad (QA) especializado en SAP Fiori. 
         Analiza detalladamente esta captura de pantalla.
         
