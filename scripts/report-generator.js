@@ -24,7 +24,7 @@ async function describeStepWithAI(stepName, imgBase64) {
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
         const prompt = `Analiza esta captura de pantalla de SAP Fiori y genera una descripción BREVE y DIRECTA de la acción de negocio realizada.
         
         REGLAS DE ORO:
@@ -38,13 +38,11 @@ async function describeStepWithAI(stepName, imgBase64) {
             prompt,
             { inlineData: { data: imgBase64, mimeType: "image/png" } }
         ]);
-        return result.response.text().trim();
+        const response = await result.response;
+        return response.text().trim();
     } catch (e) {
-        console.error(`[AI] Error describiendo paso ${stepName}:`, e.message);
-        const errorMsg = e.message.includes('429') || e.message.includes('quota') 
-            ? "" 
-            : "(IA: Error de conexión)";
-        return `${errorMsg} ${basicDescription}`.trim();
+        console.error(`[AI ERROR] Falló la descripción de la IA: ${e.message}`);
+        return basicDescription;
     }
 }
 
