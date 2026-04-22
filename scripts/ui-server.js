@@ -1037,41 +1037,24 @@ app.post('/api/system/shutdown', (req, res) => {
     res.json({ success: true, message: 'AutoBot se está apagando...' });
 
     setTimeout(() => {
-        const killPort = (port) => new Promise((resolve) => {
-            if (process.platform === 'win32') {
-                // En Windows: buscar PID que escucha en el puerto y matarlo con su árbol
-                exec(`netstat -ano | findstr ":${port} "`, (err, stdout) => {
-                    if (stdout) {
-                        const pids = new Set();
-                        stdout.trim().split('\n').forEach(line => {
-                            const parts = line.trim().split(/\s+/);
-                            const pid = parts[parts.length - 1];
-                            if (pid && /^\d+$/.test(pid) && pid !== '0') pids.add(pid);
-                        });
-                        let pending = pids.size;
-                        if (pending === 0) return resolve();
-                        pids.forEach(pid => {
-                            exec(`taskkill /PID ${pid} /F /T`, () => {
-                                pending--;
-                                if (pending === 0) resolve();
-                            });
-                        });
-                    } else {
-                        resolve();
-                    }
-                });
-            } else {
-                // En Mac/Linux: usar lsof
-                exec(`lsof -ti:${port} | xargs kill -9 2>/dev/null`, () => resolve());
-            }
-        });
-
-        // Matar Vite (5173) → el backend se cierra solo con process.exit(0)
-        // concurrently --kill-others también ayuda a cerrar todo limpiamente
-        killPort(5173).then(() => {
-            console.log('[SHUTDOWN] Vite (5173) detenido. Cerrando backend...');
-            process.exit(0);
-        });
+        if (process.platform === 'win32') {
+            // En Windows, matar procesos hijos de NPM/Vite no funciona bien con señales normales.
+            // La forma más robusta es encontrar el PID padre (el comando concurrently o npm) 
+            // y aniquilar todo su árbol de procesos con taskkill, incluyéndonos a nosotros mismos.
+            console.log(`[SHUTDOWN] Ejecutando taskkill sobre árbol padre (PPID: ${process.ppid})...`);
+            exec(`taskkill /PID ${process.ppid} /T /F`, (err) => {
+                if (err) {
+                    console.error('[SHUTDOWN] Error matando árbol padre:', err);
+                    process.exit(0);
+                }
+            });
+        } else {
+            // En Mac/Linux: matar Vite asumiendo puerto por defecto (5173), luego salir
+            exec(`lsof -ti:5173 | xargs kill -9 2>/dev/null`, () => {
+                console.log('[SHUTDOWN] Cerrando backend...');
+                process.exit(0);
+            });
+        }
     }, 500);
 });
 
