@@ -88,9 +88,14 @@ async function generatePdf(runDir) {
 
         // Si no hay imagen de "después", usamos la única que tengamos para la IA
         const aiImgBase64 = imgDespuesBase64 || imgAntesBase64;
-        const aiDescription = aiImgBase64 
-            ? await describeStepWithAI(displayName, aiImgBase64)
-            : `Ejecución del paso ${displayName}.`;
+        
+        let aiDescription = `Ejecución del paso ${displayName}.`;
+        if (aiImgBase64) {
+            console.log(`[AI] Analizando paso: ${displayName}...`);
+            aiDescription = await describeStepWithAI(displayName, aiImgBase64);
+            // Pausa de seguridad para evitar saturar la conexión (fetch failed)
+            await new Promise(r => setTimeout(r, 1500)); 
+        }
 
         stepsData.push({
             name: displayName,
