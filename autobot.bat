@@ -12,7 +12,7 @@ cd /d "%~dp0"
 echo [1/5] Sincronizando con el servidor...
 for /f "tokens=* usebackq" %%b in (`git branch --show-current 2^>nul`) do set CURRENT_BRANCH=%%b
 echo       Rama: %CURRENT_BRANCH%
-git pull origin %CURRENT_BRANCH% --no-edit --ff-only --set-upstream
+git pull origin %CURRENT_BRANCH% --no-edit --ff-only
 if %ERRORLEVEL% neq 0 echo [WARN] No se pudo sincronizar. Usando version local.
 echo.
 
