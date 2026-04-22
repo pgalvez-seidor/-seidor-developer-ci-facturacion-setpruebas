@@ -670,6 +670,7 @@ export default function App() {
                     newSt = 'done';
                     newProg = 100;
                     if (!newRes) newRes = "Validación Exitosa";
+                    if (docData) t.runDir = docData; // Guardar la ruta de la carpeta de resultados
                   }
                 } else if (type === 'error') {
                   newSt = 'error';

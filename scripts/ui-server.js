@@ -451,7 +451,7 @@ app.post('/api/run-batch', async (req, res) => {
                     } else {
                         resultMsg = `Proceso interrumpido por señal ${signal || 'desconocida'}`;
                     }
-                    sendLog(taskId, isSuccess ? 'done' : 'error', resultMsg);
+                    sendLog(taskId, isSuccess ? 'done' : 'error', resultMsg, runDir); // Enviamos runDir como docData para que el front lo guarde
 
                     // Crear result.json para el generador de reportes
                     const resultData = {
@@ -1058,6 +1058,10 @@ app.get('/api/reports/generate-ai', async (req, res) => {
         const pdfPath = await generatePdf(absRunDir, (msg) => {
             sendProgress(msg);
         });
+
+        if (!pdfPath) {
+            throw new Error("El generador no devolvió una ruta de PDF válida.");
+        }
 
         const relativeUrl = pdfPath.replace(rootDir, '').replace(/\\/g, '/');
         res.write(`data: ${JSON.stringify({ type: 'done', url: relativeUrl })}\n\n`);
