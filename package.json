@@ -14,7 +14,7 @@
         "sqlite3": "^5.1.7"
     },
     "scripts": {
-        "start": "concurrently \"node scripts/ui-server.js\" \"npm run dev --prefix ui\"",
+        "start": "concurrently --kill-others \"node scripts/ui-server.js\" \"npm run dev --prefix ui\"",
         "run:caso1": "node scripts/runner.js --caso esc_1709140000000 --env QAS",
         "run:all": "node scripts/runner.js --all --env QAS",
         "run:horario-supervisor": "npx playwright test scripts/caso-horario-supervisor.spec.js --headed",
