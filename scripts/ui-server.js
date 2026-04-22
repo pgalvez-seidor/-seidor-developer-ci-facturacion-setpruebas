@@ -214,8 +214,10 @@ app.post('/api/run-test', async (req, res) => {
         sendLog('info', `🚀 Fase 2: Ejecutando ${iterations} hilos en paralelo (Headless: ${isHeadless})...`);
         const runWorker = (preId, index) => {
             return new Promise((resolve) => {
-                const absScriptPath = path.join(rootDir, 'scripts', file);
-                const cmdArgs = ['playwright', 'test', `"${absScriptPath}"`];
+                const normalizedFile = file.replace(/\\/g, '/');
+                const relativePath = normalizedFile.startsWith('scripts/') ? normalizedFile : `scripts/${normalizedFile}`;
+                const absScriptPath = path.join(rootDir, relativePath);
+                const cmdArgs = ['playwright', 'test', absScriptPath];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
@@ -344,7 +346,9 @@ app.post('/api/run-batch', async (req, res) => {
                     processNext();
                     return;
                 }
-                const absScriptPath = path.join(rootDir, file.startsWith('scripts/') ? file : `scripts/${file}`);
+                // Normalizar separadores (Mac guarda '/', Windows usa '\') para soportar ambos
+                const normalizedFile = file.replace(/\\/g, '/');
+                const absScriptPath = path.join(rootDir, normalizedFile.startsWith('scripts/') ? normalizedFile : `scripts/${normalizedFile}`);
                 // En Mac/Linux, asegurar que los binarios sean ejecutables (prevenir código 126)
                 if (process.platform !== 'win32') {
                     try { 
@@ -354,7 +358,8 @@ app.post('/api/run-batch', async (req, res) => {
                         console.error('[Permissions] Error fijando chmod:', e.message);
                     }
                 }
-                const cmdArgs = ['test', `"${absScriptPath}"`, '--reporter=line'];
+                // Sin comillas manuales: shell:true + windowsVerbatimArguments:false ya escapan correctamente
+                const cmdArgs = ['test', absScriptPath, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
@@ -556,7 +561,7 @@ app.post('/api/open-pdf', async (req, res) => {
         console.log(`[OPEN-PDF] Intento de abrir ruta absoluta nativa: ${absolutePath}`);
 
         if (fs.existsSync(absolutePath)) {
-            const openCommand = /^win/.test(process.platform) ? 'start' : (process.platform === 'darwin' ? 'open' : 'xdg-open');
+            const openCommand = /^win/.test(process.platform) ? 'start ""' : (process.platform === 'darwin' ? 'open' : 'xdg-open');
             await runCmd(`${openCommand} "${absolutePath}"`);
             res.json({ success: true, message: 'Abierto en el visor de sistema' });
         } else {
@@ -784,19 +789,32 @@ app.post('/api/record/start', (req, res) => {
     if (!url) return res.status(400).json({ error: 'Falta la URL de inicio' });
 
     const ts = Date.now();
+    const recordingId = `rec_${ts}`;  // FIX: recordingId no estaba definido — causaba ReferenceError en cada grabación
     const safeName = (outputName || 'grabacion').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
     const outputFile = path.join(rootDir, 'scripts', `grabacion_${safeName}_${ts}.spec.js`);
-    const _npx = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
-    const cmd = /^win/.test(process.platform) ? '"' + _npx + '"' : _npx;
-    const proc = spawn(cmd, ['playwright', 'codegen', url, `--output=${outputFile}`], { cwd: rootDir });
+
+    // Usar el binario local de Playwright (más confiable que npx en Windows)
+    const pwBin = path.join(rootDir, 'node_modules', '.bin',
+        process.platform === 'win32' ? 'playwright.cmd' : 'playwright');
+
+    console.log(`[RECORD] Lanzando: ${pwBin} codegen "${url}" --output="${outputFile}"`);
+
+    const proc = spawn(`"${pwBin}"`, ['codegen', url, `--output="${outputFile}"`], {
+        cwd: rootDir,
+        shell: true,
+        windowsVerbatimArguments: false
+    });
 
     activeRecordings.set(recordingId, { process: proc, outputFile, done: false, url, credentials, extraData });
 
-    proc.on('close', () => {
+    proc.on('close', (code) => {
         const rec = activeRecordings.get(recordingId);
         if (rec) rec.done = true;
+        console.log(`[RECORD] Codegen terminó con código ${code}`);
     });
-    proc.on('error', (err) => console.error(`[RECORD] Error codegen: ${err.message}`));
+    proc.on('error', (err) => {
+        console.error(`[RECORD] Error al lanzar codegen: ${err.message}`);
+    });
 
     console.log(`[RECORD] Iniciada grabación ${recordingId} -> ${outputFile}`);
     res.json({ recordingId, outputFile: path.relative(rootDir, outputFile) });
@@ -1012,20 +1030,49 @@ app.post('/api/git/sync', (req, res) => {
     }
 });
 
-// 16. SYSTEM: Shutdown local server
+// 16. SYSTEM: Shutdown local server (backend + Vite)
 app.post('/api/system/shutdown', (req, res) => {
-    console.log('🛑 Recibida solicitud de apagado. Limpiando procesos...');
-    
-    // Matar procesos activos de Playwright/Workers
-    activeProcesses.forEach(proc => {
-        try { proc.kill(); } catch(e) {}
-    });
-    
+    console.log('[SHUTDOWN] Recibida solicitud de apagado. Cerrando todos los servicios...');
+
     res.json({ success: true, message: 'AutoBot se está apagando...' });
-    
+
     setTimeout(() => {
-        process.exit(0);
-    }, 1500);
+        const killPort = (port) => new Promise((resolve) => {
+            if (process.platform === 'win32') {
+                // En Windows: buscar PID que escucha en el puerto y matarlo con su árbol
+                exec(`netstat -ano | findstr ":${port} "`, (err, stdout) => {
+                    if (stdout) {
+                        const pids = new Set();
+                        stdout.trim().split('\n').forEach(line => {
+                            const parts = line.trim().split(/\s+/);
+                            const pid = parts[parts.length - 1];
+                            if (pid && /^\d+$/.test(pid) && pid !== '0') pids.add(pid);
+                        });
+                        let pending = pids.size;
+                        if (pending === 0) return resolve();
+                        pids.forEach(pid => {
+                            exec(`taskkill /PID ${pid} /F /T`, () => {
+                                pending--;
+                                if (pending === 0) resolve();
+                            });
+                        });
+                    } else {
+                        resolve();
+                    }
+                });
+            } else {
+                // En Mac/Linux: usar lsof
+                exec(`lsof -ti:${port} | xargs kill -9 2>/dev/null`, () => resolve());
+            }
+        });
+
+        // Matar Vite (5173) → el backend se cierra solo con process.exit(0)
+        // concurrently --kill-others también ayuda a cerrar todo limpiamente
+        killPort(5173).then(() => {
+            console.log('[SHUTDOWN] Vite (5173) detenido. Cerrando backend...');
+            process.exit(0);
+        });
+    }, 500);
 });
 
 initDb().then(() => {
