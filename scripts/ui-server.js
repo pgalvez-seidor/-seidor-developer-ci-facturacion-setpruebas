@@ -468,25 +468,22 @@ app.post('/api/run-batch', async (req, res) => {
                     // El dossier ahora se genera bajo demanda desde el botón "Ver PDF"
                     // para ahorrar cuota de IA.
                     batchResults.push({
-                        // Guardar para el reporte global (incluyendo ruta de evidencias para consolidar)
-                        batchResults.push({
-                            taskId,
-                            config,
-                            runDir, // Importante para recuperar fotos
-                            status: isSuccess ? 'EXITO' : 'FALLIDO',
-                            result: resultMsg,
-                            metrics: config.metrics || {},
-                            timestamp: new Date().toLocaleString(),
-                            metadata: req.body.metadata
-                        });
+                        taskId,
+                        config,
+                        runDir, // Importante para recuperar fotos
+                        status: isSuccess ? 'EXITO' : 'FALLIDO',
+                        result: resultMsg,
+                        metrics: config.metrics || {},
+                        timestamp: new Date().toLocaleString(),
+                        metadata: req.body.metadata
+                    });
 
                         activeProcesses = activeProcesses.filter(p => p !== workerProcess);
                         resolve();
                         processNext(); // Solo avanzar cuando el PDF esté listo
                     });
                 });
-            });
-        };
+            };
 
         const processNext = () => {
             while (runningCount < MAX_CONCURRENT && pendingTasks.length > 0) {
