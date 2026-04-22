@@ -25,18 +25,14 @@ async function describeStepWithAI(stepName, imgBase64) {
 
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-        const prompt = `Actúa como un experto en control de calidad (QA) especializado en SAP Fiori. 
-        Analiza detalladamente esta captura de pantalla.
+        const prompt = `Analiza esta captura de pantalla de SAP Fiori y genera una descripción BREVE y DIRECTA de la acción de negocio realizada.
         
-        INSTRUCCIONES CRÍTICAS:
-        1. IGNORA el nombre técnico del paso (${stepName}) si es genérico como "ACCION" o "PASO".
-        2. REALIZA UN ANÁLISIS VISUAL: Identifica títulos de diálogos, etiquetas de botones (ej: "Logout", "Continuar"), nombres de aplicaciones y textos destacado (ej: "Motivo de Modificación").
-        3. REDACCIÓN: Describe la acción de negocio que se está realizando. 
-           Ejemplo: "El usuario completa el campo 'Motivo de Modificación' en el diálogo de seguridad" o "Se procede con el cierre de sesión (Logout) del sistema".
-        4. FORMATO: Usa un tono profesional, en tercera persona. Si hay varios elementos, lístalos (1. ..., 2. ...).
-        5. DATOS: Si ves números de orden, lotes o nombres de usuario, inclúyelos.
-        
-        Sé muy preciso. Si ves un botón de 'Logout', menciónalo. Si ves un campo de texto con valor, menciónalo.`;
+        REGLAS DE ORO:
+        1. MÁXIMO 2 FRASES (máximo 30 palabras). Prohibido párrafos largos.
+        2. NO uses introducciones como "Como experto..." o "He analizado...". Empieza directamente con la acción.
+        3. IDENTIFICA DATOS CLAVE: Si ves números de lote, órdenes o ID de usuario, inclúyelos.
+        4. RESULTADOS: Si la pantalla muestra una tabla con datos, menciona si se obtuvo el resultado esperado.
+        5. ESTILO: "Se ingresa el número de lote [VALOR] y se visualiza el registro correspondiente en la tabla." o "Se hace clic en el botón [BOTÓN] para finalizar el proceso."`;
 
         const result = await model.generateContent([
             prompt,
