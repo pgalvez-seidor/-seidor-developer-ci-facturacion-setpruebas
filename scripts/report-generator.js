@@ -18,7 +18,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function describeStepWithAI(stepName, imgBase64) {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const prompt = `Actúa como un experto en control de calidad (QA) especializado en SAP Fiori. 
         Analiza detalladamente esta captura de pantalla.
         
