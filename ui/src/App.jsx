@@ -1064,7 +1064,7 @@ export default function App() {
                               </button>
                             ) : (
                               <button className="btn-open-pdf btn-gemini-gen" style={{ flex: 1 }} onClick={() => generatePdfOnDemand(q.runDir)}>
-                                <Sparkles size={14} style={{ marginRight: '6px' }} /> GENERAR DOSSIER IA
+                                <Sparkles size={14} style={{ marginRight: '6px' }} /> GENERAR PDF
                               </button>
                             )}
                           </div>
@@ -1498,7 +1498,7 @@ export default function App() {
               <Sparkles size={32} color="#6366f1" className="ai-sparkle" />
             </div>
             
-            <h3 style={{ marginBottom: '10px' }}>Generando Dossier Inteligente</h3>
+            <h3 style={{ marginBottom: '10px' }}>Generando PDF</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '2rem' }}>
               Nuestra IA está analizando las capturas de pantalla de SAP para explicar el flujo de negocio...
             </p>
@@ -1521,7 +1521,7 @@ export default function App() {
               {pdfDoneUrl ? (
                 <>
                   <button className="btn-add" style={{ flex: 1 }} onClick={() => { handleOpenPdf(pdfDoneUrl); setPdfLoading(false); setPdfMessages([]); setPdfDoneUrl(null); }}>
-                    📄 Abrir Dossier
+                    📄 Abrir PDF
                   </button>
                   <button className="btn-secondary" onClick={() => { setPdfLoading(false); setPdfMessages([]); setPdfDoneUrl(null); }}>
                     Cerrar
