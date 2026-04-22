@@ -1498,20 +1498,28 @@ export default function App() {
               <Sparkles size={32} color="#6366f1" className="ai-sparkle" />
             </div>
             
-            <h3 style={{ marginBottom: '10px' }}>Generando PDF</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '2rem' }}>
+            <h3 style={{ marginBottom: '10px', color: 'var(--text-main, #fff)' }}>Generando PDF</h3>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '2rem' }}>
               Nuestra IA está analizando las capturas de pantalla de SAP para explicar el flujo de negocio...
             </p>
 
             <div className="pdf-progress-log" style={{
-              background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1rem',
+              background: '#0a0a0a', borderRadius: '12px', padding: '1.2rem',
               textAlign: 'left', maxHeight: '180px', overflowY: 'auto', marginBottom: '2rem',
-              border: '1px solid var(--card-border)'
+              border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
             }}>
               {pdfMessages.map((msg, i) => (
-                <div key={i} style={{ fontSize: '0.75rem', color: i === pdfMessages.length - 1 ? '#8b5cf6' : 'var(--text-muted)', marginBottom: '6px', display: 'flex', gap: '8px' }}>
-                  <span style={{ opacity: 0.5 }}>[{new Date().toLocaleTimeString()}]</span>
-                  <span>{msg}</span>
+                <div key={i} style={{ 
+                  fontSize: '0.8rem', 
+                  color: i === pdfMessages.length - 1 ? '#a78bfa' : 'rgba(255,255,255,0.5)', 
+                  marginBottom: '8px', 
+                  display: 'flex', 
+                  gap: '10px',
+                  lineHeight: '1.4'
+                }}>
+                  <span style={{ color: '#6366f1', fontWeight: '700', fontSize: '0.7rem' }}>[{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}]</span>
+                  <span style={{ color: i === pdfMessages.length - 1 ? '#fff' : 'inherit' }}>{msg}</span>
                 </div>
               ))}
               <div id="pdf-log-bottom"></div>
