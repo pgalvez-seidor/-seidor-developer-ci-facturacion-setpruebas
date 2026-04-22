@@ -14,9 +14,15 @@ const { chromium } = require('playwright');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 
 async function describeStepWithAI(stepName, imgBase64) {
+    const basicDescription = `El usuario ejecutó la acción ${stepName.replace(/_/g, ' ')} de manera exitosa.`;
+    
+    if (!genAI) {
+        return basicDescription; // Si no hay llave, retorna texto básico silenciosamente
+    }
+
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const prompt = `Actúa como un experto en control de calidad (QA) especializado en SAP Fiori. 
@@ -24,7 +30,7 @@ async function describeStepWithAI(stepName, imgBase64) {
         
         INSTRUCCIONES CRÍTICAS:
         1. IGNORA el nombre técnico del paso (${stepName}) si es genérico como "ACCION" o "PASO".
-        2. REALIZA UN ANÁLISIS VISUAL: Identifica títulos de diálogos, etiquetas de botones (ej: "Logout", "Continuar"), nombres de aplicaciones y textos destacados (ej: "Motivo de Modificación").
+        2. REALIZA UN ANÁLISIS VISUAL: Identifica títulos de diálogos, etiquetas de botones (ej: "Logout", "Continuar"), nombres de aplicaciones y textos destacado (ej: "Motivo de Modificación").
         3. REDACCIÓN: Describe la acción de negocio que se está realizando. 
            Ejemplo: "El usuario completa el campo 'Motivo de Modificación' en el diálogo de seguridad" o "Se procede con el cierre de sesión (Logout) del sistema".
         4. FORMATO: Usa un tono profesional, en tercera persona. Si hay varios elementos, lístalos (1. ..., 2. ...).
@@ -41,8 +47,8 @@ async function describeStepWithAI(stepName, imgBase64) {
         console.error(`[AI] Error describiendo paso ${stepName}:`, e.message);
         const errorMsg = e.message.includes('429') || e.message.includes('quota') 
             ? "(IA: Límite de cuota excedido, usando descripción básica)" 
-            : "(IA: Error de interpretación visual)";
-        return `${errorMsg} El usuario ejecutó la acción ${stepName.replace(/_/g, ' ')} de manera exitosa.`;
+            : "(IA: Error de conexión)";
+        return `${errorMsg} ${basicDescription}`;
     }
 }
 
