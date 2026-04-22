@@ -1031,7 +1031,38 @@ app.post('/api/git/sync', (req, res) => {
     }
 });
 
-// 16. SYSTEM: Shutdown local server (backend + Vite)
+// 16. CONFIG: Guardar API Key de Gemini
+app.post('/api/config/gemini', (req, res) => {
+    try {
+        const { apiKey } = req.body;
+        if (!apiKey) return res.status(400).json({ error: 'API Key es requerida' });
+        
+        const envPath = path.join(rootDir, '.env');
+        let envContent = '';
+        if (fs.existsSync(envPath)) {
+            envContent = fs.readFileSync(envPath, 'utf8');
+            // Reemplazar si existe
+            if (envContent.includes('GEMINI_API_KEY=')) {
+                envContent = envContent.replace(/GEMINI_API_KEY=.*/g, `GEMINI_API_KEY=${apiKey}`);
+            } else {
+                envContent += `\nGEMINI_API_KEY=${apiKey}\n`;
+            }
+        } else {
+            envContent = `GEMINI_API_KEY=${apiKey}\n`;
+        }
+        
+        fs.writeFileSync(envPath, envContent);
+        process.env.GEMINI_API_KEY = apiKey; // Actualizar en memoria
+        
+        console.log('✅ API Key de Gemini guardada correctamente.');
+        res.json({ success: true, message: 'API Key configurada correctamente.' });
+    } catch (e) {
+        console.error('❌ Error guardando API Key:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// 17. SYSTEM: Shutdown local server (backend + Vite)
 app.post('/api/system/shutdown', (req, res) => {
     console.log('[SHUTDOWN] Recibida solicitud de apagado. Cerrando todos los servicios...');
 

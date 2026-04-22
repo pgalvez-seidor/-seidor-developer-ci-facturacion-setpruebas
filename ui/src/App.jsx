@@ -20,8 +20,23 @@ const Sidebar = ({
   onGitSync,
   setShowAbout,
   testerName, setTesterName,
-  projectName, setProjectName
+  projectName, setProjectName,
+  geminiKey, setGeminiKey
 }) => {
+  const saveGeminiKey = async () => {
+    if (!geminiKey) return;
+    try {
+      const res = await fetch(`${API_BASE}/config/gemini`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: geminiKey })
+      });
+      if (res.ok) alert("✅ Llave de Gemini guardada correctamente.");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <aside className="sidebar">
       <div style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -53,6 +68,27 @@ const Sidebar = ({
             placeholder="Tu nombre completo"
             style={{ fontSize: '0.75rem' }}
           />
+        </div>
+      </div>
+
+      <div className="sidebar-section">
+        <div className="sidebar-label">Inteligencia Artificial</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '-5px' }}>GEMINI API KEY</div>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <input 
+              type="password" 
+              className="branch-select" 
+              value={geminiKey} 
+              onChange={e => setGeminiKey(e.target.value)}
+              placeholder="AIzaSy..."
+              style={{ fontSize: '0.75rem', flex: 1 }}
+            />
+            <button onClick={saveGeminiKey} style={{
+              background: '#10b981', color: 'white', border: 'none', borderRadius: '4px',
+              padding: '0 8px', fontSize: '0.7rem', cursor: 'pointer', fontWeight: 'bold'
+            }}>Guardar</button>
+          </div>
         </div>
       </div>
 
@@ -180,6 +216,7 @@ export default function App() {
   const [instruccionesIa, setInstruccionesIa] = useState('');
   const [testerName, setTesterName] = useState('');
   const [projectName, setProjectName] = useState('');
+  const [geminiKey, setGeminiKey] = useState('');
 
   const [builderConfig, setBuilderConfig] = useState({
     iteraciones: 1,
@@ -692,6 +729,8 @@ export default function App() {
           setTesterName={setTesterName}
           projectName={projectName}
           setProjectName={setProjectName}
+          geminiKey={geminiKey}
+          setGeminiKey={setGeminiKey}
         />
 
         <main className="main split-layout">
