@@ -46,9 +46,9 @@ async function describeStepWithAI(stepName, imgBase64) {
     } catch (e) {
         console.error(`[AI] Error describiendo paso ${stepName}:`, e.message);
         const errorMsg = e.message.includes('429') || e.message.includes('quota') 
-            ? "(IA: Límite de cuota excedido, usando descripción básica)" 
+            ? "" 
             : "(IA: Error de conexión)";
-        return `${errorMsg} ${basicDescription}`;
+        return `${errorMsg} ${basicDescription}`.trim();
     }
 }
 
