@@ -347,7 +347,8 @@ app.post('/api/run-batch', async (req, res) => {
                 }
                 // Normalizar separadores (Mac guarda '/', Windows usa '\') para soportar ambos
                 const normalizedFile = file.replace(/\\/g, '/');
-                const absScriptPath = path.join(rootDir, normalizedFile.startsWith('scripts/') ? normalizedFile : `scripts/${normalizedFile}`);
+                const relativePath = normalizedFile.startsWith('scripts/') ? normalizedFile : `scripts/${normalizedFile}`;
+                const absScriptPath = path.join(rootDir, relativePath);
                 // En Mac/Linux, asegurar que los binarios sean ejecutables (prevenir código 126)
                 if (process.platform !== 'win32') {
                     try { 
