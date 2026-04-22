@@ -48,10 +48,15 @@ async function describeStepWithAI(stepName, imgBase64) {
     }
 }
 
-async function generatePdf(runDir) {
+async function generatePdf(runDir, progressCb = null) {
+    const log = (msg) => {
+        console.log(`[Dossier] ${msg}`);
+        if (progressCb) progressCb(msg);
+    };
+
     const resultPath = path.join(runDir, 'result.json');
     if (!fs.existsSync(resultPath)) {
-        console.error(`❌ No se encontró result.json en: ${runDir}`);
+        log(`❌ No se encontró result.json en: ${runDir}`);
         return;
     }
 
@@ -62,7 +67,7 @@ async function generatePdf(runDir) {
     const finalTemplateDir = fs.existsSync(templateDir) ? templateDir : path.join(__dirname, 'templates', 'medifarma');
     const cssContent = fs.readFileSync(path.join(finalTemplateDir, 'style.css'), 'utf8');
 
-    console.log("🤖 AutoBot AI: Analizando capturas para descripción inteligente...");
+    log("🤖 AutoBot AI: Iniciando análisis de capturas para descripción inteligente...");
 
     const stepsData = [];
     const screenshotFiles = fs.readdirSync(runDir).filter(f => f.endsWith('.png') && !f.includes('logo')).sort();
@@ -91,7 +96,7 @@ async function generatePdf(runDir) {
         
         let aiDescription = `Ejecución del paso ${displayName}.`;
         if (aiImgBase64) {
-            console.log(`[AI] Analizando paso: ${displayName}...`);
+            log(`🧠 IA: Analizando visualmente el paso "${displayName}"...`);
             aiDescription = await describeStepWithAI(displayName, aiImgBase64);
             // Pausa de seguridad para evitar saturar la conexión (fetch failed)
             await new Promise(r => setTimeout(r, 1500)); 
@@ -105,6 +110,7 @@ async function generatePdf(runDir) {
         });
     }
 
+    log("📝 Maquetando documento PDF profesional...");
     const htmlContent = `
     <!DOCTYPE html>
     <html lang="es">
@@ -178,6 +184,7 @@ async function generatePdf(runDir) {
     </html>
     `;
 
+    log("🖨️ Exportando PDF final...");
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
     await page.setContent(htmlContent);
@@ -191,7 +198,7 @@ async function generatePdf(runDir) {
     });
 
     await browser.close();
-    console.log(`✅ Dossier AI PDF generado con éxito: ${pdfPath}`);
+    log(`✅ Dossier AI PDF generado con éxito.`);
     return pdfPath;
 }
 
