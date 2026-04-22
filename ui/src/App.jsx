@@ -271,6 +271,11 @@ export default function App() {
   const [scriptEditorFile, setScriptEditorFile] = useState('');
   const [scriptEditorContent, setScriptEditorContent] = useState('');
   const [scriptEditorSaving, setScriptEditorSaving] = useState(false);
+  
+  // Generación de PDF bajo demanda
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfMessages, setPdfMessages] = useState([]);
+  const [pdfDoneUrl, setPdfDoneUrl] = useState(null);
 
   const CHANGELOG = [
     { version: '1.1.0', date: '2026-04-19', changes: ['Rama Medifarma — cliente independiente', 'Grabación de flujos sin código (Playwright Codegen)', 'Botón Grabar Flujo Nuevo en dashboard', 'Flujos grabados guardados automáticamente en SQLite'] },
@@ -716,6 +721,46 @@ export default function App() {
     }
   };
 
+  const generatePdfOnDemand = async (runDir) => {
+    setPdfLoading(true);
+    setPdfMessages(["🚀 Conectando con AutoBot AI..."]);
+    setPdfDoneUrl(null);
+    
+    try {
+      const eventSource = new EventSource(`${API_BASE}/reports/generate-ai?runDir=${encodeURIComponent(runDir)}`);
+      
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'progress') {
+          setPdfMessages(prev => [...prev, data.message]);
+          // Scroll automático hacia abajo en el log
+          setTimeout(() => {
+            const log = document.getElementById('pdf-log-bottom');
+            if (log) log.scrollIntoView({ behavior: 'smooth' });
+          }, 50);
+        } else if (data.type === 'done') {
+          setPdfDoneUrl(data.url);
+          setPdfMessages(prev => [...prev, "✅ ¡Dossier generado correctamente!"]);
+          eventSource.close();
+        } else if (data.type === 'error') {
+          addToast(data.message, "error");
+          setPdfLoading(false);
+          eventSource.close();
+        }
+      };
+
+      eventSource.onerror = (e) => {
+        console.error("EventSource Error:", e);
+        eventSource.close();
+        setPdfLoading(false);
+      };
+    } catch (err) {
+      console.error("PDF Generate Error:", err);
+      addToast("Error al iniciar la generación del PDF.", "error");
+      setPdfLoading(false);
+    }
+  };
+
   return (
     <div className="app">
       <div className="body">
@@ -1009,7 +1054,19 @@ export default function App() {
                         <span className={q.status === 'error' ? 'b-error-msg' : ''}>
                           {q.status === 'error' ? `Detalle: ${q.result}` : `Resultado: ${q.result}`}
                         </span>
-                        {q.pdfUrl && <button className="btn-open-pdf" onClick={() => handleOpenPdf(q.pdfUrl)}>VER PDF</button>}
+                        {q.status === 'done' && (
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                            {q.pdfUrl ? (
+                              <button className="btn-open-pdf" style={{ flex: 1 }} onClick={() => handleOpenPdf(q.pdfUrl)}>
+                                <FileText size={14} style={{ marginRight: '6px' }} /> VER PDF
+                              </button>
+                            ) : (
+                              <button className="btn-open-pdf btn-gemini-gen" style={{ flex: 1 }} onClick={() => generatePdfOnDemand(q.runDir)}>
+                                <Sparkles size={14} style={{ marginRight: '6px' }} /> GENERAR DOSSIER IA
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1429,6 +1486,95 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Modal de Generación de PDF Bajo Demanda */}
+      {pdfLoading && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center', padding: '2.5rem' }}>
+            <div className="ai-loader" style={{ marginBottom: '1.5rem' }}>
+              <div className="ai-circle"></div>
+              <Sparkles size={32} color="#6366f1" className="ai-sparkle" />
+            </div>
+            
+            <h3 style={{ marginBottom: '10px' }}>Generando Dossier Inteligente</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '2rem' }}>
+              Nuestra IA está analizando las capturas de pantalla de SAP para explicar el flujo de negocio...
+            </p>
+
+            <div className="pdf-progress-log" style={{
+              background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1rem',
+              textAlign: 'left', maxHeight: '180px', overflowY: 'auto', marginBottom: '2rem',
+              border: '1px solid var(--card-border)'
+            }}>
+              {pdfMessages.map((msg, i) => (
+                <div key={i} style={{ fontSize: '0.75rem', color: i === pdfMessages.length - 1 ? '#8b5cf6' : 'var(--text-muted)', marginBottom: '6px', display: 'flex', gap: '8px' }}>
+                  <span style={{ opacity: 0.5 }}>[{new Date().toLocaleTimeString()}]</span>
+                  <span>{msg}</span>
+                </div>
+              ))}
+              <div id="pdf-log-bottom"></div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {pdfDoneUrl ? (
+                <>
+                  <button className="btn-add" style={{ flex: 1 }} onClick={() => { handleOpenPdf(pdfDoneUrl); setPdfLoading(false); setPdfMessages([]); setPdfDoneUrl(null); }}>
+                    📄 Abrir Dossier
+                  </button>
+                  <button className="btn-secondary" onClick={() => { setPdfLoading(false); setPdfMessages([]); setPdfDoneUrl(null); }}>
+                    Cerrar
+                  </button>
+                </>
+              ) : (
+                <div style={{ flex: 1, color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                  Esto puede tardar unos segundos dependiendo del número de pasos...
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Estilos dinámicos para el cargador IA */}
+      <style>{`
+        .pdf-progress-log div:last-child {
+          animation: fadeIn 0.3s ease-out;
+        }
+        .btn-gemini-gen {
+          background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)) !important;
+          color: #8b5cf6 !important;
+          border: 1px solid rgba(139, 92, 246, 0.3) !important;
+        }
+        .btn-gemini-gen:hover {
+          background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2)) !important;
+          border-color: rgba(139, 92, 246, 0.5) !important;
+        }
+        .ai-loader {
+          position: relative;
+          width: 80px;
+          height: 80px;
+          margin: 0 auto;
+        }
+        .ai-circle {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border: 4px solid rgba(99, 102, 241, 0.1);
+          border-top: 4px solid #6366f1;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        .ai-sparkle {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
 
       <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
         {toasts.map(t => (

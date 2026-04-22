@@ -465,19 +465,9 @@ app.post('/api/run-batch', async (req, res) => {
                     };
                     fs.writeFileSync(path.join(runDir, 'result.json'), JSON.stringify(resultData, null, 2));
 
-                    const generateDossier = async () => {
-                        try {
-                            const { generatePdf } = require('./report-generator');
-                            const pdfPath = await generatePdf(runDir);
-                            const relativeUrl = pdfPath.replace(rootDir, '').replace(/\\/g, '/');
-                            sendLog(taskId, 'pdf', relativeUrl);
-                            sendLog(taskId, 'log', `📄 Dossier Técnico generado: ${path.basename(pdfPath)}`);
-                        } catch (e) {
-                            console.error(`[Dossier] Error: ${e.message}`);
-                        }
-                    };
-
-                    generateDossier().then(() => {
+                    // El dossier ahora se genera bajo demanda desde el botón "Ver PDF"
+                    // para ahorrar cuota de IA.
+                    batchResults.push({
                         // Guardar para el reporte global (incluyendo ruta de evidencias para consolidar)
                         batchResults.push({
                             taskId,
@@ -522,21 +512,10 @@ app.post('/api/run-batch', async (req, res) => {
             }
         };
 
+        // El dossier global también se genera bajo demanda
         const generateGlobalReport = async (results) => {
-            console.log(`🤖 AutoBot: Orquestando Dossier Técnico Profesional Consolidado...`);
-            const { generateBatchPdf } = require('./report-generator');
-            const runDirs = results.map(r => r.runDir);
-            const batchInfo = {
-                proyecto: req.body.projectName || tasks[0]?.config?.projectName || 'Proyecto General',
-                tester: req.body.testerName || tasks[0]?.config?.testerName || 'AutoBot AI',
-                cliente: results[0]?.cliente || 'General'
-            };
-            try {
-                return await generateBatchPdf(runDirs, batchInfo);
-            } catch (e) {
-                console.error("❌ Error en generador de Dossier AI Consolidado:", e.message);
-                throw e;
-            }
+            console.log(`🤖 AutoBot: El reporte global se generará bajo demanda.`);
+            return null;
         };
 
         processNext(); // Iniciar la primera tanda de tareas en cola
@@ -1031,7 +1010,7 @@ app.post('/api/git/sync', (req, res) => {
     }
 });
 
-// 16. CONFIG: Guardar API Key de Gemini
+// 17. CONFIG: Guardar API Key de Gemini
 app.post('/api/config/gemini', (req, res) => {
     try {
         const { apiKey } = req.body;
@@ -1062,7 +1041,38 @@ app.post('/api/config/gemini', (req, res) => {
     }
 });
 
-// 17. SYSTEM: Shutdown local server (backend + Vite)
+// 18. REPORT: Generar PDF con IA Bajo Demanda (SSE)
+app.get('/api/reports/generate-ai', async (req, res) => {
+    const { runDir } = req.query;
+    if (!runDir) return res.status(400).json({ error: 'runDir es requerido' });
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    const sendProgress = (message) => {
+        res.write(`data: ${JSON.stringify({ type: 'progress', message })}\n\n`);
+    };
+
+    try {
+        const absRunDir = path.isAbsolute(runDir) ? runDir : path.join(rootDir, runDir);
+        const { generatePdf } = require('./report-generator');
+        
+        const pdfPath = await generatePdf(absRunDir, (msg) => {
+            sendProgress(msg);
+        });
+
+        const relativeUrl = pdfPath.replace(rootDir, '').replace(/\\/g, '/');
+        res.write(`data: ${JSON.stringify({ type: 'done', url: relativeUrl })}\n\n`);
+        res.end();
+    } catch (e) {
+        console.error('❌ Error generando PDF bajo demanda:', e.message);
+        res.write(`data: ${JSON.stringify({ type: 'error', message: e.message })}\n\n`);
+        res.end();
+    }
+});
+
+// 19. SYSTEM: Shutdown local server (backend + Vite)
 app.post('/api/system/shutdown', (req, res) => {
     console.log('[SHUTDOWN] Recibida solicitud de apagado. Cerrando todos los servicios...');
 
