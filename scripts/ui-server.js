@@ -216,8 +216,7 @@ app.post('/api/run-test', async (req, res) => {
             return new Promise((resolve) => {
                 const normalizedFile = file.replace(/\\/g, '/');
                 const relativePath = normalizedFile.startsWith('scripts/') ? normalizedFile : `scripts/${normalizedFile}`;
-                const absScriptPath = path.join(rootDir, relativePath);
-                const cmdArgs = ['playwright', 'test', absScriptPath];
+                const cmdArgs = ['playwright', 'test', relativePath];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
@@ -271,10 +270,10 @@ app.post('/api/run-batch', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    // Usar binario local directamente para evitar problemas con npx como grandchild process
-    // Se envuelve en comillas para manejar espacios en rutas (importante en Mac/Windows)
-    const _pwBin = path.join(rootDir, 'node_modules', '.bin', /^win/.test(process.platform) ? 'playwright.cmd' : 'playwright');
-    const playwrightBin = '"' + _pwBin + '"';
+    // Usar npx local para asegurar que encuentra el binario de playwright correctamente y
+    // evitar el bug de cmd.exe donde las comillas manuales se eliminan si es el único texto citado.
+    const _npx = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
+    const playwrightBin = _npx;
 
     const sendLog = (taskId, type, message, docData = null) => {
         const payload = JSON.stringify({ taskId, type, message: message.toString(), docData, timestamp: new Date().toISOString() });
@@ -358,8 +357,9 @@ app.post('/api/run-batch', async (req, res) => {
                         console.error('[Permissions] Error fijando chmod:', e.message);
                     }
                 }
-                // Sin comillas manuales: shell:true + windowsVerbatimArguments:false ya escapan correctamente
-                const cmdArgs = ['test', absScriptPath, '--reporter=line'];
+                // Windows BUG FIX: pasar relativePath (con slash '/') en vez de absScriptPath (con backslashes '\')
+                // porque Playwright en Windows interpreta las rutas absolutas con '\' como Regex.
+                const cmdArgs = ['playwright', 'test', relativePath, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
@@ -526,9 +526,9 @@ app.post('/api/run-batch', async (req, res) => {
             const { generateBatchPdf } = require('./report-generator');
             const runDirs = results.map(r => r.runDir);
             const batchInfo = {
-                proyecto: projectName,
-                tester: testerName,
-                cliente: results[0].cliente || 'General'
+                proyecto: req.body.projectName || tasks[0]?.config?.projectName || 'Proyecto General',
+                tester: req.body.testerName || tasks[0]?.config?.testerName || 'AutoBot AI',
+                cliente: results[0]?.cliente || 'General'
             };
             try {
                 return await generateBatchPdf(runDirs, batchInfo);
