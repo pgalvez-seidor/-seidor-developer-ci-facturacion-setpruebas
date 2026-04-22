@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Eye, Zap, CreditCard, Banknote, Trash2,
-  CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power
+  CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power,
+  Sparkles, FileText
 } from 'lucide-react';
 import './index-a.css';
 
