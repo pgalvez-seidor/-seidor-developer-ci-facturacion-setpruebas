@@ -11,6 +11,9 @@ const app = express();
 const PORT = 3001;
 
 const rootDir = path.resolve(__dirname, '..');
+let projectDir = rootDir; // Default
+let gitToken = process.env.GIT_TOKEN || '';
+
 
 app.use(cors());
 app.use(express.json());
@@ -82,7 +85,7 @@ const syncScenariosWithFileSystem = async () => {
         }
 
         const files = fs.readdirSync(scriptsPath).filter(f => f.endsWith('.js') || f.endsWith('.spec.js'));
-        console.log(`[SYNC] Iniciando sincronización de ${files.length} archivos...`);
+        console.log(`[SYNC] Iniciando sincronización de ${files.length} archivos... en ${scriptsPath}`);
 
         db.serialize(() => {
             files.forEach(file => {
@@ -92,7 +95,6 @@ const syncScenariosWithFileSystem = async () => {
                 db.get("SELECT id FROM escenarios WHERE id = ?", [id], (err, row) => {
                     if (!row) {
                         console.log(`[SYNC] + Nuevo escenario: ${file}`);
-                        // Insertar en Medifarma (client_id: 1, process_id: 1) por defecto si es nuevo
                         db.run(`INSERT OR IGNORE INTO escenarios (id, process_id, name, config_json) VALUES (?, ?, ?, ?)`,
                             [id, 1, friendlyName, JSON.stringify({ file: file })]);
                     }
@@ -103,6 +105,35 @@ const syncScenariosWithFileSystem = async () => {
         console.error('[SYNC] Error crítico en sincronización:', e);
     }
 };
+
+// Endpoints de Configuración
+app.get('/api/settings', (req, res) => {
+    res.json({
+        projectDir,
+        gitToken,
+        projectName: process.env.PROJECT_NAME || 'AutoBot Project',
+        testerName: process.env.TESTER_NAME || 'Pierre Galvez'
+    });
+});
+
+app.post('/api/config/project-dir', (req, res) => {
+    const { projectDir: newDir } = req.body;
+    if (newDir) {
+        projectDir = newDir;
+        console.log(`[CONFIG] Nuevo projectDir: ${projectDir}`);
+        syncScenariosWithFileSystem(); // Sincronizar de inmediato
+        res.json({ success: true });
+    } else {
+        res.status(400).json({ error: 'Falta projectDir' });
+    }
+});
+
+app.post('/api/config/git-token', (req, res) => {
+    const { gitToken: newToken } = req.body;
+    gitToken = newToken;
+    res.json({ success: true });
+});
+
 
 
 // 2. Cambiar de rama (Checkout)
