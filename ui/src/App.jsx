@@ -20,9 +20,13 @@ const Sidebar = ({
   currentBranch, branches, handleBranchChange,
   onGitSync,
   setShowAbout,
+  setShowSettings,
+  gitNotLinked,
+  remoteChangesCount,
   testerName, setTesterName,
   projectName, setProjectName,
-  geminiKey, setGeminiKey
+  geminiKey, setGeminiKey,
+  setShowChangelog
 }) => {
   const saveGeminiKey = async () => {
     if (!geminiKey) return;
@@ -95,25 +99,41 @@ const Sidebar = ({
 
       <div className="sidebar-section">
         <div className="sidebar-label">Entorno Git</div>
-        <select className="branch-select" value={currentBranch} onChange={handleBranchChange}>
-          <option value="">-- seleccionar --</option>
-          {branches.map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
-        
-        <button 
-          onClick={onGitSync} 
-          className="btn-sync-git"
-          style={{
-            marginTop: '10px', width: '100%', padding: '8px',
-            background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1',
-            border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '8px',
-            fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-          }}
-        >
-          <Zap size={14} fill="#6366f1" />
-          Subir cambios a Git
-        </button>
+        {gitNotLinked ? (
+          <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', marginTop: '10px' }}>
+            <div style={{ fontSize: '0.65rem', color: '#d97706', fontWeight: '800', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <AlertTriangle size={12} /> Git no vinculado
+            </div>
+            <p style={{ fontSize: '0.65rem', color: '#92400e', margin: 0 }}>
+              Abre <span style={{ textDecoration: 'underline', cursor: 'pointer', fontWeight: '700' }} onClick={() => setShowSettings(true)}>⚙️ Configuración</span> y pega la ruta de tu proyecto.
+            </p>
+          </div>
+        ) : (
+          <>
+            <select className="branch-select" value={currentBranch} onChange={handleBranchChange}>
+              <option value="">-- seleccionar --</option>
+              {branches.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+            
+            <button 
+              onClick={onGitSync} 
+              className="btn-sync-git"
+              style={{
+                marginTop: '10px', width: '100%', padding: '10px',
+                background: remoteChangesCount > 0 ? 'var(--accent-primary)' : 'rgba(99, 102, 241, 0.1)',
+                color: remoteChangesCount > 0 ? 'white' : '#6366f1',
+                border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '10px',
+                fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                boxShadow: remoteChangesCount > 0 ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none',
+                transition: 'all 0.2s'
+              }}
+            >
+              <Zap size={14} fill={remoteChangesCount > 0 ? 'white' : '#6366f1'} />
+              {remoteChangesCount > 0 ? `Sincronizar con Git (${remoteChangesCount})` : 'Sincronizar con Git'}
+            </button>
+          </>
+        )}
       </div>
 
       <div className="sidebar-section" style={{ flex: 1, marginTop: '2rem' }}>
@@ -258,6 +278,13 @@ export default function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [changelogContent, setChangelogContent] = useState('');
+  const [gitNotLinked, setGitNotLinked] = useState(false);
+  const [remoteChangesCount, setRemoteChangesCount] = useState(0);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [backendError, setBackendError] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+
+
 
   const [recordingId, setRecordingId] = useState('');
   const [recordingUrl, setRecordingUrl] = useState('');
@@ -312,20 +339,81 @@ export default function App() {
     }
   };
 
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const bRes = await fetch(`${API_BASE}/branches`);
+      if (bRes.ok) {
+        const d = await bRes.json();
+        if (d.gitNotLinked) {
+          setGitNotLinked(true);
+          setBranches([]);
+          setBranch('');
+        } else {
+          setGitNotLinked(false);
+          setBranches(d.branches || []);
+          setBranch(d.current || '');
+        }
+      }
+
+      const sRes = await fetch(`${API_BASE}/settings`);
+      if (sRes.ok) {
+        const d = await sRes.json();
+        if (d.testerName) setTesterName(d.testerName);
+        if (d.gitToken) setGitToken(d.gitToken);
+        if (d.projectName) setProjectName(d.projectName);
+        if (d.projectDir) setProjectDir(d.projectDir);
+        if (d.geminiKey) setGeminiKey(d.geminiKey);
+      }
+      setBackendError(null);
+    } catch (err) {
+      setBackendError("⚠️ No hay conexión con el servidor (Puerto 3005). Intentando reconectar...");
+    }
+  }, []);
+
   const fetchRegistry = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/registry`);
+      if (!res.ok) throw new Error("Server error");
       const data = await res.json();
       setRegistry(data);
+
+      const statRes = await fetch(`${API_BASE}/git/status`);
+      if (statRes.ok) {
+        const statData = await statRes.json();
+        setHasPendingChanges(statData.hasChanges);
+        setRemoteChangesCount(statData.behind || 0);
+      }
+      setBackendError(null);
     } catch (err) {
       console.error("Fetch Registry Error:", err);
+      setBackendError("⚠️ No hay conexión con el servidor (Puerto 3005). Intentando reconectar...");
     }
   }, []);
 
   useEffect(() => {
-    fetch(`${API_BASE}/branches`).then(r => r.json()).then(d => { setBranches(d.branches || []); setBranch(d.current || ''); }).catch(() => { });
+    fetchInitialData();
     fetchRegistry();
-  }, [fetchRegistry]);
+    const timer = setInterval(fetchRegistry, 30000); // Cada 30s
+    return () => clearInterval(timer);
+  }, [fetchInitialData, fetchRegistry]);
+
+  // 2.3. Notificaciones Nativas de Git
+  useEffect(() => {
+    if (remoteChangesCount > 0) {
+      const lastCount = parseInt(localStorage.getItem('lastGitCount') || '0');
+      if (remoteChangesCount > lastCount) {
+        try {
+          new Notification('🤖 AutoBotIA: Cambios Detectados', { 
+            body: `Hay ${remoteChangesCount} nuevos escenarios o cambios en la rama ${currentBranch}.`, 
+            icon: '/favicon.png'
+          });
+        } catch (err) {}
+      }
+      localStorage.setItem('lastGitCount', remoteChangesCount.toString());
+    } else {
+      localStorage.setItem('lastGitCount', '0');
+    }
+  }, [remoteChangesCount, currentBranch]);
 
   // Al cambiar de cliente, resetear escenario y proceso al primero disponible
   useEffect(() => {
@@ -792,31 +880,50 @@ export default function App() {
           currentBranch={currentBranch} branches={branches} handleBranchChange={handleBranchChange}
           onGitSync={handleGitSync}
           setShowAbout={setShowAbout}
+          setShowSettings={setShowSettings}
+          gitNotLinked={gitNotLinked}
+          remoteChangesCount={remoteChangesCount}
           testerName={testerName}
           setTesterName={setTesterName}
           projectName={projectName}
           setProjectName={setProjectName}
           geminiKey={geminiKey}
           setGeminiKey={setGeminiKey}
+          setShowChangelog={setShowChangelog}
         />
 
         <main className="main split-layout">
           <div className="config-panel">
             <header className="main-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ margin: 0 }}>Configuración del Escenario</h2>
-              <button 
-                onClick={handleShutdown}
-                title="Apagar AutoBot"
-                className="power-off-btn"
-                style={{
-                  background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
-                  border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '50%',
-                  width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', transition: '0.3s'
-                }}
-              >
-                <Power size={18} />
-              </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={() => setShowSettings(true)}
+                    className="power-off-btn"
+                    style={{
+                      background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1',
+                      border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '50%',
+                      width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', transition: '0.3s'
+                    }}
+                  >
+                    <Settings size={18} />
+                  </button>
+                  <button 
+                    onClick={handleShutdown}
+                    title="Apagar AutoBot"
+                    className="power-off-btn"
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+                      border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '50%',
+                      width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', transition: '0.3s'
+                    }}
+                  >
+                    <Power size={18} />
+                  </button>
+                </div>
+
             </header>
 
             <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--card-border)', padding: '1.2rem', borderRadius: '16px', marginBottom: '1.5rem' }}>
@@ -1566,6 +1673,81 @@ export default function App() {
       )}
 
       {/* Estilos dinámicos para el cargador IA */}
+      {showSettings && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal-content" style={{ width: '500px' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ padding: '8px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px' }}>
+                  <Settings size={20} color="#6366f1" />
+                </div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', margin: 0 }}>Configuración</h2>
+              </div>
+              <button className="btn-close" onClick={() => setShowSettings(false)}><X size={20}/></button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <div>
+                <label style={{ fontWeight: '700', fontSize: '0.85rem', display: 'block', marginBottom: '8px' }}>Directorio del Proyecto</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input type="text" value={projectDir} readOnly style={{ flex: 1, background: '#f8fafc', color: '#64748b' }} />
+                  <button 
+                    onClick={async () => {
+                      const path = await window.electron.selectFolder();
+                      if (path) {
+                        setProjectDir(path);
+                        const res = await fetch(`${API_BASE}/config/project-dir`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ projectDir: path })
+                        });
+                        if (res.ok) {
+                          addToast("📁 Directorio actualizado.", "success");
+                          fetchInitialData();
+                        }
+                      }
+                    }}
+                    style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', padding: '0 12px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    Cambiar
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontWeight: '700', fontSize: '0.85rem', display: 'block', marginBottom: '8px' }}>Git Token (Seidor)</label>
+                <input 
+                  type="password" 
+                  value={gitToken} 
+                  onChange={e => setGitToken(e.target.value)}
+                  placeholder="ghp_..."
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                />
+                <p style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '6px' }}>Requerido para el pull automático de ramas remotas.</p>
+              </div>
+
+              <button 
+                className="btn-run"
+                style={{ background: 'var(--accent-primary)', color: 'white', width: '100%', marginTop: '10px' }}
+                onClick={async () => {
+                  const res = await fetch(`${API_BASE}/config/git-token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gitToken })
+                  });
+                  if (res.ok) {
+                    addToast("✅ Configuración guardada.", "success");
+                    setShowSettings(false);
+                    fetchInitialData();
+                  }
+                }}
+              >
+                Guardar Configuración
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showChangelog && (
         <div className="modal-overlay" style={{ zIndex: 10000 }}>
           <div className="modal-content" style={{ width: '700px', maxWidth: '90%', maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
