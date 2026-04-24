@@ -137,9 +137,17 @@ const Sidebar = ({
         )}
       </div>
 
-      <div onClick={() => setShowAbout(true)} style={{ opacity: 0.4, fontSize: '0.7rem', textAlign: 'center', cursor: 'pointer', transition: 'opacity 0.2s' }}>
-        AutoBot v1.0.0 by Pierre Gálvez Larriega for Seidor Peru
+      <div onClick={() => setShowAbout(true)} style={{ opacity: 0.6, fontSize: '0.7rem', textAlign: 'center', cursor: 'pointer', transition: 'opacity 0.2s', padding: '10px 0' }}>
+        <div style={{ fontWeight: '700', marginBottom: '4px' }}>AutoBot v2.0.0</div>
+        <div style={{ color: 'var(--text-secondary)' }}>by Pierre Gálvez - Seidor</div>
+        <button 
+          onClick={(e) => { e.stopPropagation(); setShowChangelog(true); }}
+          style={{ marginTop: '8px', background: 'none', border: 'none', color: '#6366f1', fontSize: '0.65rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+        >
+          📜 Ver Historial (Changelog)
+        </button>
       </div>
+
     </aside>
   );
 };
@@ -248,6 +256,9 @@ export default function App() {
   const [showRecordModal, setShowRecordModal] = useState(false);
   const [recordingStep, setRecordingStep] = useState('intro'); // 'intro' | 'form' | 'recording'
   const [isRecording, setIsRecording] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
+  const [changelogContent, setChangelogContent] = useState('');
+
   const [recordingId, setRecordingId] = useState('');
   const [recordingUrl, setRecordingUrl] = useState('');
   const [recordingName, setRecordingName] = useState('');
@@ -710,6 +721,15 @@ export default function App() {
       }
     }
   };
+
+  useEffect(() => {
+    if (showChangelog) {
+      fetch(`${API_BASE}/changelog`)
+        .then(res => res.text())
+        .then(text => setChangelogContent(text))
+        .catch(err => console.error("Error loading changelog:", err));
+    }
+  }, [showChangelog]);
 
   const handleGitSync = async () => {
     addToast("Iniciando sincronización con Git...", "success");
@@ -1546,6 +1566,41 @@ export default function App() {
       )}
 
       {/* Estilos dinámicos para el cargador IA */}
+      {showChangelog && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal-content" style={{ width: '700px', maxWidth: '90%', maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ padding: '8px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px' }}>
+                  <Zap size={20} color="#6366f1" />
+                </div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', margin: 0 }}>Historial de Evolución (Skills)</h2>
+              </div>
+              <button className="btn-close" onClick={() => setShowChangelog(false)}><X size={20}/></button>
+            </div>
+            
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#f8fafc' }}>
+              <pre style={{ 
+                whiteSpace: 'pre-wrap', 
+                wordWrap: 'break-word', 
+                fontSize: '0.9rem', 
+                lineHeight: '1.6', 
+                color: '#334155',
+                fontFamily: 'inherit'
+              }}>
+                {changelogContent || 'Cargando historial...'}
+              </pre>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-secondary" style={{ width: '100%' }} onClick={() => setShowChangelog(false)}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .pdf-progress-log div:last-child {
           animation: fadeIn 0.3s ease-out;

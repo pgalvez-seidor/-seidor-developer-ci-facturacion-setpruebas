@@ -72,6 +72,39 @@ app.get('/api/branches', async (req, res) => {
     }
 });
 
+// Función para sincronizar archivos del sistema con la DB
+const syncScenariosWithFileSystem = async () => {
+    try {
+        const scriptsPath = path.join(projectDir, 'scripts');
+        if (!fs.existsSync(scriptsPath)) {
+            console.log(`[SYNC] Carpeta scripts no encontrada en: ${scriptsPath}`);
+            return;
+        }
+
+        const files = fs.readdirSync(scriptsPath).filter(f => f.endsWith('.js') || f.endsWith('.spec.js'));
+        console.log(`[SYNC] Iniciando sincronización de ${files.length} archivos...`);
+
+        db.serialize(() => {
+            files.forEach(file => {
+                const friendlyName = file.replace(/\.spec\.js$/, '').replace(/\.js$/, '').replace(/-/g, ' ');
+                const id = file;
+
+                db.get("SELECT id FROM escenarios WHERE id = ?", [id], (err, row) => {
+                    if (!row) {
+                        console.log(`[SYNC] + Nuevo escenario: ${file}`);
+                        // Insertar en Medifarma (client_id: 1, process_id: 1) por defecto si es nuevo
+                        db.run(`INSERT OR IGNORE INTO escenarios (id, process_id, name, config_json) VALUES (?, ?, ?, ?)`,
+                            [id, 1, friendlyName, JSON.stringify({ file: file })]);
+                    }
+                });
+            });
+        });
+    } catch (e) {
+        console.error('[SYNC] Error crítico en sincronización:', e);
+    }
+};
+
+
 // 2. Cambiar de rama (Checkout)
 app.post('/api/checkout', async (req, res) => {
     const { branch } = req.body;
@@ -81,17 +114,23 @@ app.post('/api/checkout', async (req, res) => {
         await runCmd(`git checkout ${branch}`);
         // Intentar pull si es posible
         await runCmd(`git pull origin ${branch}`).catch(() => { });
+        
+        // CRÍTICO: Sincronizar escenarios después de cambiar rama
+        await syncScenariosWithFileSystem();
+        
         res.json({ success: true, message: `Cambiado a ${branch}` });
     } catch (e) {
         // Fallback si hay cambios sin commitear, forzar un stash temporal
         try {
             await runCmd(`git stash && git checkout ${branch}`);
+            await syncScenariosWithFileSystem();
             res.json({ success: true, message: `Stash aplicado y cambiado a ${branch}` });
         } catch (stashErr) {
             res.status(500).json({ error: stashErr.toString() });
         }
     }
 });
+
 
 // 3. Obtener el Registro Central de SQLite (Clientes -> Procesos -> Escenarios)
 app.get('/api/registry', (req, res) => {
@@ -1101,7 +1140,20 @@ app.post('/api/system/shutdown', (req, res) => {
     }, 500);
 });
 
-initDb().then(() => {
+// 20. Obtener Changelog (Historial de Evolución)
+app.get('/api/changelog', (req, res) => {
+    const changelogPath = path.join(rootDir, 'CHANGELOG.md');
+    if (fs.existsSync(changelogPath)) {
+        res.send(fs.readFileSync(changelogPath, 'utf8'));
+    } else {
+        res.status(404).send('Changelog no encontrado');
+    }
+});
+
+initDb().then(async () => {
+    // Sincronización inicial al arrancar el servidor
+    await syncScenariosWithFileSystem();
+    
     app.listen(PORT, () => {
         console.log(`✅ UI Backend API Server running at http://localhost:${PORT}`);
     });
