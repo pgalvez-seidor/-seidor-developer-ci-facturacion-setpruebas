@@ -11,20 +11,18 @@ const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const SapAiCoreProvider = require('./SapAiCoreProvider');
 require('dotenv').config();
-
-const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 
 async function describeStepWithAI(stepName, imgBase64) {
     const basicDescription = `El usuario ejecutó la acción ${stepName.replace(/_/g, ' ')} de manera exitosa.`;
     
-    if (!genAI) {
-        return basicDescription; // Si no hay llave, retorna texto básico silenciosamente
+    // Si no están configuradas las variables de SAP, intentamos fallback a Gemini o retorno básico
+    if (!process.env.SAP_AICORE_DEPLOYMENT_ID) {
+        return basicDescription;
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
         const prompt = `Analiza esta captura de pantalla de SAP Fiori y genera una descripción BREVE y DIRECTA de la acción de negocio realizada.
         
         REGLAS DE ORO:
@@ -34,14 +32,9 @@ async function describeStepWithAI(stepName, imgBase64) {
         4. RESULTADOS: Si la pantalla muestra una tabla con datos, menciona si se obtuvo el resultado esperado.
         5. ESTILO: "Se ingresa el número de lote [VALOR] y se visualiza el registro correspondiente en la tabla." o "Se hace clic en el botón [BOTÓN] para finalizar el proceso."`;
 
-        const result = await model.generateContent([
-            prompt,
-            { inlineData: { data: imgBase64, mimeType: "image/png" } }
-        ]);
-        const response = await result.response;
-        return response.text().trim();
+        return await SapAiCoreProvider.analyzeImage(prompt, imgBase64);
     } catch (e) {
-        console.error(`[AI ERROR] Falló la descripción de la IA: ${e.message}`);
+        console.error(`[SAP AI ERROR] Falló la descripción de la IA: ${e.message}`);
         return basicDescription;
     }
 }
