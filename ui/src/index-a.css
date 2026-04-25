@@ -2256,3 +2256,74 @@ div[style*="fontSize: '0.65rem'"] {
 .nuclear-main-label {
   font-size: 0.75rem !important;
 }
+/* === NUCLEAR REFINEMENT (CLEAN & BREATHING) === */
+.nuclear-led {
+  display: none !important; /* Por si acaso queda algún rastro en CSS */
+}
+
+.nuclear-main-label {
+  font-size: 0.68rem !important; /* Más pequeño para que no toque bordes */
+  font-weight: 800 !important;
+  color: var(--text-main) !important;
+  letter-spacing: 0.5px !important;
+  opacity: 0.9;
+}
+
+.nuclear-container {
+  padding: 8px 16px !important; /* Más aire horizontal */
+  min-width: 130px !important;
+  justify-content: center !important; /* Centrado para que se vea balanceado */
+}
+
+.nuclear-base {
+  width: 40px !important; /* Un pelín más pequeño para dar más espacio al texto */
+  height: 22px !important;
+}
+
+.nuclear-toggle {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.nuclear-container.active .nuclear-toggle {
+  left: 21px !important;
+}
+/* === TOTAL SPATIAL REDISTRIBUTION === */
+.sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  gap: 1.5rem !important; /* Espacio entre bloques del sidebar */
+  height: 100vh !important;
+}
+
+/* Espaciado extra para que no esté todo "10km arriba" */
+.sidebar-section {
+  margin-bottom: 1.2rem !important;
+}
+
+/* El footer se queda abajo, pero el resto se distribuye */
+.sidebar-footer {
+  margin-top: auto !important;
+  padding-bottom: 2rem !important;
+}
+
+/* Distribución de la columna central de configuración */
+.config-flow {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2.5rem !important; /* Mucho más espacio entre bloques de configuración */
+  padding: 2rem !important;
+  max-width: 600px;
+  margin: 0 auto; /* Centrado horizontal del flujo de configuración */
+}
+
+.config-block {
+  margin-bottom: 0 !important; /* El gap del padre ya lo maneja */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04) !important;
+}
+
+/* Ajuste de los parámetros de ejecución para que no se vean apretados */
+.execution-grid {
+  gap: 40px !important; /* Más aire entre Iteraciones y Velocidad */
+}

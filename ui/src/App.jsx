@@ -107,7 +107,6 @@ const NuclearSwitch = ({ active, onClick }) => {
     <div className={`nuclear-container ${active ? 'active' : ''}`} onClick={() => onClick(!active)}>
       <div className="nuclear-base">
         <div className="nuclear-toggle"></div>
-        <div className="nuclear-led"></div>
       </div>
       <div className="nuclear-label-group">
         <span className="nuclear-main-label">HEADLESS</span>
