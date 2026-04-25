@@ -1087,16 +1087,16 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   gap: 16px !important;
   justify-content: center !important;
   margin: 20px 0 0 0 !important;
-  padding: 16px !important;
+  padding: 10px 14px !important;
   position: sticky !important;
   bottom: 12px !important;
-  background: rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
   z-index: 10;
-  border-radius: 24px !important;
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.03), 0 10px 30px rgba(0,0,0,0.05) !important;
-  border: 1px solid rgba(255,255,255,0.4) !important;
+  border-radius: 100px !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8) inset !important;
+  border: 1px solid rgba(255,255,255,0.55) !important;
 }
 
 .btn-save-scenario, .btn-add-batch {
@@ -1656,15 +1656,17 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* La barra inferior de acciones del lote */
 .batch-actions-footer {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(20px) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
-  padding: 30px !important;
-  border-radius: 0 0 40px 0 !important; /* Ajuste al borde de la app */
+  background: rgba(10, 12, 20, 0.55) !important;
+  backdrop-filter: blur(24px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+  padding: 16px 24px !important;
+  border-radius: 100px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 30px !important;
+  gap: 24px !important;
+  margin: 8px !important;
 }
 
 /* Labels en la barra oscura */
@@ -2498,10 +2500,6 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .play-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* === BATCH FOOTER PILL === */
-.batch-actions-footer {
-  border-radius: 100px !important;
-  padding: 14px 20px !important;
-}
 
 /* === QROW HEADLESS GLOW === */
 @keyframes qrowHeadlessGlow {
