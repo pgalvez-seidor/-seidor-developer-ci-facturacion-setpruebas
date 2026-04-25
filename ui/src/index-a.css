@@ -2136,3 +2136,10 @@ div[style*="fontSize: '0.65rem'"] {
   align-items: center;
   gap: 8px;
 }
+/* === CLEAN LOGO RENDERING (DYNAMIC ALPHA) === */
+.brand-isotype {
+  mix-blend-mode: normal !important;
+  filter: none !important;
+  background: transparent !important;
+  /* El canvas ya procesó la transparencia, así que aquí solo damos estilo */
+}

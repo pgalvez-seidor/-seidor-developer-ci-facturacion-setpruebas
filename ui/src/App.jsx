@@ -8,6 +8,43 @@ import './index-a.css';
 
 const API_BASE = 'http://localhost:3001/api';
 
+const TransparentLogo = ({ src, className, size = 64 }) => {
+  const [processedSrc, setProcessedSrc] = useState(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i+1], b = data[i+2];
+        // Si es casi blanco (threshold 245), hacemos alfa 0
+        if (r > 245 && g > 245 && b > 245) {
+          data[i+3] = 0;
+        }
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      setProcessedSrc(canvas.toDataURL());
+    };
+  }, [src]);
+
+  return processedSrc ? (
+    <img src={processedSrc} className={className} style={{ width: size, height: size, objectFit: 'contain' }} />
+  ) : (
+    <div style={{ width: size, height: size, background: 'rgba(0,0,0,0.05)', borderRadius: '50%' }} />
+  );
+};
+
 const ModernSwitch = ({ checked, onChange, label, description, icon: Icon }) => (
   <div className="modern-switch-wrapper" onClick={() => onChange(!checked)}>
     <div className="modern-switch-info-group">
@@ -152,10 +189,10 @@ const Sidebar = ({
   return (
     <aside className="sidebar">
       <div className="brand-container">
-        <img
-          src="/logo-pure.png"
-          alt="AutoBot"
-          className="brand-isotype"
+        <TransparentLogo 
+          src="/logo-pure.png" 
+          className="brand-isotype" 
+          size={64} 
         />
         <div className="brand-name">
           Auto<span style={{ fontWeight: '700' }}>Bot</span>
