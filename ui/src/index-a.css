@@ -21,7 +21,7 @@ body {
   background-color: var(--bg-dark);
   color: var(--text-main);
   min-height: 100vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
 }
@@ -638,9 +638,17 @@ body {
   color: var(--accent-primary);
 }
 .modern-select-option.active {
-  background: rgba(0, 74, 153, 0.05);
-  color: var(--accent-primary);
-  font-weight: 600;
+  background: var(--accent-primary);
+  color: white !important;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modern-select-option.active::after {
+  content: '✓';
+  font-size: 0.9rem;
+  margin-left: 10px;
 }
 
 .modern-switch-wrapper {
@@ -1049,4 +1057,17 @@ body {
   color: #78350f;
   margin-bottom: 0.5rem;
   display: block;
+}
+
+/* === REFINED SWITCH LAYOUT === */
+.modern-switch-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.modern-switch-description {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding-left: 24px;
+  line-height: 1.3;
 }

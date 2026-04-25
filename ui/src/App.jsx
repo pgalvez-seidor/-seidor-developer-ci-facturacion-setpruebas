@@ -8,11 +8,14 @@ import './index-a.css';
 
 const API_BASE = 'http://localhost:3001/api';
 
-const ModernSwitch = ({ checked, onChange, label, icon: Icon }) => (
+const ModernSwitch = ({ checked, onChange, label, description, icon: Icon }) => (
   <div className="modern-switch-wrapper" onClick={() => onChange(!checked)}>
-    <div className="modern-switch-info">
-      {Icon && <Icon size={14} className="modern-switch-icon" />}
-      <span>{label}</span>
+    <div className="modern-switch-info-group">
+      <div className="modern-switch-info">
+        {Icon && <Icon size={14} className="modern-switch-icon" />}
+        <span>{label}</span>
+      </div>
+      {description && <div className="modern-switch-description">{description}</div>}
     </div>
     <div className={`modern-switch-track ${checked ? 'active' : ''}`}>
       <div className="modern-switch-thumb" />
@@ -1113,14 +1116,12 @@ export default function App() {
                   checked={builderConfig.headless} 
                   onChange={checked => setBuilderConfig({ ...builderConfig, headless: checked })}
                   label="Modo Ultra-Velocidad (Headless)"
-                  icon={Zap}
-                />
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '-8px', marginLeft: '24px' }}>
-                  {builderConfig.headless 
+                  description={builderConfig.headless 
                     ? "La prueba volará en segundo plano (Ideal para ejecución masiva)" 
                     : "El navegador se abrirá para auditoría visual (Ideal para depurar)"
                   }
-                </div>
+                  icon={Zap}
+                />
               </div>
 
               {activeClient !== 'Medifarma' && activeProcess === 'facturacion' && (
