@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Eye, Zap, CreditCard, Banknote, Trash2, Plus, Tag, Brain,
+  Eye, Zap, CreditCard, Banknote, Trash2, Plus, Tag, Brain, GitBranch,
   CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power,
   Sparkles, FileText, Settings, Cpu, Bot, AlertTriangle
 } from 'lucide-react';
@@ -1305,8 +1305,15 @@ export default function App() {
         />
         <main className="main split-layout">
           <div className="config-panel">
-            <header className="main-header" style={{ marginBottom: '2rem' }}>
+            <header className="main-header" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ margin: 0 }}>Configuración de escenario</h2>
+              {currentBranch && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: remoteChangesCount > 0 ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.1)', border: `1px solid ${remoteChangesCount > 0 ? 'rgba(245,158,11,0.4)' : 'rgba(99,102,241,0.3)'}`, borderRadius: '100px', fontSize: '0.72rem', fontWeight: '700', color: remoteChangesCount > 0 ? '#d97706' : '#6366f1' }}>
+                  <GitBranch size={12} />
+                  {currentBranch}
+                  {remoteChangesCount > 0 && <span style={{ background: '#f59e0b', color: 'white', borderRadius: '100px', padding: '1px 6px', fontSize: '0.65rem', fontWeight: '800' }}>{remoteChangesCount}</span>}
+                </div>
+              )}
             </header>
 
             <div className="config-flow">
