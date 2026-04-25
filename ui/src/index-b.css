@@ -321,6 +321,67 @@ body {
   backdrop-filter: blur(4px);
   display: flex; justify-content: center; align-items: center; z-index: 10000;
 }
+.modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
+  overflow: hidden;
+  animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.modal-body {
+  padding: 20px 24px 24px;
+}
+.btn-close {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: #f1f5f9; color: #64748b;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.btn-close:hover { background: #e2e8f0; color: #1e293b; }
+
+.modal-field-label {
+  font-size: 0.78rem; font-weight: 700; color: #374151;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  display: block; margin-bottom: 8px;
+}
+.modal-input {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 14px; border-radius: 10px;
+  border: 1.5px solid #e2e8f0; background: #f8fafc;
+  color: #1e293b; font-size: 0.875rem; font-family: inherit;
+  outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.modal-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+.modal-input[readonly] { color: #64748b; cursor: default; }
+.modal-input::placeholder { color: #94a3b8; }
+.modal-input-row { display: flex; gap: 8px; align-items: stretch; }
+.modal-input-row .modal-input { flex: 1; }
+.modal-hint { font-size: 0.72rem; color: #94a3b8; margin-top: 6px; }
+.modal-btn-change {
+  padding: 0 16px; border-radius: 10px; border: none;
+  background: #6366f1; color: white;
+  font-size: 0.78rem; font-weight: 700; cursor: pointer;
+  transition: background 0.15s; white-space: nowrap; font-family: inherit;
+}
+.modal-btn-change:hover { background: #4f46e5; }
+.modal-btn-save {
+  width: 100%; padding: 12px; border-radius: 12px; border: none;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s; font-family: inherit;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+.modal-btn-save:hover { opacity: 0.9; }
+
 .about-modal {
   width: 500px; max-height: 80vh;
   background: white; border-radius: 10px;

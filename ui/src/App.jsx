@@ -2044,59 +2044,59 @@ export default function App() {
       {/* Estilos dinámicos para el cargador IA */}
       {showSettings && (
         <div className="modal-overlay" style={{ zIndex: 10000 }}>
-          <div className="modal-content" style={{ width: '500px' }}>
+          <div className="modal-content" style={{ width: '480px' }}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ padding: '8px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px' }}>
-                  <Settings size={20} color="#6366f1" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ padding: '8px', background: 'rgba(99,102,241,0.08)', borderRadius: '10px', display: 'flex' }}>
+                  <Settings size={18} color="#6366f1" />
                 </div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', margin: 0 }}>Configuración</h2>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', margin: 0 }}>Configuración</h2>
               </div>
-              <button className="btn-close" onClick={() => setShowSettings(false)}><X size={20}/></button>
+              <button className="btn-close" onClick={() => setShowSettings(false)}><X size={16}/></button>
             </div>
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div>
-                <label style={{ fontWeight: '700', fontSize: '0.85rem', display: 'block', marginBottom: '8px' }}>Directorio del Proyecto</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input type="text" value={projectDir} readOnly style={{ flex: 1, background: '#f8fafc', color: '#64748b' }} />
-                  <button 
+                <label className="modal-field-label">Carpeta del proyecto</label>
+                <div className="modal-input-row">
+                  <input className="modal-input" type="text" value={projectDir} readOnly />
+                  <button
+                    className="modal-btn-change"
                     onClick={async () => {
-                      const path = await window.electron.selectFolder();
-                      if (path) {
-                        setProjectDir(path);
+                      const p = await window.electron?.selectFolder();
+                      if (p) {
+                        setProjectDir(p);
                         const res = await fetch(`${API_BASE}/config/project-dir`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ projectDir: path })
+                          body: JSON.stringify({ projectDir: p })
                         });
                         if (res.ok) {
-                          addToast("📁 Directorio actualizado.", "success");
+                          addToast('📁 Directorio actualizado.', 'success');
                           fetchInitialData();
                         }
                       }
                     }}
-                    style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', padding: '0 12px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
                   >
                     Cambiar
                   </button>
                 </div>
+                <p className="modal-hint">Carpeta raíz del repositorio git con los scripts de prueba.</p>
               </div>
 
               <div>
-                <label style={{ fontWeight: '700', fontSize: '0.85rem', display: 'block', marginBottom: '8px' }}>Git Token (Seidor)</label>
-                <input 
-                  type="password" 
-                  value={gitToken} 
+                <label className="modal-field-label">Git Token</label>
+                <input
+                  className="modal-input"
+                  type="password"
+                  value={gitToken}
                   onChange={e => setGitToken(e.target.value)}
                   placeholder="ghp_..."
-                  style={{ width: '100%', boxSizing: 'border-box' }}
                 />
-                <p style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '6px' }}>Requerido para el pull automático de ramas remotas.</p>
+                <p className="modal-hint">Requerido para el pull automático de ramas remotas.</p>
               </div>
 
-              <button 
-                className="btn-run"
-                style={{ background: 'var(--accent-primary)', color: 'white', width: '100%', marginTop: '10px' }}
+              <button
+                className="modal-btn-save"
                 onClick={async () => {
                   const res = await fetch(`${API_BASE}/config/git-token`, {
                     method: 'POST',
@@ -2104,7 +2104,7 @@ export default function App() {
                     body: JSON.stringify({ gitToken })
                   });
                   if (res.ok) {
-                    addToast("✅ Configuración guardada.", "success");
+                    addToast('✅ Configuración guardada.', 'success');
                     setShowSettings(false);
                     fetchInitialData();
                   }

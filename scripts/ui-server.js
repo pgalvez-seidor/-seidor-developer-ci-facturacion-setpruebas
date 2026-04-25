@@ -114,7 +114,7 @@ app.get('/api/git/status', async (req, res) => {
 
 // 1.6 Git Init-Check — verificación completa al arranque de la app
 app.get('/api/git/init-check', async (req, res) => {
-    const gitDir = path.join(rootDir, '.git');
+    const gitDir = path.join(projectDir, '.git');
     if (!fs.existsSync(gitDir)) {
         return res.json({
             gitConnected: false,
