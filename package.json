@@ -23,7 +23,8 @@
         "run:horario-cajero": "npx playwright test scripts/caso-horario-cajero.spec.js --headed",
         "test:caso1": "npx playwright test scripts/caso1-boleta.spec.js --headed",
         "report": "node scripts/report-generator.js",
-        "dry-run": "node scripts/runner.js --caso caso1 --env QAS --dry-run"
+        "dry-run": "node scripts/runner.js --caso caso1 --env QAS --dry-run",
+        "electron:build": "npm run build --prefix ui && npx electron-builder"
     },
     "devDependencies": {
         "concurrently": "^9.2.1",
