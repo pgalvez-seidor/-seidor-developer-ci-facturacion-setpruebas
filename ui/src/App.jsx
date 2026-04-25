@@ -616,20 +616,19 @@ const Sidebar = ({
     <aside className="sidebar">
 
       {/* HEADER FIJO */}
-      <div className="sidebar-header-fixed" style={{ flexDirection: 'column', alignItems: 'center', padding: '14px 16px 10px', justifyContent: 'center', gap: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <TransparentLogo src="./logo-pure.png" className="brand-isotype" size={80} />
-          <div className="brand-name" style={{ fontSize: '1.25rem' }}>
-            Auto<span style={{ fontWeight: '700' }}>Bot</span>
-          </div>
+      <div className="sidebar-header-fixed" style={{ flexDirection: 'row', alignItems: 'center', padding: '14px 16px', justifyContent: 'flex-start', gap: '8px' }}>
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <TransparentLogo src="./logo-pure.png" className="brand-isotype" size={52} />
+          {currentBranch && (
+            <div style={{ position: 'absolute', top: '-4px', right: '-6px', display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 6px', background: remoteChangesCount > 0 ? 'rgba(245,158,11,0.9)' : 'rgba(99,102,241,0.9)', borderRadius: '100px', fontSize: '0.55rem', fontWeight: '800', color: '#fff', letterSpacing: '0.03em', backdropFilter: 'blur(4px)', border: '1.5px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}>
+              {remoteChangesCount > 0 && <span style={{ background: 'white', color: '#f59e0b', borderRadius: '100px', padding: '0 3px', fontSize: '0.5rem', fontWeight: '900' }}>{remoteChangesCount}</span>}
+              {currentBranch}
+            </div>
+          )}
         </div>
-        {currentBranch && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 10px', background: remoteChangesCount > 0 ? 'rgba(245,158,11,0.15)' : 'rgba(99,102,241,0.12)', border: `1px solid ${remoteChangesCount > 0 ? 'rgba(245,158,11,0.4)' : 'rgba(99,102,241,0.3)'}`, borderRadius: '100px', fontSize: '0.68rem', fontWeight: '700', color: remoteChangesCount > 0 ? '#d97706' : '#6366f1' }}>
-            <GitBranch size={11} />
-            {currentBranch}
-            {remoteChangesCount > 0 && <span style={{ background: '#f59e0b', color: 'white', borderRadius: '100px', padding: '1px 5px', fontSize: '0.6rem', fontWeight: '800' }}>{remoteChangesCount}</span>}
-          </div>
-        )}
+        <div className="brand-name" style={{ fontSize: '1.15rem' }}>
+          Auto<span style={{ fontWeight: '700' }}>Bot</span>
+        </div>
       </div>
 
       {/* CONTENIDO SCROLLABLE */}
