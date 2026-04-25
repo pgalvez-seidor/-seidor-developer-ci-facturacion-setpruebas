@@ -34,6 +34,7 @@
     "build": {
         "appId": "com.seidor.autobotia",
         "productName": "AutoBotIA",
+        "asar": false,
         "mac": {
             "icon": "icon.png",
             "category": "public.app-category.developer-tools",
@@ -52,10 +53,6 @@
             "!**/node_modules/playwright/**/*",
             "!**/node_modules/@playwright/**/*"
         ],
-        "asarUnpack": [
-            "node_modules/sqlite3/**/*",
-            "scripts/**/*",
-            "preload.js"
-        ]
+        "asarUnpack": []
     }
 }
