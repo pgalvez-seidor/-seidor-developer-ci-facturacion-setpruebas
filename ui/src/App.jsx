@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Eye, Zap, CreditCard, Banknote, Trash2, Plus, Tag, Brain, GitBranch,
   CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power,
-  Sparkles, FileText, Settings, Cpu, Bot, AlertTriangle
+  Sparkles, FileText, Settings, Cpu, Bot, AlertTriangle, Play
 } from 'lucide-react';
 import { basicSetup, EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
@@ -184,7 +184,7 @@ const ThreadsPicker = ({ value, onChange }) => {
 
 const NuclearSwitch = ({ active, onClick }) => {
   return (
-    <div className={`nuclear-container ${active ? 'active' : ''}`} onClick={() => onClick(!active)}>
+    <div className={`nuclear-container nuclear-headless ${active ? 'active' : ''}`} onClick={() => onClick(!active)}>
       <div className="nuclear-base">
         <div className="nuclear-toggle"></div>
       </div>
@@ -735,7 +735,7 @@ const Sidebar = ({
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(37,99,235,0.7)'; e.currentTarget.style.background = 'rgba(37,99,235,0.06)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(37,99,235,0.35)'; e.currentTarget.style.background = 'transparent'; }}
           >
-            <Settings size={17} />
+            <Settings size={18} strokeWidth={2.5} color="#2563eb" />
           </button>
           <button
             onClick={() => window.handleShutdown()}
@@ -744,7 +744,7 @@ const Sidebar = ({
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.7)'; e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.background = 'transparent'; }}
           >
-            <Power size={17} />
+            <Power size={18} strokeWidth={2.5} color="#ef4444" />
           </button>
         </div>
         <div className="sap-branding-badge">
@@ -1816,7 +1816,7 @@ export default function App() {
                 </div>
               ) : (
                 queue.map((q, idx) => (
-                  <div key={q.taskId} className={`qrow ${q.status}`}>
+                  <div key={q.taskId} className={`qrow ${q.status}${q.headless ? ' qrow--headless' : ''}`}>
                     {/* COL IZQUIERDA: status dot */}
                     <div className="qrow-status">
                       {q.status === 'running' ? (
@@ -1915,9 +1915,11 @@ export default function App() {
                       REPORTE
                     </button>
                   )}
-                  <button className="btn-execute-batch" onClick={runBatch} disabled={isBatchRunning}>
-                    {isBatchRunning ? 'PROCESANDO...' : `EJECUTAR ${queue.length}`}
-                  </button>
+                  <div className={`play-ring ${isBatchRunning ? 'play-ring--spinning' : ''}`}>
+                    <button className="play-btn" onClick={runBatch} disabled={isBatchRunning}>
+                      <Play size={22} fill="white" color="white" style={{ marginLeft: '3px' }} />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
