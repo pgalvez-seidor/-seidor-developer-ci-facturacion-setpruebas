@@ -220,11 +220,23 @@ const GitInitScreen = ({ onContinue }) => {
   const [isCloning, setIsCloning] = useState(false);
   const [nameError, setNameError] = useState(false);
   const [toast, setToast] = useState({ show: false, msg: '' });
+  const carouselRef = useRef(null);
 
   const showToast = (msg) => {
     setToast({ show: true, msg });
     setTimeout(() => setToast({ show: false, msg: '' }), 3000);
   };
+
+  useEffect(() => {
+    if (selectedBranch && carouselRef.current) {
+      setTimeout(() => {
+        const selectedEl = carouselRef.current.querySelector('.selected');
+        if (selectedEl) {
+          selectedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }, 100);
+    }
+  }, [selectedBranch, gitInfo]);
 
   useEffect(() => {
     let cancelled = false;
@@ -443,7 +455,7 @@ const GitInitScreen = ({ onContinue }) => {
             {gitInfo.branches?.length > 0 && (
               <div className="git-splash-branches">
                 <div className="git-splash-branches-label">RAMA DE TRABAJO</div>
-                <div className="git-splash-branch-pills">
+                <div className="git-splash-branch-pills" ref={carouselRef}>
                   {gitInfo.branches.map(b => {
                     const isActive = b === (gitInfo.current || gitInfo.branch);
                     const isSelected = b === selectedBranch;

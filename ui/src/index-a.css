@@ -1706,23 +1706,25 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .git-splash-branch-pills {
   display: flex;
   overflow-x: auto;
-  gap: 10px;
-  padding: 15px 0;
+  gap: 12px;
+  padding: 20px 140px; /* Padding para permitir centrar el primer y último item */
   justify-content: flex-start;
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
   
   mask-image: linear-gradient(to right, 
     transparent 0%, 
-    black 15%, 
-    black 85%, 
+    black 30%, 
+    black 70%, 
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(to right, 
     transparent 0%, 
-    black 15%, 
-    black 85%, 
+    black 30%, 
+    black 70%, 
     transparent 100%
   );
 }
