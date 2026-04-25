@@ -14,6 +14,16 @@ const rootDir = process.env.PROJECT_DIR || path.resolve(__dirname, '..');
 let projectDir = rootDir;
 let gitToken = process.env.GIT_TOKEN || '';
 
+// Electron no hereda el PATH completo del shell — agregamos rutas comunes de Node/Homebrew
+process.env.PATH = [
+    process.env.PATH,
+    '/usr/local/bin',
+    '/opt/homebrew/bin',
+    '/opt/homebrew/sbin',
+    '/usr/bin',
+    '/bin'
+].filter(Boolean).join(':');
+
 
 app.use(cors());
 app.use(express.json());
