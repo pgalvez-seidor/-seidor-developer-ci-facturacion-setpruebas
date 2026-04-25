@@ -2305,3 +2305,42 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   font-size: 11px; color: #b0b0b8; font-weight: 400;
   animation: fadeIn 0.4s ease 0.3s both;
 }
+
+/* ── VALIDACIÓN Y TOAST ───────────────────────────── */
+.git-splash-name-input.error {
+  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+.git-splash-toast {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 40px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  z-index: 1000;
+  animation: slideUpFade 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  white-space: nowrap;
+}
+
+@keyframes slideUpFade {
+  from { transform: translate(-50%, 20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}

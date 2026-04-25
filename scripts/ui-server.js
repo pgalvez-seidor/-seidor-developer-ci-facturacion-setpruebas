@@ -183,11 +183,15 @@ app.get('/api/git/init-check', async (req, res) => {
             behind = parseInt(behindStr) || 0;
         } catch (_) {}
 
-        // Cambios no commiteados
+        // Cambios no commiteados (SOLO ESCENARIOS)
         let uncommitted = false;
         try {
             const statusOut = await runCmd('git status --porcelain');
-            uncommitted = statusOut.trim().length > 0;
+            const lines = statusOut.split('\n');
+            uncommitted = lines.some(line => {
+                const file = line.substring(3).trim();
+                return file.startsWith('grabacion_') || file.endsWith('.spec.js');
+            });
         } catch (_) {}
 
         res.json({ gitConnected, gitNotLinked: false, branch, branches, remote, behind, uncommitted });

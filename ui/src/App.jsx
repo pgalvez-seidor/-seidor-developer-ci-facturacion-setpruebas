@@ -218,6 +218,13 @@ const GitInitScreen = ({ onContinue }) => {
   const [testerInput, setTesterInput] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
   const [isCloning, setIsCloning] = useState(false);
+  const [nameError, setNameError] = useState(false);
+  const [toast, setToast] = useState({ show: false, msg: '' });
+
+  const showToast = (msg) => {
+    setToast({ show: true, msg });
+    setTimeout(() => setToast({ show: false, msg: '' }), 3000);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -258,12 +265,24 @@ const GitInitScreen = ({ onContinue }) => {
   }, [checkTrigger]);
 
   const handleSelectFolder = async () => {
-    if (!window.electron?.selectFolder) return;
-    setIsSelectingFolder(true);
+    let folder = null;
+
+    if (window.electron?.selectFolder) {
+      setIsSelectingFolder(true);
+      try {
+        folder = await window.electron.selectFolder();
+      } catch (e) {
+        console.error("Electron selectFolder error:", e);
+      }
+      setIsSelectingFolder(false);
+    } else {
+      // Fallback para cuando se usa en el navegador (Desarrollo)
+      folder = window.prompt("Introduce la ruta absoluta de la carpeta del proyecto:", gitInfo?.projectDir || "");
+    }
+
+    if (!folder) return;
+
     try {
-      const folder = await window.electron.selectFolder();
-      if (!folder) { setIsSelectingFolder(false); return; }
-      
       // Alerta solicitada por el usuario al cambiar la ruta
       alert("⚠️ Has cambiado la ruta del proyecto.\n\nIMPORTANTE: Asegúrate de mover manualmente tus archivos de prueba a esta carpeta o realizar un 'Clone' para inicializarla correctamente.");
 
@@ -275,8 +294,9 @@ const GitInitScreen = ({ onContinue }) => {
       setPhase('loading');
       setGitInfo(null);
       setCheckTrigger(t => t + 1);
-    } catch (_) {}
-    setIsSelectingFolder(false);
+    } catch (err) {
+      alert("Error al actualizar la ruta en el servidor");
+    }
   };
 
   const handleClone = async () => {
@@ -304,13 +324,16 @@ const GitInitScreen = ({ onContinue }) => {
   };
 
   const handleContinue = async () => {
-    if (!testerInput.trim()) return;
-    if (!selectedBranch || !gitInfo) { onContinue(null, testerInput.trim()); return; }
-    const currentBranch = gitInfo.current || gitInfo.branch;
-    if (selectedBranch !== currentBranch) {
+    if (!testerInput.trim()) {
+      setNameError(true);
+      showToast("Es obligatorio identificarte");
+      return;
+    }
+    
+    if (gitInfo?.gitConnected && selectedBranch !== (gitInfo.current || gitInfo.branch)) {
       setIsChanging(true);
       try {
-        await fetch(`${API_BASE}/checkout`, {
+        await fetch(`${API_BASE}/git/checkout`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ branch: selectedBranch })
@@ -359,15 +382,17 @@ const GitInitScreen = ({ onContinue }) => {
             <div style={{ width: '100%', marginBottom: '20px' }}>
               <label className="git-splash-input-label">TU NOMBRE COMPLETO</label>
               <input
-                className="git-splash-name-input"
+                className={`git-splash-name-input ${nameError ? 'error' : ''}`}
                 type="text"
                 placeholder=""
                 value={testerInput}
-                onChange={e => setTesterInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && testerInput.trim() && handleContinue()}
+                onChange={e => {
+                  setTesterInput(e.target.value);
+                  if (nameError) setNameError(false);
+                }}
+                onKeyDown={e => e.key === 'Enter' && handleContinue()}
                 autoFocus
               />
-
             </div>
 
             {/* Status & Path Area */}
@@ -449,7 +474,7 @@ const GitInitScreen = ({ onContinue }) => {
                 {gitInfo.uncommitted && (
                   <div className="git-splash-notice info">
                     <AlertCircle size={12} />
-                    Hay cambios locales sin commitear
+                    Escenarios nuevos detectados localmente
                   </div>
                 )}
               </div>
