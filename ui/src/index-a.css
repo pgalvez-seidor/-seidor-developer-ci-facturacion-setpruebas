@@ -1882,3 +1882,32 @@ html, body, #root, .app {
 .body {
   height: calc(100% - 52px) !important; /* Descontando el topbar de forma exacta */
 }
+/* === BRAND RENDERING FIX (MULTIPLY & CLEAN GRADIENT) === */
+.brand-container {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.brand-isotype {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  /* Elimina el fondo blanco si la imagen lo tiene */
+  mix-blend-mode: multiply; 
+  background: transparent !important;
+}
+
+.brand-name {
+  display: inline-block;
+  padding: 0 4px;
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: #0f172a; /* Color de respaldo sólido */
+  /* Re-aplicando gradiente con seguridad */
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: 'Inter', sans-serif;
+}
