@@ -207,7 +207,7 @@ const Sidebar = ({
         )}
       </div>
 
-      <div style={{ marginTop: 'auto', padding: '1rem 0', display: 'flex', justifyContent: 'center', borderTop: '1px solid rgba(0,0,0,0.03)' }}>
+      <div style={{ marginTop: 'auto', padding: '1.5rem 0', display: 'flex', justifyContent: 'center', borderTop: '1px solid rgba(0,0,0,0.03)' }}>
         <button 
           onClick={() => setShowChangelog(true)}
           className="evolution-portal-trigger"
@@ -1826,35 +1826,43 @@ export default function App() {
       )}
 
       {showChangelog && (
-        <div className="modal-overlay" style={{ zIndex: 10000 }}>
-          <div className="modal-content" style={{ width: '700px', maxWidth: '90%', maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ padding: '8px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px' }}>
-                  <Zap size={20} color="#6366f1" />
-                </div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', margin: 0 }}>Historial de Evolución (Skills)</h2>
+        <div className="modal-overlay" onClick={() => setShowChangelog(false)}>
+          <div className="evolution-modal animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="evolution-header">
+              <div className="evolution-title">
+                <Sparkles size={20} className="sparkle-icon" />
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>Evolución de AutoBot</h2>
               </div>
-              <button className="btn-close" onClick={() => setShowChangelog(false)}><X size={20}/></button>
+              <button className="evolution-close" onClick={() => setShowChangelog(false)}><X size={20} /></button>
             </div>
             
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#f8fafc' }}>
-              <pre style={{ 
-                whiteSpace: 'pre-wrap', 
-                wordWrap: 'break-word', 
-                fontSize: '0.9rem', 
-                lineHeight: '1.6', 
-                color: '#334155',
-                fontFamily: 'inherit'
-              }}>
-                {changelogContent || 'Cargando historial...'}
-              </pre>
+            <div className="evolution-timeline">
+              <div className="timeline-item">
+                <div className="timeline-icon rocket" style={{ border: '2px solid #f59e0b', color: '#f59e0b' }}><Zap size={12} /></div>
+                <div className="timeline-content">
+                  <div className="timeline-version">v2.1.0 — La Era de la Sincronización</div>
+                  <div className="timeline-date">Hoy</div>
+                  <p>Unificación total de ramas CI y Medifarma con el nuevo diseño <strong>Enterprise Glass</strong>.</p>
+                  <ul className="timeline-list">
+                    <li>Centro de mando unificado para escenarios.</li>
+                    <li>Interruptores de alta velocidad (Headless Mode).</li>
+                    <li>Branding remasterizado con logo "Pure".</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="timeline-item">
+                <div className="timeline-icon gear" style={{ border: '2px solid #64748b', color: '#64748b' }}><Settings size={12} /></div>
+                <div className="timeline-content">
+                  <div className="timeline-version">v2.0.0 — Estabilidad Definitiva</div>
+                  <div className="timeline-date">Ayer</div>
+                  <p>Implementación de la arquitectura nativa para macOS y persistencia de base de datos local.</p>
+                </div>
+              </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn-secondary" style={{ width: '100%' }} onClick={() => setShowChangelog(false)}>
-                Entendido
-              </button>
+            <div className="evolution-footer">
+              <button className="btn-evolution-ok" onClick={() => setShowChangelog(false)}>Entendido</button>
             </div>
           </div>
         </div>
