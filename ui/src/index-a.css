@@ -1550,3 +1550,31 @@ input[type="text"], input[type="number"], textarea, .modern-select-trigger {
   border-color: #fbbf24;
   box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
 }
+/* === LAYOUT BALANCE ADJUSTMENT === */
+.main-content {
+  display: grid;
+  grid-template-columns: 420px 1fr; /* Franja de config más esbelta, lista con el resto */
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+
+.config-panel {
+  width: 420px !important;
+  border-right: 1px solid var(--card-border);
+  padding: 1.5rem !important; /* Un poco menos de padding para ganar espacio interno */
+}
+
+.batch-panel {
+  padding: 2rem 3rem !important; /* Más aire para la lista de ejecución */
+  background: #fdfdfe; /* Un fondo sutilmente distinto para separar áreas */
+}
+
+/* Ajuste de los bloques para el nuevo ancho */
+.config-grid-two {
+  grid-template-columns: 1fr; /* En 420px es mejor que sean verticales o muy compactos */
+  gap: 1rem;
+}
+
+.iter-manual-input {
+  font-size: 1.25rem !important; /* Ajuste sutil de tamaño para el nuevo ancho */
+}
