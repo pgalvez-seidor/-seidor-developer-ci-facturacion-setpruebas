@@ -1671,38 +1671,48 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   position: relative;
 }
 
-/* Efecto de "Corte" y "Entrada" en los extremos */
+.git-splash-branches-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
 .git-splash-branches::before,
 .git-splash-branches::after {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 60px;
+  width: 50px;
   z-index: 10;
   pointer-events: none;
 }
 
 .git-splash-branches::before {
-  left: -2px;
-  background: linear-gradient(to right, #ffffff 20%, rgba(255,255,255,0));
+  left: 0;
+  background: linear-gradient(to right, #ffffff 20%, rgba(255, 255, 255, 0));
 }
 
 .git-splash-branches::after {
-  right: -2px;
-  background: linear-gradient(to left, #ffffff 20%, rgba(255,255,255,0));
+  right: 0;
+  background: linear-gradient(to left, #ffffff 20%, rgba(255, 255, 255, 0));
 }
 
 .git-splash-branch-pills {
   display: flex;
   overflow-x: auto;
   gap: 10px;
-  padding: 15px 10px;
+  padding: 15px 0;
   justify-content: flex-start;
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-snap-type: x mandatory;
-  /* Máscara más agresiva para el efecto de desvanecimiento */
+  
   mask-image: linear-gradient(to right, 
     transparent 0%, 
     black 15%, 
@@ -2092,43 +2102,50 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 .git-splash-path-card {
-  background: #ffffff;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 8px 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .git-splash-path-card:hover {
   border-color: #3b82f6;
-  background: #f8faff;
+  background: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
 }
 
 .git-splash-path-label {
-  display: block;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 800;
   color: #94a3b8;
-  margin-bottom: 4px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  border-right: 1px solid #e2e8f0;
+  padding-right: 12px;
 }
 
 .git-splash-path-value {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
 }
 
 .git-splash-path-text {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: #475569;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: -apple-system, sans-serif;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2143,9 +2160,6 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   font-weight: 700;
   color: #3b82f6;
   flex-shrink: 0;
-  padding: 4px 8px;
-  background: rgba(59, 130, 246, 0.05);
-  border-radius: 6px;
 }
 
 .git-splash-dot {
