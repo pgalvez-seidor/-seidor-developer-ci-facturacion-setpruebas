@@ -1882,7 +1882,7 @@ export default function App() {
                           </button>
                         )
                       )}
-                      <button className="qrow-del" onClick={() => removeTask(q.taskId)}><X size={13} /></button>
+                      <button className="qrow-del" onClick={() => removeTask(q.taskId)}><X size={15} strokeWidth={3} /></button>
                     </div>
                   </div>
                 ))
