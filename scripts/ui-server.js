@@ -1107,6 +1107,8 @@ function injectScreenshots(content) {
         }
     }
 
+    content = result.join('\n');
+
     // Limpieza agresiva: si hay un logout, eliminar cualquier shot posterior
     let finalLines = content.split('\n');
     let firstLogoutIndex = -1;

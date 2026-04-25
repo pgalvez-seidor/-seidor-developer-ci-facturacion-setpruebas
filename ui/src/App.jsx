@@ -1838,54 +1838,35 @@ export default function App() {
 
                     {q.status === 'running' && (
                       <div style={{ marginTop: '8px' }}>
-                        {/* TABLERO MOTO */}
-                        <div style={{
-                          background: 'linear-gradient(160deg, #0a0a0f 0%, #111827 100%)',
-                          borderRadius: '16px',
-                          padding: '18px 20px 14px',
-                          marginBottom: '10px',
-                          border: '1px solid rgba(99,102,241,0.2)',
-                          boxShadow: '0 0 30px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.04)',
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}>
-                          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.6), transparent)' }} />
-                          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '4px', lineHeight: 1 }}>
-                            <span style={{
-                              fontFamily: '"Orbitron", "Share Tech Mono", "Courier New", monospace',
-                              fontSize: '4.5rem',
-                              fontWeight: '900',
-                              letterSpacing: '-2px',
-                              background: 'linear-gradient(180deg, #a5b4fc 0%, #6366f1 50%, #4f46e5 100%)',
-                              WebkitBackgroundClip: 'text',
-                              WebkitTextFillColor: 'transparent',
-                              filter: 'drop-shadow(0 0 12px rgba(99,102,241,0.7))',
-                              fontVariantNumeric: 'tabular-nums',
-                              minWidth: '120px',
-                              textAlign: 'right',
-                              transition: 'all 0.4s ease',
-                            }}>
-                              {String(Math.round(q.progress || 0)).padStart(3, ' ')}
-                            </span>
-                            <span style={{
-                              fontFamily: '"Orbitron", "Share Tech Mono", monospace',
-                              fontSize: '1.4rem',
-                              fontWeight: '700',
-                              color: '#6366f1',
-                              opacity: 0.7,
-                              marginBottom: '10px',
-                              letterSpacing: '1px',
-                            }}>%</span>
-                          </div>
-                          <div style={{ textAlign: 'center', fontSize: '0.62rem', letterSpacing: '3px', color: 'rgba(165,180,252,0.4)', fontWeight: '700', textTransform: 'uppercase', marginTop: '2px' }}>
-                            PROGRESS
-                          </div>
-                          {/* Barra de fondo estilo tacómetro */}
-                          <div style={{ marginTop: '12px', height: '3px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${q.progress || 0}%`, background: 'linear-gradient(90deg, #4f46e5, #a855f7)', borderRadius: '2px', transition: 'width 0.4s ease', boxShadow: '0 0 8px rgba(99,102,241,0.8)' }} />
-                          </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '4px', lineHeight: 1, marginBottom: '2px' }}>
+                          <span style={{
+                            fontFamily: '"Orbitron", "Share Tech Mono", "Courier New", monospace',
+                            fontSize: '4.5rem',
+                            fontWeight: '900',
+                            letterSpacing: '-2px',
+                            background: 'linear-gradient(180deg, #a5b4fc 0%, #6366f1 50%, #4f46e5 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            filter: 'drop-shadow(0 0 12px rgba(99,102,241,0.7))',
+                            fontVariantNumeric: 'tabular-nums',
+                            textAlign: 'right',
+                            transition: 'all 0.4s ease',
+                          }}>
+                            {Math.round(q.progress || 0)}
+                          </span>
+                          <span style={{
+                            fontFamily: '"Orbitron", "Share Tech Mono", monospace',
+                            fontSize: '1.4rem',
+                            fontWeight: '700',
+                            color: '#6366f1',
+                            opacity: 0.7,
+                            marginBottom: '10px',
+                            letterSpacing: '1px',
+                          }}>%</span>
                         </div>
-                        {/* Barra y log originales */}
+                        <div style={{ textAlign: 'center', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '8px', letterSpacing: '0.02em' }}>
+                          {q.currentLog || 'Iniciando...'}
+                        </div>
                         <div className="modern-progress-track">
                           <div
                             className="modern-progress-fill"
@@ -1894,11 +1875,6 @@ export default function App() {
                             <div className="modern-progress-segments" />
                             <div className="modern-progress-shimmer" />
                           </div>
-                        </div>
-                        <div className="modern-progress-info">
-                          <span className="modern-progress-log">
-                            {q.currentLog || 'Iniciando...'}
-                          </span>
                         </div>
                       </div>
                     )}
@@ -1924,9 +1900,6 @@ export default function App() {
                       </div>
                     )}
 
-                    {q.status === 'running' && q.currentLog && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px', fontStyle: 'italic' }}>{q.currentLog}</div>
-                    )}
                   </div>
                 ))
               )}
