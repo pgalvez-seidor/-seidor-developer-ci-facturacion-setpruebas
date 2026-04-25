@@ -1291,12 +1291,16 @@ export default function App() {
   }, [showChangelog]);
 
   const handleGitSync = async () => {
-    addToast("Iniciando sincronización con Git...", "success");
+    addToast("Sincronizando con Git...", "info");
     try {
       const res = await fetch(`${API_BASE}/git/sync`, { method: 'POST' });
       const data = await res.json();
-      if (data.success) addToast(data.message, "success");
-      else addToast(data.error || "Error en sincronización", "error");
+      if (data.success) {
+        addToast(data.message, data.upToDate ? "info" : "success");
+        if (!data.upToDate) fetchInitialData();
+      } else {
+        addToast(data.error || "Error en sincronización", "error");
+      }
     } catch {
       addToast("Error de conexión al sincronizar Git", "error");
     }

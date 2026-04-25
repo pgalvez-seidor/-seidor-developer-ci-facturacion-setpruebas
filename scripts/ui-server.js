@@ -1214,30 +1214,42 @@ app.post('/api/script/normalize', (req, res) => {
 });
 
 
-// 15. GIT: Sincronización automática (Commit & Push)
+// 15. GIT: Sincronización completa (Pull → Commit scripts/ → Push)
 app.post('/api/git/sync', (req, res) => {
-    console.log('🚀 Iniciando sincronización automática con Git...');
+    console.log('🚀 Iniciando sincronización con Git...');
+    const opts = { cwd: projectDir, encoding: 'utf8' };
     try {
-        const timestamp = new Date().toLocaleString();
-        const branch = execSync('git branch --show-current', { cwd: projectDir }).toString().trim() || 'CI';
+        const branch = execSync('git branch --show-current', opts).trim() || 'CI';
 
-        execSync('git add scripts/', { cwd: projectDir, stdio: 'inherit' });
+        // 1. Pull primero para traer lo último del remoto
         try {
-            execSync(`git commit -m "autobot: nuevo escenario grabado - ${timestamp}"`, { cwd: projectDir, stdio: 'inherit' });
-        } catch (e) {
-            if (e.message.includes('nothing to commit')) {
-                console.log('ℹ️ No hay cambios para commitear.');
-            } else {
-                throw e;
-            }
+            execSync(`git pull origin ${branch}`, opts);
+            console.log('[SYNC] Pull completado.');
+        } catch (_) {
+            console.warn('[SYNC] Pull falló (quizás no hay remoto). Continuando...');
         }
-        execSync(`git push origin ${branch}`, { cwd: projectDir, stdio: 'inherit' });
-        
-        console.log('✅ Sincronización completada con éxito.');
-        res.json({ success: true, message: 'Cambios subidos al repositorio correctamente.' });
+
+        // 2. Agregar solo scripts/
+        execSync('git add scripts/', opts);
+
+        // 3. Detectar si hay algo nuevo para commitear
+        const statusOut = execSync('git status --porcelain scripts/', opts).trim();
+        if (!statusOut) {
+            console.log('[SYNC] No hay escenarios nuevos. Ya estás al día.');
+            return res.json({ success: true, upToDate: true, message: 'No hay escenarios nuevos. Ya estás al día.' });
+        }
+
+        // 4. Commit y push
+        const timestamp = new Date().toLocaleString('es-PE');
+        execSync(`git commit -m "autobot: nuevo escenario grabado - ${timestamp}"`, opts);
+        execSync(`git push origin ${branch}`, opts);
+
+        console.log('✅ Sincronización completada.');
+        res.json({ success: true, upToDate: false, message: 'Escenarios subidos al repositorio correctamente.' });
     } catch (e) {
-        console.error('❌ Error en sincronización Git:', e.message);
-        res.status(500).json({ error: `Fallo en Git: ${e.message}` });
+        const detail = e.stderr || e.stdout || e.message || String(e);
+        console.error('❌ Error en sincronización Git:', detail);
+        res.status(500).json({ error: `Error en Git: ${detail.split('\n')[0]}` });
     }
 });
 
