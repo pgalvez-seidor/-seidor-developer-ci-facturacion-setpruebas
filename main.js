@@ -53,7 +53,7 @@ function createWindow() {
     });
 
     if (isDev) {
-        const startUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
+        const startUrl = process.env.ELECTRON_START_URL || 'http://localhost:5173';
         mainWindow.loadURL(startUrl);
     } else {
         mainWindow.loadFile(path.join(__dirname, 'ui/dist/index.html'));
