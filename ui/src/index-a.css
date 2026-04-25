@@ -1465,3 +1465,130 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   flex-shrink: 0;
   opacity: 0.8;
 }
+/* === DARK SHELL EFFECT (CASCARA DE COLOR) === */
+
+/* Panel de Lote Profundo */
+.batch-panel {
+  background-color: #1d1d1f !important; /* Space Grey Profundo estilo Apple */
+  padding: 40px !important;
+  border-left: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+/* Título del Panel en Blanco Legible */
+.batch-panel h2 {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px;
+  margin-bottom: 30px !important;
+}
+
+/* Tarjetas que RESALTAN BASTANTE */
+.queue-card-apple {
+  background-color: #ffffff !important; /* Blanco puro sobre fondo negro = Máximo contraste */
+  border-radius: 24px !important;
+  padding: 24px !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important; /* Sombra más fuerte para flotar */
+  border: none !important;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.queue-card-apple:hover {
+  transform: scale(1.02) translateY(-4px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Detalles internos de la tarjeta para coherencia */
+.queue-card-title {
+  color: #1d1d1f !important;
+  font-size: 1.15rem !important;
+}
+
+.queue-card-subtitle {
+  color: #86868b !important;
+}
+
+/* Texto de "Lote Vacío" en gris claro para legibilidad */
+.batch-panel .empty-state-text {
+  color: rgba(255,255,255,0.4) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
+/* Botón de Limpiar Lote en contraste */
+.btn-clear-batch {
+  color: rgba(255,255,255,0.6) !important;
+}
+
+.btn-clear-batch:hover {
+  color: #ffffff !important;
+}
+/* === EXECUTION BAR INTEGRATION (DARK MODE) === */
+
+/* La barra inferior de acciones del lote */
+.batch-actions-footer {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(20px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 30px !important;
+  border-radius: 0 0 40px 0 !important; /* Ajuste al borde de la app */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 30px !important;
+}
+
+/* Labels en la barra oscura */
+.batch-actions-footer label {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* El botón de EJECUTAR como Píldora Gigante */
+.btn-execute-batch {
+  height: 56px !important;
+  border-radius: 28px !important;
+  background: #0071e3 !important; /* Azul Apple */
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 1rem !important;
+  border: none !important;
+  padding: 0 40px !important;
+  box-shadow: 0 10px 30px rgba(0, 113, 227, 0.3) !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-execute-batch:hover {
+  transform: scale(1.05);
+  box-shadow: 0 15px 40px rgba(0, 113, 227, 0.4) !important;
+}
+
+/* Inputs y Switches en la barra oscura */
+.batch-actions-footer .modern-input,
+.batch-actions-footer .nuclear-container {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+/* Slider de hilos refinado */
+.batch-actions-footer input[type="range"] {
+  accent-color: #0071e3 !important;
+}
+
+/* El número de hilos en píldora blanca */
+.thread-count-badge {
+  background: #ffffff !important;
+  color: #1d1d1f !important;
+  font-weight: 800 !important;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

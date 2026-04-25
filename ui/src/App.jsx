@@ -1247,7 +1247,7 @@ export default function App() {
 
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {queue.length === 0 ? (
-                <div style={{ border: '2px dashed var(--card-border)', borderRadius: '16px', padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>El lote está vacío. Configura un caso y añádelo.</div>
+                <div className="empty-state-text" style={{ padding: '4rem', textAlign: 'center' }}>El lote está vacío. Configura un caso y añádelo.</div>
               ) : (
                 queue.map((q, idx) => (
                   <div
@@ -1306,53 +1306,47 @@ export default function App() {
             </div>
 
             {queue.length > 0 && (
-              <div className="batch-footer">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.05)', padding: '14px', borderRadius: '14px', border: '1px solid rgba(0,0,0,0.1)' }}>
-                  <div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main, #1a1a1a)' }}>Modo de Ejecución</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted, #666)', fontWeight: '600' }}>{runSequential ? 'Paso a paso (Secuencial)' : 'Multi-hilo (Paralelo)'}</div>
-                  </div>
-                  <div
+              <div className="batch-actions-footer">
+                <div style={{ flex: 1 }}>
+                  <label>Modo de Ejecución</label>
+                  <div 
+                    className={`nuclear-container ${!runSequential ? 'active' : ''}`}
                     onClick={() => !isBatchRunning && setRunSequential(!runSequential)}
-                    style={{
-                      width: '50px', height: '26px', background: runSequential ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
-                      borderRadius: '20px', position: 'relative', cursor: isBatchRunning ? 'not-allowed' : 'pointer', transition: '0.3s'
-                    }}
+                    style={{ width: '100%', maxWidth: '180px' }}
                   >
-                    <div style={{
-                      width: '20px', height: '20px', background: 'white', borderRadius: '50%',
-                      position: 'absolute', top: '3px', left: runSequential ? '27px' : '3px', transition: '0.3s',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                    }} />
+                    <div className="nuclear-track"><div className="nuclear-thumb" /></div>
+                    <span>{runSequential ? 'Secuencial' : 'Paralelo'}</span>
                   </div>
                 </div>
 
                 {!runSequential && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Hilos en Paralelo</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label>Hilos en Paralelo</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <input
                         type="range" min="1" max="50" step="1"
                         value={batchConcurrency}
                         onChange={(e) => setBatchConcurrency(parseInt(e.target.value))}
                         disabled={isBatchRunning}
-                        style={{ flex: 1, accentColor: 'var(--accent-primary)' }}
+                        style={{ flex: 1 }}
                       />
-                      <input
-                        type="number" min="1" max="100"
-                        value={batchConcurrency}
-                        onChange={(e) => setBatchConcurrency(parseInt(e.target.value) || 1)}
-                        disabled={isBatchRunning}
-                        className="concurrency-input"
-                      />
+                      <div className="thread-count-badge">{batchConcurrency}</div>
                     </div>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '12px', marginTop: '1.5rem' }}>
-                  {globalPdf && <button className="btn-run-all" onClick={() => handleOpenPdf(globalPdf)} style={{ background: 'var(--text-main)', color: 'white' }}>📄 REPORTE GLOBAL</button>}
-                  <button className="btn-run-all" onClick={runBatch} disabled={isBatchRunning}>
-                    {isBatchRunning ? 'PROCESANDO...' : `EJECUTAR ${queue.length} PRUEBAS`}
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  {globalPdf && (
+                    <button 
+                      className="btn-execute-batch" 
+                      onClick={() => handleOpenPdf(globalPdf)}
+                      style={{ background: '#323232', fontSize: '0.8rem', padding: '0 20px', height: '48px' }}
+                    >
+                      REPORTE
+                    </button>
+                  )}
+                  <button className="btn-execute-batch" onClick={runBatch} disabled={isBatchRunning}>
+                    {isBatchRunning ? 'PROCESANDO...' : `EJECUTAR ${queue.length}`}
                   </button>
                 </div>
               </div>
