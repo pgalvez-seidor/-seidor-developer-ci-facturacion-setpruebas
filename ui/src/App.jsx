@@ -457,8 +457,12 @@ const Sidebar = ({
           </div>
         ) : (
           <>
-            <ModernSelect 
-              value={currentBranch} 
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.7rem', fontWeight: '700', color: remoteChangesCount > 0 ? '#d97706' : '#10b981' }}>
+              <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: remoteChangesCount > 0 ? '#f59e0b' : '#10b981', boxShadow: remoteChangesCount > 0 ? '0 0 6px rgba(245,158,11,0.6)' : '0 0 6px rgba(16,185,129,0.6)' }} />
+              {remoteChangesCount > 0 ? `${remoteChangesCount} cambios pendientes` : 'Sincronizado'}
+            </div>
+            <ModernSelect
+              value={currentBranch}
               onChange={val => handleBranchChange({ target: { value: val } })}
               options={branches.map(b => ({ label: b, value: b }))}
               placeholder="Seleccionar Rama "
