@@ -102,6 +102,40 @@ const IteracionesPicker = ({ value, onChange }) => {
   );
 };
 
+const ThreadsPicker = ({ value, onChange }) => {
+  const [rotation, setRotation] = useState(0);
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -1 : 1;
+    const newValue = Math.max(1, Math.min(100, value + delta));
+    if (newValue !== value) {
+      onChange(newValue);
+      setRotation(prev => prev + (delta * 30));
+    }
+  };
+
+  return (
+    <div className="iter-picker-container dark-mode-picker" onWheel={handleWheel} style={{ background: 'rgba(255,255,255,0.05)', color: 'white' }}>
+      <div className="iter-wheel-wrapper">
+        <Cpu 
+          size={24} 
+          className="iter-wheel-icon" 
+          style={{ transform: `rotate(${rotation}deg)`, color: '#007aff' }} 
+        />
+      </div>
+      <input 
+        type="number" 
+        className="iter-manual-input"
+        value={value} 
+        onChange={e => onChange(parseInt(e.target.value) || 1)}
+        min="1" max="100"
+        style={{ color: 'white' }}
+      />
+    </div>
+  );
+};
+
 const NuclearSwitch = ({ active, onClick }) => {
   return (
     <div className={`nuclear-container ${active ? 'active' : ''}`} onClick={() => onClick(!active)}>
@@ -1247,7 +1281,15 @@ export default function App() {
 
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {queue.length === 0 ? (
-                <div className="empty-state-text" style={{ padding: '4rem', textAlign: 'center' }}>El lote está vacío. Configura un caso y añádelo.</div>
+                <div className="sleeping-robot-container">
+                  <div className="zz-container">
+                    <span className="z-particle z1">Z</span>
+                    <span className="z-particle z2">Z</span>
+                    <span className="z-particle z3">Z</span>
+                  </div>
+                  <Bot size={64} className="robot-snoring" />
+                  <div className="empty-state-text">El lote está vacío. Configura un caso y añádelo para despertar al sistema.</div>
+                </div>
               ) : (
                 queue.map((q, idx) => (
                   <div
@@ -1322,16 +1364,10 @@ export default function App() {
                 {!runSequential && (
                   <div style={{ flex: 1 }}>
                     <label>Hilos en Paralelo</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <input
-                        type="range" min="1" max="50" step="1"
-                        value={batchConcurrency}
-                        onChange={(e) => setBatchConcurrency(parseInt(e.target.value))}
-                        disabled={isBatchRunning}
-                        style={{ flex: 1 }}
-                      />
-                      <div className="thread-count-badge">{batchConcurrency}</div>
-                    </div>
+                    <ThreadsPicker 
+                      value={batchConcurrency} 
+                      onChange={val => setBatchConcurrency(val)}
+                    />
                   </div>
                 )}
 

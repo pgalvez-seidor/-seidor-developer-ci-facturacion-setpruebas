@@ -1592,3 +1592,60 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   align-items: center;
   justify-content: center;
 }
+/* === SLEEPING ROBOT ANIMATION (SNORING) === */
+
+.sleeping-robot-container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 20px !important;
+  opacity: 0.4;
+  margin-top: 60px;
+}
+
+/* Animación de respiración del robot */
+.robot-snoring {
+  animation: snore-breath 4s ease-in-out infinite;
+  color: #ffffff;
+}
+
+@keyframes snore-breath {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+/* Las Zzz que flotan */
+.zz-container {
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+
+.z-particle {
+  position: absolute;
+  font-family: var(--font-body);
+  font-weight: 800;
+  color: #ffffff;
+  font-size: 14px;
+  opacity: 0;
+  animation: z-float 4s infinite;
+}
+
+.z1 { animation-delay: 0s; left: 10px; }
+.z2 { animation-delay: 1.3s; left: 20px; font-size: 10px; }
+.z3 { animation-delay: 2.6s; left: 5px; font-size: 18px; }
+
+@keyframes z-float {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  30% { opacity: 0.8; }
+  100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
+}
+
+.empty-state-text {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  max-width: 250px;
+  line-height: 1.5;
+}
