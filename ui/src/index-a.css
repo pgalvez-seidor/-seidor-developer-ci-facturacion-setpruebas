@@ -1555,19 +1555,19 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .qrow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  gap: 12px;
+  padding: 10px 18px;
   background: #ffffff;
-  border-radius: 12px;
-  margin-bottom: 5px;
-  border: 1px solid rgba(226,232,240,0.8);
-  transition: background 0.15s, box-shadow 0.15s;
-  min-height: 52px;
+  border-radius: 100px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(226,232,240,0.9);
+  transition: background 0.18s, box-shadow 0.18s;
+  min-height: 56px;
 }
-.qrow:hover { background: #f8fafc; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-.qrow.running { border-color: rgba(99,102,241,0.28); background: rgba(99,102,241,0.02); }
-.qrow.done    { border-color: rgba(22,163,74,0.2); }
-.qrow.error   { border-color: rgba(220,38,38,0.2); background: rgba(220,38,38,0.02); }
+.qrow:hover { background: #f8fafc; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.qrow.running { border-color: rgba(99,102,241,0.4); background: #ffffff; box-shadow: 0 2px 16px rgba(99,102,241,0.1); }
+.qrow.done    { border-color: rgba(22,163,74,0.25); background: #ffffff; }
+.qrow.error   { border-color: rgba(220,38,38,0.25); background: #ffffff; }
 
 .qrow-status { flex-shrink: 0; width: 18px; display: flex; align-items: center; justify-content: center; }
 
@@ -1579,10 +1579,10 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .qrow-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
 
 .qrow-name {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 0.82rem; font-weight: 700; color: #0f172a;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 1rem; font-weight: 800; color: #0f172a;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 .qrow-zap { flex-shrink: 0; }
 
@@ -1611,13 +1611,13 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 .qrow-pct {
   font-family: 'Orbitron', monospace;
-  font-size: 1.45rem; font-weight: 900;
+  font-size: 2.4rem; font-weight: 900;
   background: linear-gradient(180deg, #a5b4fc 0%, #6366f1 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 6px rgba(99,102,241,0.5));
-  letter-spacing: -1px; line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(99,102,241,0.55));
+  letter-spacing: -2px; line-height: 1;
 }
-.qrow-pct small { font-size: 0.6rem; letter-spacing: 0; opacity: 0.7; }
+.qrow-pct small { font-size: 0.85rem; letter-spacing: 0; opacity: 0.7; }
 
 .qrow-btn {
   display: inline-flex; align-items: center; gap: 4px;
