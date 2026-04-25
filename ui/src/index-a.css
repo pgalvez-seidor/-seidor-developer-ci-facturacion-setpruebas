@@ -2167,8 +2167,8 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .git-splash-path-card {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 8px 12px;
+  border-radius: 100px;
+  padding: 8px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
@@ -2324,7 +2324,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .git-splash-notice {
   display: flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 500;
-  padding: 8px 12px; border-radius: 8px;
+  padding: 7px 14px; border-radius: 100px;
 }
 
 .git-splash-notice.warning { background: rgba(255,149,0,0.08); color: #c26b00; }

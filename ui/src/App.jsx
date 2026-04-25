@@ -1620,7 +1620,7 @@ export default function App() {
                                 onClick={() => handleScenarioSelect(s.id)}
                                 style={{
                                   display: 'flex', alignItems: 'center', gap: '10px',
-                                  padding: '10px 12px', borderRadius: '12px', cursor: 'pointer',
+                                  padding: '10px 16px', borderRadius: '100px', cursor: 'pointer',
                                   background: isActive ? 'rgba(99,102,241,0.08)' : 'rgba(0,0,0,0.02)',
                                   border: `1px solid ${isActive ? 'rgba(99,102,241,0.3)' : 'var(--card-border)'}`,
                                   transition: 'all 0.15s'
