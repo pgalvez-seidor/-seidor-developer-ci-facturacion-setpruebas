@@ -32,6 +32,39 @@ const ModernCheckbox = ({ checked, onChange, label }) => (
   </label>
 );
 
+const IteracionesPicker = ({ value, onChange }) => {
+  const [rotation, setRotation] = useState(0);
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -1 : 1;
+    const newValue = Math.max(1, Math.min(50, value + delta));
+    if (newValue !== value) {
+      onChange(newValue);
+      setRotation(prev => prev + (delta * 45)); // Gira 45 grados por paso
+    }
+  };
+
+  return (
+    <div className="iter-picker-container" onWheel={handleWheel}>
+      <div className="iter-wheel-wrapper">
+        <Settings 
+          size={28} 
+          className="iter-wheel-icon" 
+          style={{ transform: `rotate(${rotation}deg)` }} 
+        />
+      </div>
+      <input 
+        type="number" 
+        className="iter-manual-input"
+        value={value} 
+        onChange={e => onChange(parseInt(e.target.value) || 1)}
+        min="1" max="50"
+      />
+    </div>
+  );
+};
+
 const ModernSelect = ({ value, onChange, options, placeholder = '-- seleccionar --', style = {} }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedLabel = options.find(o => o.value === value)?.label || placeholder;
@@ -1111,11 +1144,9 @@ export default function App() {
                 <div className="config-grid-two">
                   <div className="field-group">
                     <label>Batería de Pruebas (Iteraciones)</label>
-                    <input 
-                      type="number" 
+                    <IteracionesPicker 
                       value={builderConfig.iteraciones || 1} 
-                      onChange={e => setBuilderConfig({ ...builderConfig, iteraciones: parseInt(e.target.value) || 1 })}
-                      min="1" max="50"
+                      onChange={val => setBuilderConfig({ ...builderConfig, iteraciones: val })}
                     />
                   </div>
                   <div className="field-group" style={{ justifyContent: 'center' }}>
