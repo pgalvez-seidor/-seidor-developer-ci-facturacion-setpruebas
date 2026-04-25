@@ -4,12 +4,12 @@ import {
   CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power,
   Sparkles, FileText, Settings, Cpu, Bot, AlertTriangle
 } from 'lucide-react';
+import { basicSetup, EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
-import { EditorView, keymap, lineNumbers, highlightActiveLine } from '@codemirror/view';
+import { keymap } from '@codemirror/view';
 import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
+import { indentWithTab } from '@codemirror/commands';
 import './index-a.css';
 
 const API_BASE = 'http://localhost:3001/api';
@@ -20,31 +20,27 @@ const CodeEditor = ({ value, onChange }) => {
 
   useEffect(() => {
     if (!containerRef.current) return;
-    const view = new EditorView({
-      state: EditorState.create({
-        doc: value || '',
-        extensions: [
-          lineNumbers(),
-          highlightActiveLine(),
-          history(),
-          bracketMatching(),
-          javascript({ jsx: false }),
-          oneDark,
-          keymap.of([...defaultKeymap, ...historyKeymap]),
-          EditorView.updateListener.of(update => {
-            if (update.docChanged) onChange(update.state.doc.toString());
-          }),
-          EditorView.theme({
-            '&': { height: '60vh', borderRadius: '10px', overflow: 'hidden', fontSize: '13px' },
-            '.cm-scroller': { fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace', lineHeight: '1.65', overflowY: 'auto' },
-            '.cm-content': { padding: '12px 0' },
-          }),
-        ],
+    const extensions = [
+      basicSetup,
+      javascript({ jsx: false }),
+      oneDark,
+      keymap.of([indentWithTab]),
+      EditorView.updateListener.of(update => {
+        if (update.docChanged) onChange(update.state.doc.toString());
       }),
+      EditorView.theme({
+        '&': { height: '60vh', borderRadius: '10px', overflow: 'hidden', fontSize: '13px' },
+        '.cm-scroller': { fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace', lineHeight: '1.65', overflowY: 'auto' },
+        '.cm-content': { padding: '12px 0' },
+        '.cm-gutters': { borderRight: '1px solid rgba(255,255,255,0.06)' },
+      }),
+    ];
+    const view = new EditorView({
+      state: EditorState.create({ doc: value || '', extensions }),
       parent: containerRef.current,
     });
     viewRef.current = view;
-    return () => view.destroy();
+    return () => { view.destroy(); viewRef.current = null; };
   }, []);
 
   useEffect(() => {
@@ -620,11 +616,20 @@ const Sidebar = ({
     <aside className="sidebar">
 
       {/* HEADER FIJO */}
-      <div className="sidebar-header-fixed" style={{ flexDirection: 'row', alignItems: 'center', padding: '16px 20px', justifyContent: 'center', gap: '10px' }}>
-        <TransparentLogo src="./logo-pure.png" className="brand-isotype" size={80} />
-        <div className="brand-name" style={{ fontSize: '1.25rem' }}>
-          Auto<span style={{ fontWeight: '700' }}>Bot</span>
+      <div className="sidebar-header-fixed" style={{ flexDirection: 'column', alignItems: 'center', padding: '14px 16px 10px', justifyContent: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <TransparentLogo src="./logo-pure.png" className="brand-isotype" size={80} />
+          <div className="brand-name" style={{ fontSize: '1.25rem' }}>
+            Auto<span style={{ fontWeight: '700' }}>Bot</span>
+          </div>
         </div>
+        {currentBranch && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 10px', background: remoteChangesCount > 0 ? 'rgba(245,158,11,0.15)' : 'rgba(99,102,241,0.12)', border: `1px solid ${remoteChangesCount > 0 ? 'rgba(245,158,11,0.4)' : 'rgba(99,102,241,0.3)'}`, borderRadius: '100px', fontSize: '0.68rem', fontWeight: '700', color: remoteChangesCount > 0 ? '#d97706' : '#6366f1' }}>
+            <GitBranch size={11} />
+            {currentBranch}
+            {remoteChangesCount > 0 && <span style={{ background: '#f59e0b', color: 'white', borderRadius: '100px', padding: '1px 5px', fontSize: '0.6rem', fontWeight: '800' }}>{remoteChangesCount}</span>}
+          </div>
+        )}
       </div>
 
       {/* CONTENIDO SCROLLABLE */}
@@ -1579,17 +1584,6 @@ export default function App() {
         />
         <main className="main split-layout">
           <div className="config-panel">
-            <header className="main-header" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0 }}>Configuración de escenario</h2>
-              {currentBranch && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: remoteChangesCount > 0 ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.1)', border: `1px solid ${remoteChangesCount > 0 ? 'rgba(245,158,11,0.4)' : 'rgba(99,102,241,0.3)'}`, borderRadius: '100px', fontSize: '0.72rem', fontWeight: '700', color: remoteChangesCount > 0 ? '#d97706' : '#6366f1' }}>
-                  <GitBranch size={12} />
-                  {currentBranch}
-                  {remoteChangesCount > 0 && <span style={{ background: '#f59e0b', color: 'white', borderRadius: '100px', padding: '1px 6px', fontSize: '0.65rem', fontWeight: '800' }}>{remoteChangesCount}</span>}
-                </div>
-              )}
-            </header>
-
             <div className="config-flow">
               
               {/* BLOQUE 1: CONTROL DE FLUJO */}
