@@ -1433,3 +1433,35 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   background-color: #ffffff !important;
   border-right: 1px solid rgba(0,0,0,0.03) !important;
 }
+/* === SIDEBAR FOOTER CENTERING & DISTRIBUTION === */
+.sidebar-footer {
+  padding: 30px 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important; /* Centrado horizontal */
+  justify-content: center !important;
+  gap: 12px !important; /* Distribución equilibrada en altura */
+  border-top: 1px solid rgba(0,0,0,0.03) !important;
+  margin-top: auto !important;
+}
+
+.sidebar-footer-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.sidebar-footer-item span {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  color: #86868b !important;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sidebar-footer-item svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
