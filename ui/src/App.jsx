@@ -569,13 +569,9 @@ const Sidebar = ({
     <aside className="sidebar">
 
       {/* HEADER FIJO */}
-      <div className="sidebar-header-fixed">
-        <TransparentLogo
-          src="./logo-pure.png"
-          className="brand-isotype"
-          size={52}
-        />
-        <div className="brand-name">
+      <div className="sidebar-header-fixed" style={{ flexDirection: 'row', alignItems: 'center', padding: '16px 20px', justifyContent: 'center', gap: '10px' }}>
+        <TransparentLogo src="./logo-pure.png" className="brand-isotype" size={80} />
+        <div className="brand-name" style={{ fontSize: '1.25rem' }}>
           Auto<span style={{ fontWeight: '700' }}>Bot</span>
         </div>
       </div>
@@ -674,23 +670,29 @@ const Sidebar = ({
       </div>
 
       {/* FOOTER FIJO */}
-      <div className="sidebar-footer-fixed">
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+      <div className="sidebar-footer-fixed" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', width: '100%', justifyContent: 'space-around', paddingBottom: '4px' }}>
           <button
             onClick={() => setShowSettings(true)}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 0', borderRadius: '12px', border: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.03)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}
+            title="Configuración"
+            style={{ width: '44px', height: '44px', borderRadius: '50%', border: '2px solid rgba(37,99,235,0.35)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(37,99,235,0.7)'; e.currentTarget.style.background = 'rgba(37,99,235,0.06)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(37,99,235,0.35)'; e.currentTarget.style.background = 'transparent'; }}
           >
-            <Settings size={14} /> Configuración
+            <Settings size={17} />
           </button>
           <button
             onClick={() => window.handleShutdown()}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', borderRadius: '12px', border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: '#ef4444' }}
+            title="Apagar"
+            style={{ width: '44px', height: '44px', borderRadius: '50%', border: '2px solid rgba(239,68,68,0.3)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.7)'; e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.background = 'transparent'; }}
           >
-            <Power size={14} />
+            <Power size={17} />
           </button>
         </div>
         <div className="sap-branding-badge">
-          <Cpu size={14} color="var(--accent-primary)" />
+          <Cpu size={13} color="var(--accent-primary)" />
           <span className="sap-branding-text">Potencia por SAP AI Core</span>
         </div>
         <button
@@ -698,7 +700,7 @@ const Sidebar = ({
           className="evolution-text"
           style={{ background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          <Sparkles size={12} color="#f59e0b" />
+          <Sparkles size={11} color="#f59e0b" />
           <span>AutoBotAI v2.1.0</span>
         </button>
       </div>
@@ -1252,7 +1254,7 @@ export default function App() {
     const newItems = [];
     const baseId = Date.now();
     const prefBase = parseInt(builderConfig.prefacturaBase) || 0;
-    for (let i = 0; i < builderConfig.iteraciones; i++) {
+    for (let i = 0; i < (builderConfig.iteraciones || 1); i++) {
       const cfg = JSON.parse(JSON.stringify({ ...builderConfig, iteraciones: 1 }));
       if (prefBase > 0) cfg.prefacturaId = (prefBase + i).toString();
       newItems.push({
@@ -1551,7 +1553,11 @@ export default function App() {
                   <div className="scenario-selector-group">
                     {/* Lista de escenarios con metadata */}
                     {(() => {
-                      const escenarios = registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios || [];
+                      const escenarios = [...(registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios || [])].sort((a, b) => {
+                        const da = a.created_at ? new Date(a.created_at) : new Date(0);
+                        const db2 = b.created_at ? new Date(b.created_at) : new Date(0);
+                        return db2 - da;
+                      });
                       return (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto', paddingRight: '2px' }}>
                           {escenarios.length === 0 && (
@@ -1611,28 +1617,43 @@ export default function App() {
                   {/* Banner: escenario sin script grabado (INTEGRADO) */}
                   {activeScenarioId && (() => {
                     const esc = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === activeScenarioId);
-                    const scriptRef = esc?.config?.recordedScript || (esc?.config?.file ? `scripts/${esc.config.file}` : null);
+                    const scriptRef = esc?.config?.recordedScript || (esc?.config?.file ? `scripts/${esc.config.file}` : null) || (esc?.id?.endsWith('.js') ? `scripts/${esc.id}` : null);
                     if (scriptRef) return (
-                      <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '100px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', flexShrink: 0 }}>
-                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px rgba(16,185,129,0.7)' }} />
-                          <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#10b981', whiteSpace: 'nowrap' }}>Flujo listo</span>
+                      <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '100px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', flexShrink: 0 }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px rgba(16,185,129,0.7)' }} />
+                            <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#10b981', whiteSpace: 'nowrap' }}>Flujo listo</span>
+                          </div>
+                          <button
+                            onClick={() => openScriptEditor(scriptRef)}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                              padding: '6px 12px', borderRadius: '100px', cursor: 'pointer',
+                              background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.25)',
+                              color: '#2563eb', fontSize: '0.72rem', fontWeight: '700', transition: 'all 0.15s'
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.14)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.08)'; }}
+                          >
+                            <FileText size={12} /> Ver código
+                          </button>
+                          <button
+                            onClick={() => openAiModal(scriptRef)}
+                            style={{
+                              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                              padding: '6px 12px', borderRadius: '100px', border: 'none', cursor: 'pointer',
+                              background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 60%, #ec4899 100%)',
+                              color: 'white', fontSize: '0.72rem', fontWeight: '700',
+                              boxShadow: '0 2px 12px rgba(139,92,246,0.35)',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(139,92,246,0.55)'}
+                            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 12px rgba(139,92,246,0.35)'}
+                          >
+                            ✨ Mejorar con IA
+                          </button>
                         </div>
-                        <button
-                          onClick={() => openAiModal(scriptRef)}
-                          style={{
-                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                            padding: '6px 12px', borderRadius: '100px', border: 'none', cursor: 'pointer',
-                            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 60%, #ec4899 100%)',
-                            color: 'white', fontSize: '0.72rem', fontWeight: '700',
-                            boxShadow: '0 2px 12px rgba(139,92,246,0.35)',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(139,92,246,0.55)'}
-                          onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 12px rgba(139,92,246,0.35)'}
-                        >
-                          ✨ Mejorar con IA
-                        </button>
                       </div>
                     );
                     return (
@@ -2002,13 +2023,21 @@ export default function App() {
                 outline: 'none', lineHeight: '1.5',
               }}
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '1rem' }}>
-              <button onClick={() => setShowScriptEditor(false)} style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
-                Cancelar
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '1rem' }}>
+              <button
+                onClick={() => { setShowScriptEditor(false); openAiModal(scriptEditorFile); }}
+                style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                ✨ Evaluar con IA
               </button>
-              <button onClick={saveScriptEditor} disabled={scriptEditorSaving} style={{ padding: '8px 20px', background: scriptEditorSaving ? '#555' : 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none', borderRadius: '8px', cursor: scriptEditorSaving ? 'not-allowed' : 'pointer', fontWeight: '700' }}>
-                {scriptEditorSaving ? 'Guardando...' : '💾 Guardar'}
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => setShowScriptEditor(false)} style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
+                  Cancelar
+                </button>
+                <button onClick={saveScriptEditor} disabled={scriptEditorSaving} style={{ padding: '8px 20px', background: scriptEditorSaving ? '#555' : 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none', borderRadius: '8px', cursor: scriptEditorSaving ? 'not-allowed' : 'pointer', fontWeight: '700' }}>
+                  {scriptEditorSaving ? 'Guardando...' : '💾 Guardar'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
