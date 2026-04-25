@@ -322,6 +322,145 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .config-actions { display: flex; gap: 10px; margin-top: 4px; }
 
+/* ── IDENTIDAD DEL ESCENARIO ──────────────────────── */
+
+/* Título del bloque con acento púrpura (Apple Intelligence style) */
+.apple-intelligence-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #af52de;
+}
+
+/* Contenedor de campo moderno */
+.field-group-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+.field-group-modern:last-of-type { margin-bottom: 0; }
+
+/* Label con ícono inline */
+.modern-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--apple-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* Wrapper del input (para íconos internos si se necesitan) */
+.input-with-icon { position: relative; }
+
+/* Input de nombre — tamaño grande, tipo Apple Search */
+.modern-input {
+  width: 100%;
+  background: var(--apple-bg);
+  border: 1.5px solid var(--apple-border);
+  border-radius: var(--r-lg);
+  color: var(--apple-text);
+  padding: 11px 14px;
+  font-size: 15px;
+  font-weight: 400;
+  outline: none;
+  transition: border-color var(--t), box-shadow var(--t), background var(--t);
+}
+.modern-input:hover { border-color: rgba(0,0,0,0.17); }
+.modern-input:focus {
+  border-color: var(--apple-blue);
+  box-shadow: 0 0 0 4px rgba(0,113,227,0.1);
+  background: var(--apple-surface);
+}
+.modern-input::placeholder { color: var(--apple-text-3); }
+
+/* Contenedor del prompt — actúa como el input pero para textarea */
+.prompt-box-container {
+  background: var(--apple-bg);
+  border: 1.5px solid var(--apple-border);
+  border-radius: var(--r-lg);
+  padding: 12px 14px;
+  transition: border-color var(--t), box-shadow var(--t), background var(--t);
+}
+.prompt-box-container:focus-within {
+  border-color: var(--apple-blue);
+  box-shadow: 0 0 0 4px rgba(0,113,227,0.1);
+  background: var(--apple-surface);
+}
+
+/* Textarea borderless dentro del contenedor — crece con el contenido */
+.modern-textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--apple-text);
+  font-size: 13px;
+  line-height: 1.65;
+  resize: none;
+  outline: none;
+  min-height: 76px;
+  field-sizing: content; /* auto-grow nativo — soportado en Chrome 123+ / Safari 17.4+ */
+}
+.modern-textarea::placeholder { color: var(--apple-text-3); }
+
+/* Fila de indicador SAP AI Core al pie del prompt */
+.prompt-magic-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--apple-sep);
+}
+
+/* Badge "NEW" naranja degradado */
+.sap-badge-new {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+  color: white;
+  border-radius: var(--r-pill);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* ── QUEUE CARDS (panel de lote) ──────────────────── */
+.queue-card-apple {
+  background: var(--apple-surface);
+  border: 1px solid var(--apple-border);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: slideDown 220ms ease;
+  transition: border-color var(--t), box-shadow var(--t);
+}
+.queue-card-apple:hover { border-color: rgba(0,0,0,0.14); box-shadow: var(--shadow-md); }
+
+.queue-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--apple-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.queue-card-subtitle {
+  font-size: 12px;
+  color: var(--apple-text-3);
+}
+
 /* Labels & badges dentro de blocks */
 .control-label {
   font-size: 12px; font-weight: 500; color: var(--apple-text-2);

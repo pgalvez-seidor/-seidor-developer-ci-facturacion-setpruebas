@@ -1,5 +1,8 @@
 node_modules/
 ui/node_modules/
+# Builds de Electron — se generan localmente, no van al repo
+dist/
+ui/dist/
 package-lock.json
 ui/package-lock.json
 npm-debug.log*
