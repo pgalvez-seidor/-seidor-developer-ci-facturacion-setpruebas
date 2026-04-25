@@ -8,6 +8,58 @@ import './index-a.css';
 
 const API_BASE = 'http://localhost:3001/api';
 
+const ModernSwitch = ({ checked, onChange, label, icon: Icon }) => (
+  <div className="modern-switch-wrapper" onClick={() => onChange(!checked)}>
+    <div className="modern-switch-info">
+      {Icon && <Icon size={14} className="modern-switch-icon" />}
+      <span>{label}</span>
+    </div>
+    <div className={`modern-switch-track ${checked ? 'active' : ''}`}>
+      <div className="modern-switch-thumb" />
+    </div>
+  </div>
+);
+
+const ModernCheckbox = ({ checked, onChange, label }) => (
+  <label className="modern-checkbox-container" onClick={() => onChange(!checked)}>
+    <div className={`modern-checkbox-box ${checked ? 'checked' : ''}`}>
+      {checked && <div className="modern-checkbox-tick" />}
+    </div>
+    {label && <span className="modern-checkbox-label">{label}</span>}
+  </label>
+);
+
+const ModernSelect = ({ value, onChange, options, placeholder = '-- seleccionar --', style = {} }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedLabel = options.find(o => o.value === value)?.label || placeholder;
+
+  return (
+    <div className="modern-select-container" style={style}>
+      <div className="modern-select-trigger" onClick={() => setIsOpen(!isOpen)}>
+        <span>{selectedLabel}</span>
+        <ChevronRight size={16} style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: '0.3s' }} />
+      </div>
+      {isOpen && (
+        <div className="modern-select-dropdown">
+          {options.length === 0 ? (
+            <div className="modern-select-option empty">{placeholder}</div>
+          ) : (
+            options.map(o => (
+              <div 
+                key={o.value} 
+                className={`modern-select-option ${value === o.value ? 'active' : ''}`}
+                onClick={() => { onChange({ target: { value: o.value } }); setIsOpen(false); }}
+              >
+                {o.label}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CLIENTS = [
   { id: 'CI', name: 'Clínica Internacional', icon: <div style={{ width: '24px', height: '24px', background: 'var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '10px', fontWeight: 'bold' }}>CI</div>, env: 'QAS' },
 ];
@@ -44,12 +96,24 @@ const Sidebar = ({
 
   return (
     <aside className="sidebar">
-      <div style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+      <div style={{ marginBottom: '2.5rem', display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '0 5px' }}>
         <img
-          src="/logo-full.png"
+          src="/logo-pure.png"
           alt="AutoBot"
-          style={{ width: '100%', height: 'auto', objectFit: 'contain' }}
+          style={{ width: '42px', height: '42px', objectFit: 'contain' }}
         />
+        <div style={{ 
+          fontSize: '1.4rem', 
+          fontWeight: '300', 
+          letterSpacing: '1px', 
+          color: 'var(--text-main)',
+          background: 'linear-gradient(135deg, #0f172a, #475569)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          fontFamily: "'Inter', sans-serif"
+        }}>
+          Auto<span style={{ fontWeight: '700' }}>Bot</span>
+        </div>
       </div>
 
       <div className="sidebar-section">
@@ -77,27 +141,13 @@ const Sidebar = ({
       </div>
 
       <div className="sidebar-section">
-        <div className="sidebar-label">Inteligencia Artificial</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '-5px' }}>GEMINI API KEY</div>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <input 
-              type="password" 
-              className="branch-select" 
-              value={geminiKey} 
-              onChange={e => setGeminiKey(e.target.value)}
-              placeholder="AIzaSy..."
-              style={{ fontSize: '0.75rem', flex: 1 }}
-            />
-            <button onClick={saveGeminiKey} style={{
-              background: '#10b981', color: 'white', border: 'none', borderRadius: '4px',
-              padding: '0 8px', fontSize: '0.7rem', cursor: 'pointer', fontWeight: 'bold'
-            }}>Guardar</button>
+        <div className="ai-badge">
+          <div className="ai-badge-label">Inteligencia Artificial</div>
+          <div className="ai-badge-name">
+            <Cpu size={14} /> SAP Core AI
           </div>
         </div>
-      </div>
-
-      <div className="sidebar-section">
+        
         <div className="sidebar-label">Entorno Git</div>
         {gitNotLinked ? (
           <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', marginTop: '10px' }}>
@@ -148,23 +198,27 @@ const Sidebar = ({
         {activeClient && (
           <div style={{ marginTop: '2rem' }}>
             <div className="sidebar-label">Proceso Analítico</div>
-            <select className="branch-select" value={activeProcess} onChange={e => setActiveProcess(e.target.value)}>
-              {registry.find(c => c.id === activeClient)?.procesos.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+            <ModernSelect 
+              value={activeProcess} 
+              onChange={e => setActiveProcess(e.target.value)}
+              options={registry.find(c => c.id === activeClient)?.procesos?.map(p => ({ label: p.name, value: p.id })) || []}
+            />
           </div>
         )}
       </div>
 
-      <div onClick={() => setShowAbout(true)} style={{ opacity: 0.6, fontSize: '0.7rem', textAlign: 'center', cursor: 'pointer', transition: 'opacity 0.2s', padding: '10px 0' }}>
-        <div style={{ fontWeight: '700', marginBottom: '4px' }}>AutoBot v2.0.0</div>
-        <div style={{ color: 'var(--text-secondary)' }}>by Pierre Gálvez - Seidor</div>
+      <div style={{ marginTop: 'auto', padding: '1rem 0', display: 'flex', justifyContent: 'center', borderTop: '1px solid rgba(0,0,0,0.03)' }}>
         <button 
-          onClick={(e) => { e.stopPropagation(); setShowChangelog(true); }}
-          style={{ marginTop: '8px', background: 'none', border: 'none', color: '#6366f1', fontSize: '0.65rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+          onClick={() => setShowChangelog(true)}
+          className="evolution-portal-trigger"
+          style={{ 
+            background: 'none', border: 'none', color: '#94a3b8', 
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+            opacity: 0.7, letterSpacing: '0.5px'
+          }}
         >
-          📜 Ver Historial (Changelog)
+          <Sparkles size={14} className="sparkle-icon" />
+          <span style={{ fontSize: '0.72rem', fontWeight: '500' }}>Evolución del Sistema</span>
         </button>
       </div>
 
@@ -211,7 +265,11 @@ const PaymentTray = ({ pagos, medioVuelto, updatePagos, updateMedioVuelto }) => 
             {p.tipo === 'Tarjeta' && (
               <div style={{ marginTop: '0.8rem' }}>
                 <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <input type="checkbox" checked={p.autoData} onChange={e => updAuto(p.id, e.target.checked)} />
+                  <ModernCheckbox 
+                    checked={p.autoData} 
+                    onChange={val => updAuto(p.id, val)}
+                    label="Autodatos"
+                  />
                   Auto-generar datos (ID/Bin)
                 </label>
               </div>
@@ -927,30 +985,38 @@ export default function App() {
 
             </header>
 
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--card-border)', padding: '1.2rem', borderRadius: '16px', marginBottom: '1.5rem' }}>
-              <label>Escenario Guardado</label>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                <select style={{ flex: 1 }} value={activeScenarioId} onChange={e => handleScenarioSelect(e.target.value)}>
-                  <option value="">-- Nuevo (En Blanco) --</option>
-                  {registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-                <button onClick={deleteScenario} disabled={!activeScenarioId} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '10px', padding: '0 12px', cursor: 'pointer' }}>Borrar</button>
+            <div className="control-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span className="control-label">Gestión de Escenarios</span>
+                <span className="control-badge">{registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.length || 0} Guardados</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <ModernSelect 
+                  style={{ flex: 1 }} 
+                  value={activeScenarioId} 
+                  onChange={e => handleScenarioSelect(e.target.value)}
+                  placeholder="-- Iniciar Nuevo Flujo --"
+                  options={registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.map(s => ({ label: s.name, value: s.id })) || []}
+                />
+                <button 
+                  className="btn-record-mini" 
+                  onClick={() => openRecordModal()}
+                  title="Grabar ahora"
+                >
+                  <Circle size={14} fill="white" className="rec-pulse" />
+                  Grabar
+                </button>
+                {activeScenarioId && (
+                  <button 
+                    onClick={deleteScenario} 
+                    className="btn-icon-danger"
+                    title="Eliminar este escenario"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </div>
-
-            <button
-              onClick={() => openRecordModal()}
-              style={{
-                width: '100%', marginBottom: '1rem', padding: '12px',
-                background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444',
-                border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: '12px',
-                cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-              }}
-            >
-              <Circle size={14} fill="#ef4444" color="#ef4444" />
-              Grabar Flujo Nuevo
-            </button>
 
             {/* Banner: escenario sin script grabado */}
             {activeClient === 'Medifarma' && activeScenarioId && (() => {
@@ -1024,9 +1090,19 @@ export default function App() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '12px', border: '1px solid var(--card-border)' }}>
-                <input type="checkbox" checked={builderConfig.headless} onChange={e => setBuilderConfig({ ...builderConfig, headless: e.target.checked })} style={{ width: '20px', height: '20px' }} />
-                <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>Ejecutar en Segundo Plano (Headless)</span>
+              <div className="settings-grid">
+                <ModernSwitch 
+                  checked={builderConfig.headless} 
+                  onChange={checked => setBuilderConfig({ ...builderConfig, headless: checked })}
+                  label="Modo Ultra-Velocidad (Headless)"
+                  icon={Zap}
+                />
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '-8px', marginLeft: '24px' }}>
+                  {builderConfig.headless 
+                    ? "La prueba volará en segundo plano (Ideal para ejecución masiva)" 
+                    : "El navegador se abrirá para auditoría visual (Ideal para depurar)"
+                  }
+                </div>
               </div>
 
               {activeClient !== 'Medifarma' && activeProcess === 'facturacion' && (
