@@ -1182,3 +1182,36 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   letter-spacing: 0.5px;
   white-space: nowrap;
 }
+/* === SIDEBAR TYPOGRAPHIC COHERENCE === */
+.sidebar .modern-select-trigger, 
+.sidebar .branch-select, 
+.sidebar .modern-input,
+.sidebar button {
+  font-size: 0.85rem !important; /* Tamaño coherente y refinado */
+  font-weight: 600 !important;
+  color: #1d1d1f !important;
+  letter-spacing: -0.2px !important;
+  text-transform: none !important; /* Evitamos el ALL CAPS si estaba activado */
+}
+
+/* El label superior (PROCESO ANALÍTICO) ya está bien, pero le damos un toque de aire */
+.sidebar-label {
+  font-size: 0.7rem !important;
+  letter-spacing: 1px !important;
+  margin-bottom: 8px !important;
+  opacity: 0.6;
+}
+
+/* Fix específico para que FLUJOS GRABADOS no se vea gigante */
+.modern-select-trigger span {
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+}
+
+/* Ajuste del botón Sincronizar con Git para que no desentone */
+.btn-git-sync {
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  height: 38px !important; /* Un poco más pequeño que los selectores principales */
+  margin-top: 10px !important;
+}

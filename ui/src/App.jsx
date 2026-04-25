@@ -1222,7 +1222,7 @@ export default function App() {
                   className="btn-save-scenario"
                   disabled={!newScenarioName}
                 >
-                  {saveStatus === 'loading' ? 'Guardando...' : saveStatus === 'success' ? '✅ Guardado' : 'Guardar Cambios'}
+                  {saveStatus === 'loading' ? 'Guardando...' : saveStatus === 'success' ? '✅ Guardado' : 'Guardar'}
                 </button>
 
                 <button 
