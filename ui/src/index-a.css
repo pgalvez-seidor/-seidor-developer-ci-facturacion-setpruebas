@@ -2437,13 +2437,13 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   100% { opacity: 0; transform: translate(20px, 28px) scale(0); }
 }
 
-.nuclear-container:not(.active) {
+.nuclear-container.active {
   animation: visibleGlowPulse 2.2s ease-in-out infinite;
   border-color: rgba(245,158,11,0.45);
   position: relative;
 }
-.nuclear-container:not(.active)::before,
-.nuclear-container:not(.active)::after {
+.nuclear-container.active::before,
+.nuclear-container.active::after {
   content: '';
   position: absolute;
   width: 5px; height: 5px;
@@ -2451,11 +2451,11 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   background: #fde68a;
   pointer-events: none;
 }
-.nuclear-container:not(.active)::before {
+.nuclear-container.active::before {
   top: -3px; left: 18px;
   animation: visibleSparkA 2.2s ease-out infinite;
 }
-.nuclear-container:not(.active)::after {
+.nuclear-container.active::after {
   top: -3px; right: 18px;
   animation: visibleSparkB 2.2s ease-out infinite 0.6s;
 }

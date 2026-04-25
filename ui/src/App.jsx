@@ -1870,7 +1870,7 @@ export default function App() {
                           </button>
                         ) : (
                           <button className="qrow-btn qrow-btn--gen" onClick={() => generatePdfOnDemand(q.runDir)}>
-                            <Sparkles size={12} /> Dossier
+                            <Sparkles size={12} /> PDF
                           </button>
                         )
                       )}
