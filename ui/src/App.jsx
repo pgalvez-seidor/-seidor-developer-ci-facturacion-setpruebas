@@ -196,6 +196,15 @@ const Sidebar = ({
         <div className="brand-name">
           Auto<span style={{ fontWeight: '700' }}>Bot</span>
         </div>
+        
+        <div className="sidebar-quick-actions">
+          <button onClick={() => setShowSettings(true)} className="action-btn-pill settings" title="Configuración">
+            <Settings size={16} />
+          </button>
+          <button onClick={() => window.handleShutdown()} className="action-btn-pill power" title="Apagar Sistema">
+            <Power size={16} />
+          </button>
+        </div>
       </div>
 
       <div className="sidebar-section">
@@ -1072,40 +1081,10 @@ export default function App() {
           setGeminiKey={setGeminiKey}
           setShowChangelog={setShowChangelog}
           isGitLoading={isGitLoading}
-        />
-
         <main className="main split-layout">
           <div className="config-panel">
-            <header className="main-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <header className="main-header" style={{ marginBottom: '2rem' }}>
               <h2 style={{ margin: 0 }}>Configuración de escenario</h2>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button 
-                    onClick={() => setShowSettings(true)}
-                    className="power-off-btn"
-                    style={{
-                      background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1',
-                      border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '50%',
-                      width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', transition: '0.3s'
-                    }}
-                  >
-                    <Settings size={18} />
-                  </button>
-                  <button 
-                    onClick={handleShutdown}
-                    title="Apagar AutoBot"
-                    className="power-off-btn"
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
-                      border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '50%',
-                      width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', transition: '0.3s'
-                    }}
-                  >
-                    <Power size={18} />
-                  </button>
-                </div>
-
             </header>
 
             <div className="config-flow">
