@@ -741,8 +741,11 @@ app.post('/api/run-batch', async (req, res) => {
                 });
                 console.log(`[WORKER] PID: ${workerProcess.pid}`);
                 activeProcesses.push(workerProcess);
+                if (!isHeadless && process.platform === 'darwin') {
+                    setTimeout(() => { try { require('child_process').exec('open -a "Google Chrome"'); } catch(e) {} }, 1500);
+                }
 
-                let lastError = ''; // Captura el último error relevante del test
+                let lastError = '';
 
                 workerProcess.stdout.on('data', (data) => {
                     const text = stripAnsi(data.toString());
@@ -854,8 +857,10 @@ app.post('/api/run-batch', async (req, res) => {
             if (runningCount === 0 && pendingTasks.length === 0) {
                 // Todas las tareas terminaron -> Generar Reporte Global
                 generateGlobalReport(batchResults).then(globalPdfPath => {
-                    const relativeUrl = globalPdfPath.replace(rootDir, '').replace(/\\/g, '/');
-                    sendLog('orchestrator', 'pdf_global', 'Reporte Global de Lote Listo', relativeUrl);
+                    if (globalPdfPath) {
+                        const relativeUrl = globalPdfPath.replace(rootDir, '').replace(/\\/g, '/');
+                        sendLog('orchestrator', 'pdf_global', 'Reporte Global de Lote Listo', relativeUrl);
+                    }
                     sendLog('orchestrator', 'done', 'Todas las tareas del lote han finalizado.');
                     clearInterval(keepAliveInterval);
                     intentionalEnd = true;

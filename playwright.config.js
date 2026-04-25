@@ -21,7 +21,7 @@ module.exports = defineConfig({
             'Accept-Language': 'es-PE,es;q=0.9,en;q=0.1'
         },
         launchOptions: {
-            args: ['--lang=es-PE']  // Fuerza idioma a nivel del proceso Chromium
+            args: ['--lang=es-PE', '--disable-background-timer-throttling', '--force-app-mode'],
         },
     },
     workers: 1,               // Por defecto 1 worker (se controla desde el servidor)
