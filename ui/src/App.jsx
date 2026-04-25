@@ -283,7 +283,8 @@ export default function App() {
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [backendError, setBackendError] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-
+  const [gitToken, setGitToken] = useState('');
+  const [projectDir, setProjectDir] = useState('');
 
 
   const [recordingId, setRecordingId] = useState('');

@@ -1,12 +1,14 @@
 {
-    "name": "facturacion-setpruebas",
+    "name": "autobot-ia",
+    "productName": "AutoBotIA",
     "version": "2.0.0",
+    "author": "Pierre Gálvez - Seidor",
     "description": "Set de pruebas automatizadas para Facturación - Seidor",
-    "main": "scripts/runner.js",
+    "main": "main.js",
     "dependencies": {
         "@google/generative-ai": "^0.24.1",
         "@playwright/test": "^1.40.0",
-        "axios": "^1.6.0",
+        "axios": "^1.15.2",
         "cors": "^2.8.6",
         "dotenv": "^16.3.0",
         "express": "^5.2.1",
@@ -24,6 +26,32 @@
         "dry-run": "node scripts/runner.js --caso caso1 --env QAS --dry-run"
     },
     "devDependencies": {
-        "concurrently": "^9.2.1"
+        "concurrently": "^9.2.1",
+        "electron": "^30.0.0",
+        "electron-builder": "*"
+    },
+    "build": {
+        "appId": "com.seidor.autobotia",
+        "productName": "AutoBotIA",
+        "mac": {
+            "icon": "icon.png",
+            "category": "public.app-category.developer-tools",
+            "target": ["dmg"]
+        },
+        "files": [
+            "main.js",
+            "CHANGELOG.md",
+            "scripts/**/*",
+            "config/**/*",
+            "ui/dist/**/*",
+            "ui/public/**/*",
+            "node_modules/**/*",
+            "!node_modules/.cache/**/*",
+            "!**/node_modules/playwright/**/*",
+            "!**/node_modules/@playwright/**/*"
+        ],
+        "asarUnpack": [
+            "node_modules/sqlite3/**/*"
+        ]
     }
 }
