@@ -1774,7 +1774,8 @@ export default function App() {
               </div>
 
               {/* ACCIONES FINALES */}
-              <div className="config-actions">
+              <div style={{ display: 'flex', justifyContent: 'center', position: 'sticky', bottom: '12px', zIndex: 10 }}>
+              <div className="config-actions" style={{ position: 'static', margin: 0 }}>
                 <button 
                   onClick={saveScenario} 
                   className="btn-save-scenario"
@@ -1791,6 +1792,7 @@ export default function App() {
                   <span>Apilar</span>
                   <ChevronRight size={16} />
                 </button>
+              </div>
               </div>
 
             </div>
