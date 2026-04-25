@@ -1387,7 +1387,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tasks: tasksToRun.map(t => ({ taskId: t.taskId, config: t.config, file: t.config.recordedScript || (t.config.file ? `scripts/${t.config.file}` : null) || processScripts[activeProcess] || null })),
+          tasks: tasksToRun.map(t => ({ taskId: t.taskId, config: { ...t.config, headless: builderConfig.headless }, file: t.config.recordedScript || (t.config.file ? `scripts/${t.config.file}` : null) || processScripts[activeProcess] || null })),
           parallel: !runSequential,
           concurrency: runSequential ? 1 : batchConcurrency,
           metadata: {
