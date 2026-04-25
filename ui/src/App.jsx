@@ -43,21 +43,25 @@ const ModernSelect = ({ value, onChange, options, placeholder = '-- seleccionar 
         <ChevronRight size={16} style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: '0.3s' }} />
       </div>
       {isOpen && (
-        <div className="modern-select-dropdown">
-          {options.length === 0 ? (
-            <div className="modern-select-option empty">{placeholder}</div>
-          ) : (
-            options.map(o => (
-              <div 
-                key={o.value} 
-                className={`modern-select-option ${value === o.value ? 'active' : ''}`}
-                onClick={() => { onChange({ target: { value: o.value } }); setIsOpen(false); }}
-              >
-                {o.label}
-              </div>
-            ))
-          )}
-        </div>
+        <>
+          <div className="modern-select-backdrop" onClick={() => setIsOpen(false)} />
+          <div className="modern-select-dropdown animate-scale-in">
+            {options.length === 0 ? (
+              <div className="modern-select-option empty">{placeholder}</div>
+            ) : (
+              options.map(o => (
+                <div 
+                  key={o.value} 
+                  className={`modern-select-option ${value === o.value ? 'active' : ''}`}
+                  onClick={() => { onChange(o.value); setIsOpen(false); }}
+                >
+                  <span>{o.label}</span>
+                  {value === o.value && <div className="modern-select-tick">✓</div>}
+                </div>
+              ))
+            )}
+          </div>
+        </>
       )}
     </div>
   );
@@ -164,10 +168,12 @@ const Sidebar = ({
           </div>
         ) : (
           <>
-            <select className="branch-select" value={currentBranch} onChange={handleBranchChange}>
-              <option value="">-- seleccionar --</option>
-              {branches.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
+            <ModernSelect 
+              value={currentBranch} 
+              onChange={val => handleBranchChange({ target: { value: val } })}
+              options={branches.map(b => ({ label: b, value: b }))}
+              placeholder="-- Seleccionar Rama --"
+            />
             
             <button 
               onClick={onGitSync} 
@@ -204,7 +210,7 @@ const Sidebar = ({
             <div className="sidebar-label">Proceso Analítico</div>
             <ModernSelect 
               value={activeProcess} 
-              onChange={e => setActiveProcess(e.target.value)}
+              onChange={val => setActiveProcess(val)}
               options={registry.find(c => c.id === activeClient)?.procesos?.map(p => ({ label: p.name, value: p.id })) || []}
             />
           </div>
@@ -285,9 +291,11 @@ const PaymentTray = ({ pagos, medioVuelto, updatePagos, updateMedioVuelto }) => 
       {showVuelto && (
         <div style={{ background: 'rgba(241, 196, 15, 0.1)', border: '1px solid rgba(241, 196, 15, 0.3)', padding: '1rem', borderRadius: '12px', marginTop: '1rem' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f1c40f', marginBottom: '8px' }}>MEDIO DE VUELTO</div>
-          <select value={medioVuelto || "Efectivo"} onChange={(e) => updateMedioVuelto(e.target.value)} style={{ width: '100%', background: 'white', border: '1px solid var(--card-border)', color: 'var(--text-main)', padding: '8px', borderRadius: '8px' }}>
-            {MEDIOS_VUELTO.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+          <ModernSelect 
+            value={medioVuelto || "Efectivo"} 
+            onChange={(val) => updateMedioVuelto(val)} 
+            options={MEDIOS_VUELTO.map(m => ({ label: m, value: m }))}
+          />
         </div>
       )}
     </div>
@@ -1015,7 +1023,7 @@ export default function App() {
                 <ModernSelect 
                   style={{ flex: 1 }} 
                   value={activeScenarioId} 
-                  onChange={e => handleScenarioSelect(e.target.value)}
+                  onChange={val => handleScenarioSelect(val)}
                   placeholder="-- Iniciar Nuevo Flujo --"
                   options={registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.map(s => ({ label: s.name, value: s.id })) || []}
                 />
@@ -1085,10 +1093,14 @@ export default function App() {
                 {activeClient !== 'Medifarma' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label>Tipo Comprobante</label>
-                    <select value={builderConfig.tipoComprobante} onChange={e => setBuilderConfig({ ...builderConfig, tipoComprobante: e.target.value })}>
-                      <option value="Boleta">Boleta</option>
-                      <option value="Factura">Factura</option>
-                    </select>
+                    <ModernSelect 
+                      value={builderConfig.tipoComprobante} 
+                      onChange={val => setBuilderConfig({ ...builderConfig, tipoComprobante: val })}
+                      options={[
+                        { label: 'Boleta', value: 'Boleta' },
+                        { label: 'Factura', value: 'Factura' }
+                      ]}
+                    />
                   </div>
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
