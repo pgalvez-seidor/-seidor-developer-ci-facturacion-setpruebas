@@ -65,14 +65,16 @@ const IteracionesPicker = ({ value, onChange }) => {
   );
 };
 
-const NitroButton = ({ active, onClick }) => {
+const NuclearSwitch = ({ active, onClick }) => {
   return (
-    <div className={`nitro-container ${active ? 'nitro-active' : ''}`} onClick={() => onClick(!active)}>
-      <div className="nitro-exhaust-flame"></div>
-      <div className="nitro-button-body">
-        <div className="nitro-label">NITRO</div>
-        <Zap size={24} fill={active ? "#ffeb3b" : "transparent"} stroke={active ? "#ff9800" : "#94a3b8"} className="nitro-icon" />
-        <div className="nitro-status">{active ? 'ON' : 'OFF'}</div>
+    <div className={`nuclear-container ${active ? 'active' : ''}`} onClick={() => onClick(!active)}>
+      <div className="nuclear-base">
+        <div className="nuclear-toggle"></div>
+        <div className="nuclear-led"></div>
+      </div>
+      <div className="nuclear-label-group">
+        <span className="nuclear-main-label">HEADLESS MODE</span>
+        <span className="nuclear-sub-label">{active ? 'SECURE IGNITION' : 'STANDBY'}</span>
       </div>
     </div>
   );
@@ -195,11 +197,6 @@ const Sidebar = ({
       </div>
 
       <div className="sidebar-section">
-        <div className="ai-badge">
-          <div className="ai-badge-label">Inteligencia Artificial</div>
-          <div className="ai-badge-name">
-            <Cpu size={14} /> SAP Core AI
-          </div>
         </div>
         
         <div className="sidebar-label">Entorno Git</div>
@@ -263,14 +260,19 @@ const Sidebar = ({
         )}
       </div>
 
-      <div style={{ marginTop: 'auto', padding: '1.5rem 0', display: 'flex', justifyContent: 'center', borderTop: '1px solid rgba(0,0,0,0.03)' }}>
+      <div style={{ marginTop: 'auto', padding: '1.5rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', borderTop: '1px solid rgba(0,0,0,0.03)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.5 }}>
+          <Cpu size={12} color="#94a3b8" />
+          <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Potencia por SAP AI Core</span>
+        </div>
+        
         <button 
           onClick={() => setShowChangelog(true)}
           className="evolution-portal-trigger"
           style={{ 
             background: 'none', border: 'none', color: '#94a3b8', 
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-            opacity: 0.7, letterSpacing: '0.5px'
+            opacity: 0.7, letterSpacing: '0.5px', marginTop: '4px'
           }}
         >
           <Sparkles size={14} className="sparkle-icon" />
@@ -1154,17 +1156,17 @@ export default function App() {
                   <Zap size={16} color="#f59e0b" />
                   <h3>Parámetros de Ejecución</h3>
                 </div>
-                <div className="config-grid-two">
-                  <div className="field-group">
-                    <label>Batería de Pruebas (Iteraciones)</label>
+                <div className="execution-grid">
+                  <div className="execution-item">
+                    <label className="sidebar-label" style={{ marginBottom: '12px', display: 'block' }}>Iteraciones</label>
                     <IteracionesPicker 
                       value={builderConfig.iteraciones || 1} 
                       onChange={val => setBuilderConfig({ ...builderConfig, iteraciones: val })}
                     />
                   </div>
-                  <div className="field-group" style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    <label>Inyección de Velocidad (Headless)</label>
-                    <NitroButton 
+                  <div className="execution-item">
+                    <label className="sidebar-label" style={{ marginBottom: '12px', display: 'block' }}>Velocidad</label>
+                    <NuclearSwitch 
                       active={builderConfig.headless}
                       onClick={val => setBuilderConfig({ ...builderConfig, headless: val })}
                     />
