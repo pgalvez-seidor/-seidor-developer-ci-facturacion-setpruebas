@@ -225,16 +225,23 @@ const syncScenariosWithFileSystem = async () => {
         // 1. Registrar archivos nuevos
         db.serialize(() => {
             files.forEach(file => {
-                const friendlyName = file.replace(/\.spec\.js$/, '').replace(/\.js$/, '').replace(/-/g, ' ');
-                const id = file;
+                // Nombre amigable: quitar grabacion_, timestamps y extensiones
+                const friendlyName = file
+                    .replace(/^grabacion_/, '')
+                    .replace(/\.spec\.js$/, '')
+                    .replace(/\.js$/, '')
+                    .replace(/_\d{10,}$/, '') // Quitar timestamps largos
+                    .replace(/[_-]/g, ' ')
+                    .trim()
+                    .replace(/^\w/, c => c.toUpperCase()); // Capitalizar primera letra
 
-                db.get("SELECT id FROM escenarios WHERE id = ?", [id], (err, row) => {
+                // Buscar si ya existe un escenario que apunte a este archivo (evitar duplicados por sync)
+                db.get("SELECT id FROM escenarios WHERE config_json LIKE ?", [`%${file}%`], (err, row) => {
                     if (!row) {
                         console.log(`[SYNC] + Nuevo escenario detectado en disco: ${file}`);
-                        // Usar 'mf_flujos' como proceso por defecto para Medifarma (o el que corresponda según la rama)
                         const defaultProcess = 'mf_flujos'; 
                         db.run(`INSERT OR IGNORE INTO escenarios (id, process_id, name, config_json) VALUES (?, ?, ?, ?)`,
-                            [id, defaultProcess, friendlyName, JSON.stringify({ file: file })]);
+                            [file, defaultProcess, friendlyName, JSON.stringify({ file: file })]);
                     }
                 });
             });
@@ -469,12 +476,33 @@ app.post('/api/registry/scenario', (req, res) => {
     });
 });
 
-// 3.6. Eliminar un Escenario
+// 3.6. Eliminar un Escenario (y su archivo físico si es una grabación)
 app.delete('/api/registry/scenario/:id', (req, res) => {
     const { id } = req.params;
-    db.run("DELETE FROM escenarios WHERE id = ?", [id], function (err) {
-        if (err) return res.status(500).json({ error: err.toString() });
-        res.json({ success: true, message: 'Escenario eliminado' });
+    
+    // Primero buscar el archivo físico para eliminarlo
+    db.get("SELECT config_json FROM escenarios WHERE id = ?", [id], (err, row) => {
+        if (row) {
+            try {
+                const config = JSON.parse(row.config_json);
+                const relFile = config.recordedScript || config.file;
+                if (relFile) {
+                    const absPath = path.join(rootDir, relFile.startsWith('scripts/') ? relFile : `scripts/${relFile}`);
+                    if (fs.existsSync(absPath)) {
+                        fs.unlinkSync(absPath);
+                        console.log(`[DELETE] Archivo físico eliminado: ${absPath}`);
+                    }
+                }
+            } catch (e) {
+                console.error('[DELETE] Error eliminando archivo físico:', e.message);
+            }
+        }
+        
+        // Luego eliminar de la DB
+        db.run("DELETE FROM escenarios WHERE id = ?", [id], function (err) {
+            if (err) return res.status(500).json({ error: err.toString() });
+            res.json({ success: true, message: 'Escenario y archivo eliminados' });
+        });
     });
 });
 

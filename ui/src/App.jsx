@@ -1033,12 +1033,28 @@ export default function App() {
     }
   };
 
-  const deleteScenario = async () => {
-    if (!activeScenarioId || !window.confirm("¿Eliminar permanentemente?")) return;
+  const deleteScenario = async (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (!activeScenarioId) return;
+    
+    // Alerta personalizada para confirmar borrado físico
+    const confirmMsg = "¿Eliminar este escenario permanentemente?\n\nEsta acción borrará el registro de la base de datos y ELIMINARÁ EL ARCHIVO físico de la grabación de tu disco.";
+    
+    if (!window.confirm(confirmMsg)) return;
+
     try {
       const res = await fetch(`${API_BASE}/registry/scenario/${activeScenarioId}`, { method: 'DELETE' });
-      if ((await res.json()).success) { await fetchRegistry(); setActiveScenarioId(''); setNewScenarioName(''); setInstruccionesIa(''); addToast("Escenario eliminado.", "success"); }
-    } catch { addToast("Error al eliminar.", "error"); }
+      const data = await res.json();
+      if (data.success) { 
+        await fetchRegistry(); 
+        setActiveScenarioId(''); 
+        setNewScenarioName(''); 
+        setInstruccionesIa(''); 
+        addToast("Escenario y archivo eliminados.", "success"); 
+      }
+    } catch { 
+      addToast("Error al eliminar.", "error"); 
+    }
   };
 
   const openRecordModal = (prefilledName = '') => {
@@ -1531,8 +1547,9 @@ export default function App() {
                       </button>
                       {activeScenarioId && (
                         <button 
-                          onClick={deleteScenario} 
+                          onClick={(e) => deleteScenario(e)} 
                           className="btn-icon-danger"
+                          title="Eliminar permanentemente"
                           style={{ width: '46px', height: '46px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
                         >
                           <Trash2 size={16} />
