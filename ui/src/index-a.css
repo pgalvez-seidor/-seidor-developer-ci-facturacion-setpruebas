@@ -2143,3 +2143,61 @@ div[style*="fontSize: '0.65rem'"] {
   background: transparent !important;
   /* El canvas ya procesó la transparencia, así que aquí solo damos estilo */
 }
+/* === SIDEBAR HORIZONTAL BALANCE === */
+.sidebar {
+  width: 270px !important; /* Más espacio para que todo respire */
+  padding: 2rem 1.25rem !important;
+}
+
+.sidebar-section {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+/* === POWERED BY SAP AI CORE — PRESTIGE MODE === */
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1.5rem 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.sap-branding-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 74, 153, 0.05);
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 74, 153, 0.1);
+  transition: all 0.3s ease;
+}
+
+.sap-branding-badge:hover {
+  background: rgba(0, 74, 153, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 153, 0.05);
+}
+
+.sap-branding-text {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  color: var(--accent-primary) !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase;
+}
+
+.evolution-text {
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  opacity: 0.7;
+}

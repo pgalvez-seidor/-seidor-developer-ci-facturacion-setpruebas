@@ -286,23 +286,18 @@ const Sidebar = ({
         )}
       </div>
 
-      <div style={{ marginTop: 'auto', padding: '1.5rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', borderTop: '1px solid rgba(0,0,0,0.03)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.5 }}>
-          <Cpu size={12} color="#94a3b8" />
-          <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Potencia por SAP AI Core</span>
+      <div className="sidebar-footer">
+        <div className="sap-branding-badge">
+          <Cpu size={14} color="var(--accent-primary)" />
+          <span className="sap-branding-text">Potencia por SAP AI Core</span>
         </div>
-        
         <button 
           onClick={() => setShowChangelog(true)}
-          className="evolution-portal-trigger"
-          style={{ 
-            background: 'none', border: 'none', color: '#94a3b8', 
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-            opacity: 0.7, letterSpacing: '0.5px', marginTop: '4px'
-          }}
+          className="evolution-text"
+          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          <Sparkles size={14} className="sparkle-icon" />
-          <span style={{ fontSize: '0.72rem', fontWeight: '500' }}>Evolución del Sistema</span>
+          <Sparkles size={12} color="#f59e0b" />
+          <span>Evolución del Sistema</span>
         </button>
       </div>
 
