@@ -11,12 +11,14 @@ echo "         Seidor Perú"
 echo "----------------------------------------"
 echo ""
 
-# Sincronizar con el repositorio (Git Pull)
-echo "🔄 Sincronizando scripts con el servidor..."
-git fetch --all >/dev/null 2>&1
-git pull
-if [ $? -ne 0 ]; then
-  echo "⚠️  No se pudo sincronizar con Git. Usando versión local..."
+# Sincronizar con el repositorio (Git Pull — rama actual)
+echo "🔄 Sincronizando con el repositorio remoto..."
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+if [ -n "$CURRENT_BRANCH" ]; then
+  git fetch origin --quiet 2>/dev/null || true
+  git pull origin "$CURRENT_BRANCH" --quiet 2>/dev/null || echo "⚠️  Sin acceso remoto. Usando versión local de la rama: $CURRENT_BRANCH"
+else
+  echo "⚠️  No se detectó una rama git activa. Continuando con versión local..."
 fi
 echo ""
 

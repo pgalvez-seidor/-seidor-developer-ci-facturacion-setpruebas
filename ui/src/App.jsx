@@ -205,6 +205,163 @@ const ModernSelect = ({ value, onChange, options, placeholder = '-- seleccionar 
   );
 };
 
+// ─────────────────────────────────────────────────────────────
+// GIT INIT SCREEN — Splash elegante y minimalista
+// ─────────────────────────────────────────────────────────────
+const GitInitScreen = ({ onContinue }) => {
+  const [gitInfo, setGitInfo] = useState(null);
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [isChanging, setIsChanging] = useState(false);
+  const [phase, setPhase] = useState('loading'); // 'loading' | 'ready' | 'error'
+
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/git/init-check`);
+        const data = await res.json();
+        setGitInfo(data);
+        setSelectedBranch(data.current || data.branch || '');
+        setPhase('ready');
+      } catch (e) {
+        setPhase('error');
+      }
+    };
+    // Pequeño delay para que el logo aparezca primero
+    setTimeout(check, 600);
+  }, []);
+
+  const handleContinue = async () => {
+    if (!selectedBranch || !gitInfo) { onContinue(); return; }
+    const currentBranch = gitInfo.current || gitInfo.branch;
+    if (selectedBranch !== currentBranch) {
+      setIsChanging(true);
+      try {
+        await fetch(`${API_BASE}/checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ branch: selectedBranch })
+        });
+      } catch (_) {}
+      setIsChanging(false);
+    }
+    onContinue(selectedBranch);
+  };
+
+  const statusColor  = gitInfo?.gitConnected ? '#34c759' : gitInfo?.gitNotLinked ? '#ff9500' : '#8e8e93';
+  const statusLabel  = gitInfo?.gitConnected ? 'Conectado' : gitInfo?.gitNotLinked ? 'Sin repositorio' : 'Local';
+  const statusDot    = gitInfo?.gitConnected ? 'pulse-green' : 'pulse-orange';
+
+  return (
+    <div className="git-splash-overlay">
+      <div className="git-splash-card">
+
+        {/* ── LOGO ── */}
+        <div className="git-splash-logo-wrap">
+          <TransparentLogo src="/logo-pure.png" size={96} className="git-splash-logo" />
+          <div className="git-splash-brand">
+            Auto<span>Bot</span>
+            <span className="git-splash-version">v2.1.0</span>
+          </div>
+        </div>
+
+        {/* ── ESTADO GIT ── */}
+        {phase === 'loading' && (
+          <div className="git-splash-loading">
+            <div className="git-splash-spinner" />
+            <span>Conectando con repositorio...</span>
+          </div>
+        )}
+
+        {phase === 'error' && (
+          <div className="git-splash-status-row" style={{ color: '#ff3b30' }}>
+            <div className="git-splash-dot" style={{ background: '#ff3b30' }} />
+            <span>No se pudo conectar al backend. ¿Está iniciado el servidor?</span>
+          </div>
+        )}
+
+        {phase === 'ready' && (
+          <>
+            {/* Status pill */}
+            <div className="git-splash-status-row">
+              <div className={`git-splash-dot ${statusDot}`} style={{ background: statusColor }} />
+              <span style={{ color: statusColor, fontWeight: 600 }}>{statusLabel}</span>
+              {gitInfo.remote && (
+                <span className="git-splash-remote">{gitInfo.remote.replace('https://github.com/', '').replace('.git', '')}</span>
+              )}
+            </div>
+
+            {/* Ramas */}
+            {gitInfo.branches?.length > 0 && (
+              <div className="git-splash-branches">
+                <div className="git-splash-branches-label">Rama de trabajo</div>
+                <div className="git-splash-branch-list">
+                  {gitInfo.branches.map(b => {
+                    const isActive = b === (gitInfo.current || gitInfo.branch);
+                    const isSelected = b === selectedBranch;
+                    return (
+                      <button
+                        key={b}
+                        className={`git-splash-branch-item ${isSelected ? 'selected' : ''}`}
+                        onClick={() => setSelectedBranch(b)}
+                      >
+                        <div className="git-splash-branch-dot" style={{
+                          background: isActive ? '#34c759' : 'rgba(0,0,0,0.12)'
+                        }} />
+                        <span className="git-splash-branch-name">{b}</span>
+                        {isActive && <span className="git-splash-branch-tag">actual</span>}
+                        {isSelected && !isActive && <span className="git-splash-branch-tag switch">cambiar</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Info adicional */}
+            {(gitInfo.behind > 0 || gitInfo.uncommitted) && (
+              <div className="git-splash-notices">
+                {gitInfo.behind > 0 && (
+                  <div className="git-splash-notice warning">
+                    <Zap size={12} />
+                    {gitInfo.behind} commit{gitInfo.behind > 1 ? 's' : ''} pendiente{gitInfo.behind > 1 ? 's' : ''} de pull
+                  </div>
+                )}
+                {gitInfo.uncommitted && (
+                  <div className="git-splash-notice info">
+                    <AlertCircle size={12} />
+                    Hay cambios locales sin commitear
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CTA */}
+            <button
+              className="git-splash-cta"
+              onClick={handleContinue}
+              disabled={isChanging}
+            >
+              {isChanging
+                ? 'Cambiando rama...'
+                : selectedBranch !== (gitInfo.current || gitInfo.branch)
+                  ? `Cambiar a ${selectedBranch} y continuar`
+                  : `Continuar con ${selectedBranch || 'rama actual'}`
+              }
+              <ChevronRight size={16} />
+            </button>
+          </>
+        )}
+
+        {/* ── FOOTER ── */}
+        <div className="git-splash-footer">
+          <Cpu size={12} color="#8e8e93" />
+          <span>Seidor Perú · AutoBot QA Engine</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CLIENTS = [
   { id: 'CI', name: 'Clínica Internacional', icon: <div style={{ width: '24px', height: '24px', background: 'var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '10px', fontWeight: 'bold' }}>CI</div>, env: 'QAS' },
 ];
@@ -435,6 +592,8 @@ const PaymentTray = ({ pagos, medioVuelto, updatePagos, updateMedioVuelto }) => 
 };
 
 export default function App() {
+  const [gitInitDone, setGitInitDone] = useState(false);
+
   const [registry, setRegistry] = useState([]);
   const [activeClient, setActiveClient] = useState('Medifarma');
   const [activeProcess, setActiveProcess] = useState('mf_flujos');
@@ -643,8 +802,8 @@ export default function App() {
       });
       const data = await r.json();
       if (data.success) {
-        setCurrentBranch(branch);
-        await loadRegistry();
+        setBranch(branch);          // FIX: era setCurrentBranch (no definido)
+        await fetchRegistry();     // FIX: era loadRegistry (no definido)
         console.log(`[GIT] ${data.message}`);
       } else {
         alert(`❌ Error Git: ${data.error}`);
@@ -1115,6 +1274,13 @@ export default function App() {
       setPdfLoading(false);
     }
   };
+
+  if (!gitInitDone) {
+    return <GitInitScreen onContinue={(branch) => {
+      if (branch) setBranch(branch);
+      setGitInitDone(true);
+    }} />;
+  }
 
   return (
     <div className="app">

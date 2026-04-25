@@ -51,27 +51,129 @@ const killProcessTree = (pid) => {
 // Sesiones de grabación activas (Playwright Codegen)
 const activeRecordings = new Map();
 
-// 1. Obtener ramas locales y remotas
+// 1. Obtener ramas locales y remotas (tolerante a fallos de red)
 app.get('/api/branches', async (req, res) => {
     try {
-        await runCmd('git fetch origin');
-        const output = await runCmd('git branch -a');
+        // Intentar fetch remoto con timeout - si falla, usamos ramas locales
+        let gitConnected = false;
+        try {
+            await Promise.race([
+                runCmd('git fetch origin'),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+            ]);
+            gitConnected = true;
+        } catch (fetchErr) {
+            console.warn(`[GIT] Fetch remoto falló (modo local): ${fetchErr.message}`);
+        }
 
+        const output = await runCmd('git branch -a');
         let branchesSet = new Set();
         output.split('\n').forEach(line => {
             let b = line.trim().replace(/^\* /, '');
             if (b.includes('->')) return;
-            // Limpiar remotes/origin/ -> "" u origin/ -> ""
             b = b.replace('remotes/origin/', '').replace('origin/', '');
-            if (b !== 'HEAD') branchesSet.add(b);
+            if (b && b !== 'HEAD') branchesSet.add(b);
         });
 
         const branches = Array.from(branchesSet);
         const currentBranch = await runCmd('git rev-parse --abbrev-ref HEAD');
 
-        res.json({ branches, current: currentBranch });
+        res.json({ branches, current: currentBranch, gitConnected });
     } catch (e) {
-        res.status(500).json({ error: e.toString() });
+        // Si ni siquiera hay .git, indicarlo claramente
+        res.json({ branches: [], current: '', gitConnected: false, gitNotLinked: true, error: e.toString() });
+    }
+});
+
+// 1.5 Git Status — cuántos commits atrás estamos y si hay cambios sin commitear
+app.get('/api/git/status', async (req, res) => {
+    try {
+        const branch = await runCmd('git rev-parse --abbrev-ref HEAD').catch(() => 'unknown');
+        
+        // Contar commits pendientes de pull (behind)
+        let behind = 0;
+        try {
+            const behindStr = await runCmd(`git rev-list HEAD..origin/${branch} --count`);
+            behind = parseInt(behindStr) || 0;
+        } catch (_) { /* sin remoto configurado */ }
+
+        // Detectar cambios locales sin commitear
+        let hasChanges = false;
+        try {
+            const statusOut = await runCmd('git status --porcelain');
+            hasChanges = statusOut.trim().length > 0;
+        } catch (_) {}
+
+        res.json({ branch, behind, hasChanges, gitConnected: true });
+    } catch (e) {
+        res.json({ branch: '', behind: 0, hasChanges: false, gitConnected: false, error: e.toString() });
+    }
+});
+
+// 1.6 Git Init-Check — verificación completa al arranque de la app
+app.get('/api/git/init-check', async (req, res) => {
+    const gitDir = path.join(rootDir, '.git');
+    if (!fs.existsSync(gitDir)) {
+        return res.json({
+            gitConnected: false,
+            gitNotLinked: true,
+            branch: '',
+            branches: [],
+            remote: null,
+            behind: 0,
+            uncommitted: false
+        });
+    }
+
+    try {
+        const branch = await runCmd('git rev-parse --abbrev-ref HEAD').catch(() => 'unknown');
+        
+        // Fetch con timeout para no bloquear el arranque
+        let gitConnected = false;
+        try {
+            await Promise.race([
+                runCmd('git fetch origin'),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+            ]);
+            gitConnected = true;
+        } catch (_) {}
+
+        // Listar todas las ramas (locales + remotas deduplicadas)
+        const branchOutput = await runCmd('git branch -a').catch(() => '');
+        const branchesSet = new Set();
+        branchOutput.split('\n').forEach(line => {
+            let b = line.trim().replace(/^\* /, '');
+            if (b.includes('->')) return;
+            b = b.replace('remotes/origin/', '').replace('origin/', '');
+            if (b && b !== 'HEAD') branchesSet.add(b);
+        });
+        const branches = Array.from(branchesSet);
+
+        // Remote URL
+        let remote = null;
+        try { remote = await runCmd('git remote get-url origin'); } catch (_) {}
+
+        // Commits behind
+        let behind = 0;
+        try {
+            const behindStr = await runCmd(`git rev-list HEAD..origin/${branch} --count`);
+            behind = parseInt(behindStr) || 0;
+        } catch (_) {}
+
+        // Cambios no commiteados
+        let uncommitted = false;
+        try {
+            const statusOut = await runCmd('git status --porcelain');
+            uncommitted = statusOut.trim().length > 0;
+        } catch (_) {}
+
+        res.json({ gitConnected, gitNotLinked: false, branch, branches, remote, behind, uncommitted });
+    } catch (e) {
+        res.json({
+            gitConnected: false, gitNotLinked: false,
+            branch: 'unknown', branches: [], remote: null,
+            behind: 0, uncommitted: false, error: e.toString()
+        });
     }
 });
 

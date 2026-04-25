@@ -1685,3 +1685,233 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   max-width: 250px;
   line-height: 1.5;
 }
+
+/* ══════════════════════════════════════════════════════
+   GIT INIT SCREEN — Splash Elegante y Minimalista
+   ══════════════════════════════════════════════════════ */
+
+.git-splash-overlay {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: splashFadeIn 0.35s ease;
+}
+
+@keyframes splashFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.git-splash-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+  padding: 48px 40px 40px;
+  background: #ffffff;
+  animation: splashCardRise 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+@keyframes splashCardRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.git-splash-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.git-splash-logo {
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.08));
+}
+
+.git-splash-brand {
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: -0.8px;
+  color: #1d1d1f;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.git-splash-brand span:first-child { font-weight: 700; }
+
+.git-splash-version {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #8e8e93 !important;
+  letter-spacing: 0 !important;
+  margin-left: 6px;
+}
+
+.git-splash-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #8e8e93;
+  font-size: 14px;
+  font-weight: 400;
+  margin-bottom: 32px;
+  animation: fadeIn 0.3s ease;
+}
+
+.git-splash-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-top-color: #0071e3;
+  border-radius: 50%;
+  animation: spinSmooth 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spinSmooth { to { transform: rotate(360deg); } }
+
+.git-splash-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+  font-size: 13px;
+  color: #6e6e73;
+  animation: fadeIn 0.4s ease;
+}
+
+.git-splash-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.git-splash-dot.pulse-green  { animation: pulseGreen  2s ease-in-out infinite; }
+.git-splash-dot.pulse-orange { animation: pulseOrange 2s ease-in-out infinite; }
+
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.35); }
+  50%       { box-shadow: 0 0 0 5px rgba(52, 199, 89, 0); }
+}
+
+@keyframes pulseOrange {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.35); }
+  50%       { box-shadow: 0 0 0 5px rgba(255, 149, 0, 0); }
+}
+
+.git-splash-remote {
+  font-size: 11px;
+  color: #8e8e93;
+  background: #f5f5f7;
+  padding: 2px 8px;
+  border-radius: 100px;
+  max-width: 210px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.git-splash-branches {
+  width: 100%;
+  margin-bottom: 20px;
+  animation: fadeIn 0.4s ease 0.1s both;
+}
+
+.git-splash-branches-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 10px;
+}
+
+.git-splash-branch-list { display: flex; flex-direction: column; gap: 6px; }
+
+.git-splash-branch-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: #f5f5f7;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.git-splash-branch-item:hover    { background: #ececee; transform: translateX(2px); }
+.git-splash-branch-item.selected { background: rgba(0,113,227,0.06); border-color: rgba(0,113,227,0.25); }
+
+.git-splash-branch-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%; flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.git-splash-branch-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d1d1f;
+  font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+  letter-spacing: -0.2px;
+}
+
+.git-splash-branch-tag {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 100px;
+  background: rgba(52,199,89,0.12); color: #1a7f34;
+  text-transform: lowercase; font-family: -apple-system, sans-serif;
+}
+
+.git-splash-branch-tag.switch { background: rgba(0,113,227,0.1); color: #0071e3; }
+
+.git-splash-notices {
+  width: 100%; display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 20px; animation: fadeIn 0.3s ease;
+}
+
+.git-splash-notice {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  padding: 8px 12px; border-radius: 8px;
+}
+
+.git-splash-notice.warning { background: rgba(255,149,0,0.08); color: #c26b00; }
+.git-splash-notice.info    { background: rgba(0,113,227,0.07);  color: #0058b4; }
+
+.git-splash-cta {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px 20px;
+  background: #0071e3; color: white; border: none;
+  border-radius: 100px;
+  font-size: 15px; font-weight: 500; font-family: inherit;
+  cursor: pointer; margin-top: 8px;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  box-shadow: 0 4px 16px rgba(0,113,227,0.22);
+  animation: fadeIn 0.4s ease 0.15s both;
+}
+
+.git-splash-cta:hover:not(:disabled)  { background: #0058b4; box-shadow: 0 6px 20px rgba(0,113,227,0.3); transform: translateY(-1px); }
+.git-splash-cta:active:not(:disabled) { transform: scale(0.98) translateY(0); box-shadow: none; }
+.git-splash-cta:disabled              { opacity: 0.5; cursor: not-allowed; }
+
+.git-splash-footer {
+  display: flex; align-items: center; gap: 5px;
+  margin-top: 32px;
+  font-size: 11px; color: #b0b0b8; font-weight: 400;
+  animation: fadeIn 0.4s ease 0.3s both;
+}
