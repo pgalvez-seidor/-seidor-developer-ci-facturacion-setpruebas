@@ -1936,20 +1936,20 @@ export default function App() {
           <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <div>
-                <h2 style={{ margin: 0, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>🤖 Asistente IA</h2>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>Solo responde sobre scripts de automatización Playwright</div>
+                <h2 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={18} /> Asistente IA</h2>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>Solo responde sobre scripts de automatización Playwright</div>
               </div>
               {!aiLoading && <button onClick={() => setShowAiModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}><X size={20} /></button>}
             </div>
 
-            {/* Input de instrucción */}
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ fontWeight: '700', fontSize: '0.8rem', display: 'block', marginBottom: '8px' }}>¿Qué quieres cambiar en el flujo?</label>
+            <div style={{ marginBottom: '1.2rem' }}>
+              <label className="modern-label" style={{ display: 'block', marginBottom: '8px' }}>¿Qué quieres cambiar en el flujo?</label>
               <textarea
                 value={aiInstruction}
                 onChange={e => { setAiInstruction(e.target.value); setAiResponse(null); setAiApplied(false); }}
                 placeholder={'Ej: "El botón Confirmar a veces demora, espera hasta 5 segundos"\n"Después del login aparece un modal, ignóralo"\n"Graba el número de documento que aparece en pantalla"'}
-                style={{ width: '100%', height: '90px', boxSizing: 'border-box', resize: 'vertical', marginTop: '0', fontFamily: 'inherit', lineHeight: '1.5' }}
+                className="modern-textarea"
+                style={{ height: '90px', resize: 'vertical' }}
                 disabled={aiLoading}
               />
             </div>
@@ -1957,9 +1957,9 @@ export default function App() {
             <button
               onClick={analyzeWithAi}
               disabled={aiLoading || !aiInstruction.trim()}
-              style={{ width: '100%', padding: '12px', background: aiLoading ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '10px', cursor: aiLoading ? 'not-allowed' : 'pointer', fontWeight: '700', fontSize: '0.9rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ width: '100%', padding: '11px', background: aiLoading ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '100px', cursor: aiLoading ? 'not-allowed' : 'pointer', fontWeight: '700', fontSize: '0.82rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', letterSpacing: '0.2px' }}
             >
-              {aiLoading ? <><div style={{ width: '14px', height: '14px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'pulse 0.8s linear infinite' }} /> Analizando...</> : '🔍 Analizar y proponer cambio'}
+              {aiLoading ? <><div style={{ width: '13px', height: '13px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Analizando...</> : <><Brain size={14} /> Analizar y proponer cambio</>}
             </button>
 
             {/* Respuesta de la IA */}
