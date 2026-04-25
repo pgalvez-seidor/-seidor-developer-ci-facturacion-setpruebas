@@ -2886,3 +2886,55 @@ body {
 .btn-apple-primary:hover {
   background: #0077ed !important;
 }
+/* === APPLE MASTER SPACING & PADDING === */
+.config-panel {
+  padding: 60px !important; /* Espacio exterior masivo */
+}
+
+.config-flow {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 48px !important; /* Distancia entre tarjetas Apple-style */
+}
+
+.config-block {
+  padding: 48px !important; /* Padding interno generoso */
+  border-radius: 32px !important; /* Bordes aún más suaves */
+}
+
+.config-block-header {
+  margin-bottom: 32px !important; /* Aire tras el título */
+}
+
+.config-block-header h3 {
+  font-size: 1.5rem !important; /* Títulos más grandes y claros */
+  letter-spacing: -0.8px !important;
+}
+
+/* Espaciado de Labels e Inputs */
+.field-group-modern {
+  margin-bottom: 24px !important;
+}
+
+.modern-label {
+  margin-bottom: 12px !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 1.2px !important;
+}
+
+/* El bloque de IA merece aún más aire */
+.prompt-box-container {
+  margin-top: 10px !important;
+}
+
+.modern-textarea {
+  padding: 20px !important; /* Aire dentro del texto */
+  min-height: 120px !important;
+  border-radius: 20px !important;
+}
+
+/* Sidebar labels con más aire */
+.sidebar-label {
+  margin-top: 3rem !important;
+  margin-bottom: 1rem !important;
+}
