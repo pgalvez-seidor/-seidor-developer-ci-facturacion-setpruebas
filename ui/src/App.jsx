@@ -215,19 +215,26 @@ const GitInitScreen = ({ onContinue }) => {
   const [phase, setPhase] = useState('loading'); // 'loading' | 'ready' | 'error'
 
   useEffect(() => {
+    let attempts = 0;
+    const MAX = 16;
     const check = async () => {
       try {
         const res = await fetch(`${API_BASE}/git/init-check`);
+        if (!res.ok) throw new Error('not ready');
         const data = await res.json();
         setGitInfo(data);
         setSelectedBranch(data.current || data.branch || '');
         setPhase('ready');
       } catch (e) {
-        setPhase('error');
+        attempts++;
+        if (attempts < MAX) {
+          setTimeout(check, 500);
+        } else {
+          setPhase('error');
+        }
       }
     };
-    // Pequeño delay para que el logo aparezca primero
-    setTimeout(check, 600);
+    setTimeout(check, 800);
   }, []);
 
   const handleContinue = async () => {

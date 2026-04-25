@@ -51,6 +51,8 @@ const killProcessTree = (pid) => {
 // Sesiones de grabación activas (Playwright Codegen)
 const activeRecordings = new Map();
 
+app.get('/api/health', (req, res) => res.json({ ok: true }));
+
 // 1. Obtener ramas locales y remotas (tolerante a fallos de red)
 app.get('/api/branches', async (req, res) => {
     try {
