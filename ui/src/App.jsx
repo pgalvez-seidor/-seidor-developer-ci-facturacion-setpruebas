@@ -197,7 +197,6 @@ const Sidebar = ({
       </div>
 
       <div className="sidebar-section">
-        </div>
         
         <div className="sidebar-label">Entorno Git</div>
         {gitNotLinked ? (
