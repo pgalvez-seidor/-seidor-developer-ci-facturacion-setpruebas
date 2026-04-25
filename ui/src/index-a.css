@@ -1351,3 +1351,61 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   height: 18px !important;
   opacity: 0.7;
 }
+/* === DEFINITIVE PILL REFINEMENT (NO BORDERS) === */
+
+/* Botón Git Sincronizar */
+.btn-git-sync {
+  height: 48px !important;
+  border-radius: 24px !important; /* Píldora perfecta */
+  border: none !important; /* Adiós al borde */
+  background: #eef2ff !important;
+  color: #4f46e5 !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  box-shadow: none !important;
+}
+
+/* Items de Proyecto (Todos en píldora) */
+.project-pill-item, 
+.sidebar-project-item {
+  height: 48px !important;
+  border-radius: 24px !important; /* Píldora perfecta */
+  border: none !important; /* Sin bordes */
+  margin-bottom: 12px !important;
+  padding: 0 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  transition: all 0.2s ease !important;
+  background: #f5f5f7 !important; /* Gris Apple suave para inactivos */
+  color: #86868b !important;
+  cursor: pointer;
+}
+
+/* Proyecto Activo */
+.project-pill-item.active, 
+.sidebar-project-item.active {
+  background: #e0f2fe !important; /* Azul suave para el seleccionado */
+  color: #0369a1 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02) !important;
+}
+
+/* Iconos y Texto */
+.project-pill-item span, 
+.sidebar-project-item span {
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.project-pill-item svg, 
+.sidebar-project-item svg {
+  width: 18px !important;
+  height: 18px !important;
+}
