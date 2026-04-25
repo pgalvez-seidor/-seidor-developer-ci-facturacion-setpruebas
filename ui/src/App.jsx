@@ -348,12 +348,13 @@ export default function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [changelogContent, setChangelogContent] = useState('');
-  const [gitNotLinked, setGitNotLinked] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
+  const [isGitLoading, setIsGitLoading] = useState(false);
   const [remoteChangesCount, setRemoteChangesCount] = useState(0);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [backendError, setBackendError] = useState(null);
-  const [isGitLoading, setIsGitLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [gitNotLinked, setGitNotLinked] = useState(false);
   const [gitToken, setGitToken] = useState('');
   const [projectDir, setProjectDir] = useState('');
 
@@ -536,12 +537,37 @@ export default function App() {
   };
 
   const saveScenario = async () => {
-    if (!newScenarioName.trim()) { addToast("Ingresa un nombre para el escenario", "error"); return; }
-    const scenarioToSave = { id: activeScenarioId || `esc_${Date.now()}`, name: newScenarioName.trim(), instrucciones_ia: instruccionesIa, config: builderConfig };
+    if (!newScenarioName) return;
+    setSaveStatus('loading');
     try {
-      const res = await fetch(`${API_BASE}/registry/scenario`, { method: 'POST', body: JSON.stringify({ clientId: activeClient, processId: activeProcess, scenario: scenarioToSave }), headers: { 'Content-Type': 'application/json' } });
-      if ((await res.json()).success) { await fetchRegistry(); setActiveScenarioId(scenarioToSave.id); addToast("Escenario guardado en SQLite.", "success"); }
-    } catch { addToast("Error al guardar escenario.", "error"); }
+      const response = await fetch(`${API_BASE}/registry/scenario`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client: activeClient,
+          process: activeProcess,
+          scenarioId: activeScenarioId || Date.now().toString(),
+          name: newScenarioName,
+          config: {
+            ...builderConfig,
+            instruccionesIa
+          }
+        })
+      });
+      if (response.ok) {
+        await loadRegistry();
+        setSaveStatus('success');
+        addToast("Escenario guardado correctamente.", "success");
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      } else {
+        setSaveStatus('error');
+        addToast("Error al guardar el escenario.", "error");
+      }
+    } catch (error) {
+      console.error(error);
+      setSaveStatus('error');
+      addToast("Error de conexión.", "error");
+    }
   };
 
   const deleteScenario = async () => {
