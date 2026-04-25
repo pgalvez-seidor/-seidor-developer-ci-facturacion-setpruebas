@@ -1693,12 +1693,13 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .git-splash-overlay {
   position: fixed;
   inset: 0;
-  background: #ffffff;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: splashFadeIn 0.35s ease;
+  animation: splashFadeIn 0.25s ease;
 }
 
 @keyframes splashFadeIn {
@@ -1711,10 +1712,12 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 400px;
-  padding: 48px 40px 40px;
+  max-width: 380px;
+  padding: 36px 32px 28px;
   background: #ffffff;
-  animation: splashCardRise 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  border-radius: 20px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06);
+  animation: splashCardRise 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
 }
 
 @keyframes splashCardRise {

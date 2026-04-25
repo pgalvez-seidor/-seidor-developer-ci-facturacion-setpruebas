@@ -13,7 +13,6 @@ const TransparentLogo = ({ src, className, size = 64 }) => {
 
   useEffect(() => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
     img.src = src;
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -231,6 +230,9 @@ const GitInitScreen = ({ onContinue }) => {
         setGitInfo(data);
         setSelectedBranch(data.current || data.branch || '');
         setPhase('ready');
+        if (data.gitConnected) {
+          fetch(`${API_BASE}/git/pull`, { method: 'POST' }).catch(() => {});
+        }
       } catch (e) {
         if (cancelled) return;
         attempts++;
@@ -444,8 +446,8 @@ const Sidebar = ({
     <aside className="sidebar">
       <div className="brand-container">
         <TransparentLogo 
-          src="/logo-pure.png" 
-          className="brand-isotype" 
+          src="./logo-pure.png"
+          className="brand-isotype"
           size={64} 
         />
         <div className="brand-name">
@@ -1251,13 +1253,11 @@ export default function App() {
     if (window.confirm("¿Estás seguro de que deseas APAGAR AutoBot? Esto cerrará todos los procesos y el servidor local.")) {
       try {
         await fetch(`${API_BASE}/system/shutdown`, { method: 'POST' });
-        addToast("Apagando sistema...", "success");
-        setTimeout(() => {
-          window.location.href = "about:blank";
-        }, 2000);
-      } catch {
-        addToast("Error al intentar apagar el servidor.", "error");
-      }
+      } catch (_) {}
+      setTimeout(() => {
+        if (window.electron?.quit) window.electron.quit();
+        else window.close();
+      }, 800);
     }
   };
 

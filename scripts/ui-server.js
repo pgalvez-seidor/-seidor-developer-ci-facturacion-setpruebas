@@ -259,6 +259,16 @@ app.post('/api/config/git-token', (req, res) => {
 
 
 // 2. Cambiar de rama (Checkout + Pull Blindado)
+app.post('/api/git/pull', async (req, res) => {
+    try {
+        const branch = await runCmd('git rev-parse --abbrev-ref HEAD');
+        const result = await runCmd(`git pull origin ${branch}`);
+        res.json({ ok: true, result });
+    } catch (e) {
+        res.json({ ok: false, result: e.toString() });
+    }
+});
+
 app.post('/api/checkout', async (req, res) => {
     const { branch } = req.body;
     if (!branch) return res.status(400).json({ error: 'Falta la rama' });
