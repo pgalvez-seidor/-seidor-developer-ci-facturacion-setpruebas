@@ -1077,6 +1077,28 @@ export default function App() {
                       </button>
                     )}
                   </div>
+
+                  {/* Banner: escenario sin script grabado (INTEGRADO) */}
+                  {activeScenarioId && (() => {
+                    const esc = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === activeScenarioId);
+                    if (esc?.config?.recordedScript) return (
+                      <div style={{ marginTop: '12px', padding: '10px 14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <div style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: '700' }}>✅ Flujo grabado asignado</div>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button onClick={() => openAiModal(esc.config.recordedScript)} style={{ padding: '4px 8px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.65rem' }}>
+                              🤖 Afinar IA
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                    return (
+                      <div style={{ marginTop: '12px', padding: '10px 14px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#d97706', fontWeight: '800' }}>⚠️ SIN FLUJO GRABADO</div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -1156,180 +1178,6 @@ export default function App() {
 
             </div>
 
-            {/* Banner: escenario sin script grabado */}
-            {activeClient === 'Medifarma' && activeScenarioId && (() => {
-              const esc = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === activeScenarioId);
-              if (esc?.config?.recordedScript) return (
-                <div style={{ marginBottom: '1rem', padding: '10px 14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <div style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: '700' }}>✅ Flujo grabado asignado</div>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={openScriptPicker} style={{ padding: '5px 10px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.72rem' }}>
-                        🔄 Cambiar
-                      </button>
-                      <button onClick={() => openScriptEditor(esc.config.recordedScript)} style={{ padding: '5px 10px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.72rem' }}>
-                        📝 Ver/Editar
-                      </button>
-                      <button onClick={() => openAiModal(esc.config.recordedScript)} style={{ padding: '5px 10px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        🤖 Afinar con IA
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {esc.config.recordedScript.replace('scripts/', '')}
-                  </div>
-                </div>
-              );
-              if (!esc?.config?.recordedScript) return (
-                <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.78rem', fontWeight: '800', color: '#f59e0b', marginBottom: '8px' }}>⚠️ ESCENARIO SIN FLUJO GRABADO</div>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 12px' }}>Este escenario aún no tiene un flujo grabado. Puedes grabarlo ahora o asignar uno existente.</p>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => openRecordModal(esc.name)} style={{ flex: 1, padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.78rem' }}>
-                      ● Grabar ahora
-                    </button>
-                    <button onClick={openScriptPicker} style={{ flex: 1, padding: '8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.78rem' }}>
-                      📂 Usar existente
-                    </button>
-                  </div>
-                </div>
-              );
-              return null;
-            })()}
-
-            <div className="config-form">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                {activeClient !== 'Medifarma' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label>Tipo Comprobante</label>
-                    <ModernSelect 
-                      value={builderConfig.tipoComprobante} 
-                      onChange={val => setBuilderConfig({ ...builderConfig, tipoComprobante: val })}
-                      options={[
-                        { label: 'Boleta', value: 'Boleta' },
-                        { label: 'Factura', value: 'Factura' }
-                      ]}
-                    />
-                  </div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label>Iteraciones</label>
-                  <input type="number" min="1" value={builderConfig.iteraciones} onChange={e => setBuilderConfig({ ...builderConfig, iteraciones: parseInt(e.target.value) || 1 })} />
-                </div>
-              </div>
-
-              {activeClient !== 'Medifarma' && builderConfig.tipoComprobante === 'Factura' && (
-                <div style={{ marginTop: '1rem', background: 'rgba(52, 152, 219, 0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(52, 152, 219, 0.2)' }}>
-                  <label style={{ color: '#3498db', fontWeight: '800', fontSize: '0.7rem', display: 'block', marginBottom: '8px' }}>DATOS FISCALES OBLIGATORIOS</label>
-                  <input
-                    type="text"
-                    placeholder="Ingrese RUC (11 dígitos)"
-                    maxLength="11"
-                    value={builderConfig.ruc}
-                    onChange={e => setBuilderConfig({ ...builderConfig, ruc: e.target.value.replace(/\D/g, '') })}
-                    style={{ width: '100%', boxSizing: 'border-box', border: '1px solid var(--card-border)', background: 'white', color: 'var(--text-main)' }}
-                  />
-                </div>
-              )}
-
-              <div className="settings-grid">
-                <ModernSwitch 
-                  checked={builderConfig.headless} 
-                  onChange={checked => setBuilderConfig({ ...builderConfig, headless: checked })}
-                  label="Modo Ultra-Velocidad (Headless)"
-                  description={builderConfig.headless 
-                    ? "La prueba volará en segundo plano (Ideal para ejecución masiva)" 
-                    : "El navegador se abrirá para auditoría visual (Ideal para depurar)"
-                  }
-                  icon={Zap}
-                />
-              </div>
-
-              {activeClient !== 'Medifarma' && activeProcess === 'facturacion' && (
-                <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--card-border)' }}>
-                  <div style={{ gridColumn: 'span 2', fontSize: '0.7rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', marginBottom: '5px' }}>Destino de Pre-Factura API</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label>Usuario Cajero</label>
-                    <input type="text" value={builderConfig.usuarioCajero} onChange={e => setBuilderConfig({ ...builderConfig, usuarioCajero: e.target.value.toUpperCase() })} placeholder="Eje: PGALVEZ3" />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label>Código Centro</label>
-                    <input type="text" maxLength="8" value={builderConfig.codigoCentro} onChange={e => setBuilderConfig({ ...builderConfig, codigoCentro: e.target.value })} placeholder="Eje: 4" />
-                  </div>
-                  <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      N° Pre-Factura
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '400' }}>(opcional — si hay varias copias, se incrementa automáticamente)</span>
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="Ej: 1393497298 — vacío = API lo crea sola"
-                      value={builderConfig.prefacturaBase}
-                      onChange={e => setBuilderConfig({ ...builderConfig, prefacturaBase: e.target.value })}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {activeClient !== 'Medifarma' && (
-                <PaymentTray pagos={builderConfig.pagos} medioVuelto={builderConfig.medioVuelto} updatePagos={p => setBuilderConfig({ ...builderConfig, pagos: p })} updateMedioVuelto={v => setBuilderConfig({ ...builderConfig, medioVuelto: v })} />
-              )}
-
-              <div style={{ marginTop: '1rem' }}>
-                <label>Nombre del Escenario</label>
-                <input type="text" placeholder="Ej: Pago Efectivo 100%" value={newScenarioName} onChange={e => setNewScenarioName(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', marginTop: '8px' }} />
-
-                <label style={{ marginTop: '1.2rem', display: 'block' }}>Instrucciones Detalladas</label>
-                <textarea placeholder="Describe el flujo para la bitácora..." value={instruccionesIa} onChange={e => setInstruccionesIa(e.target.value)} style={{ width: '100%', height: '80px', boxSizing: 'border-box', marginTop: '8px' }} />
-              </div>
-
-              {/* ── Botonera de acción ── */}
-              {(() => {
-                const isMedifarmaFlow = activeClient === 'Medifarma';
-                const hasName = !!newScenarioName.trim();
-                const hasScript = !!builderConfig.recordedScript;
-                const hasPayment = (builderConfig.pagos?.length ?? 0) > 0;
-                const validFiscal = builderConfig.tipoComprobante !== 'Factura' || !!builderConfig.ruc?.trim();
-                const canAdd = hasName && (isMedifarmaFlow ? hasScript : (hasPayment && validFiscal));
-                const disabledReason = !hasName
-                  ? 'Ingresa un nombre para el escenario'
-                  : isMedifarmaFlow && !hasScript
-                  ? 'Asigna un flujo grabado primero'
-                  : !isMedifarmaFlow && !hasPayment
-                  ? 'Agrega un método de pago'
-                  : !isMedifarmaFlow && !validFiscal
-                  ? 'Ingresa el RUC de la factura'
-                  : null;
-
-                return (
-                  <div style={{ marginTop: '1.25rem', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button
-                      className="btn-secondary"
-                      onClick={saveScenario}
-                      disabled={!hasName}
-                    >
-                      Guardar
-                    </button>
-                    <div style={{ flex: 1 }} />
-                    {disabledReason && !addedFlash && (
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', maxWidth: '150px', textAlign: 'right', lineHeight: 1.3 }}>
-                        {disabledReason}
-                      </span>
-                    )}
-                    <button
-                      className={`btn-add${addedFlash ? ' btn-add-success' : ''}`}
-                      onClick={addToBatch}
-                      disabled={!canAdd || addedFlash}
-                    >
-                      {addedFlash
-                        ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{animation:'popIn 300ms cubic-bezier(0.34,1.56,0.64,1)'}}><polyline points="20 6 9 17 4 12"/></svg> Añadido</>
-                        : '+ Añadir al lote'
-                      }
-                    </button>
-                  </div>
-                );
-              })()}
-            </div>
           </div>
 
           <div className="batch-panel">

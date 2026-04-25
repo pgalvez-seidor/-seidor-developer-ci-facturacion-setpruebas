@@ -1315,3 +1315,21 @@ input[type="text"], input[type="number"], textarea, .modern-select-trigger {
 .modern-select-option:active {
   transform: scale(0.98);
 }
+
+/* Scroll Control for Main Panels */
+.config-panel, .batch-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 52px); /* Descontando el Topbar */
+}
+
+/* Hide scrollbar for cleaner look if requested later, but for now standard is better */
+.config-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.config-panel::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.05);
+  border-radius: 10px;
+}
