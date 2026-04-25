@@ -213,35 +213,55 @@ const syncScenariosWithFileSystem = async () => {
             return;
         }
 
+        const KNOWN_UTILITIES = ['db.js', 'api-helper.js', 'ui-server.js', 'compare-ai.js', 'SapAiCoreProvider.js', 'runner.js', 'report-generator.js', 'debug-selector.js', 'test-sap-ai.js', 'debug-dom.spec.js'];
+
         // Solo registrar archivos de prueba (.spec.js) o grabaciones (.js) que no sean librerías conocidas
         const files = fs.readdirSync(scriptsPath).filter(f => {
             const isSpec = f.endsWith('.spec.js');
             const isGrabacion = f.startsWith('grabacion_') && f.endsWith('.js');
-            const isKnownUtility = ['db.js', 'api-helper.js', 'ui-server.js', 'compare-ai.js', 'SapAiCoreProvider.js', 'runner.js', 'report-generator.js', 'debug-selector.js', 'test-sap-ai.js', 'debug-dom.spec.js'].includes(f);
-            return (isSpec || isGrabacion) && !isKnownUtility;
+            return (isSpec || isGrabacion) && !KNOWN_UTILITIES.includes(f);
         });
         console.log(`[SYNC] Iniciando sincronización de ${files.length} scripts de prueba en disco...`);
 
+        const toFriendlyName = (file) => {
+            return file
+                .replace(/^grabacion_/, '')
+                .replace(/\.spec\.js$/, '')
+                .replace(/\.js$/, '')
+                .replace(/_\d{10,}(_backup_\d+)?$/, '')
+                .replace(/_backup_\d+$/, '')
+                .replace(/[_-]+/g, ' ')
+                .trim()
+                .split(' ')
+                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' ');
+        };
+
+        const getGitMeta = async (file) => {
+            try {
+                const log = await runCmd(`git log --diff-filter=A --format="%an|||%aI" -- scripts/${file}`);
+                const [author, date] = (log || '').split('|||');
+                return {
+                    created_by: (author || '').trim() || null,
+                    created_at: (date || '').trim() || new Date().toISOString()
+                };
+            } catch (_) {
+                return { created_by: null, created_at: new Date().toISOString() };
+            }
+        };
+
         // 1. Registrar archivos nuevos
         db.serialize(() => {
-            files.forEach(file => {
-                // Nombre amigable: quitar grabacion_, timestamps y extensiones
-                const friendlyName = file
-                    .replace(/^grabacion_/, '')
-                    .replace(/\.spec\.js$/, '')
-                    .replace(/\.js$/, '')
-                    .replace(/_\d{10,}$/, '') // Quitar timestamps largos
-                    .replace(/[_-]/g, ' ')
-                    .trim()
-                    .replace(/^\w/, c => c.toUpperCase()); // Capitalizar primera letra
-
-                // Buscar si ya existe un escenario que apunte a este archivo (evitar duplicados por sync)
-                db.get("SELECT id FROM escenarios WHERE config_json LIKE ?", [`%${file}%`], (err, row) => {
+            files.forEach(async (file) => {
+                db.get("SELECT id FROM escenarios WHERE config_json LIKE ? OR id = ?", [`%"${file}"%`, file], async (err, row) => {
                     if (!row) {
                         console.log(`[SYNC] + Nuevo escenario detectado en disco: ${file}`);
-                        const defaultProcess = 'mf_flujos'; 
-                        db.run(`INSERT OR IGNORE INTO escenarios (id, process_id, name, config_json) VALUES (?, ?, ?, ?)`,
-                            [file, defaultProcess, friendlyName, JSON.stringify({ file: file })]);
+                        const friendlyName = toFriendlyName(file);
+                        const meta = await getGitMeta(file);
+                        db.run(
+                            `INSERT OR IGNORE INTO escenarios (id, process_id, name, config_json, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?)`,
+                            [file, 'mf_flujos', friendlyName, JSON.stringify({ file }), meta.created_at, meta.created_by]
+                        );
                     }
                 });
             });
@@ -252,15 +272,11 @@ const syncScenariosWithFileSystem = async () => {
                 rows.forEach(row => {
                     try {
                         const config = JSON.parse(row.config_json);
-                        // Algunos usan 'file', otros 'recordedScript', otros el ID es el nombre del archivo
                         const fileName = config.recordedScript || config.file || (row.id.endsWith('.js') ? row.id : null);
-                        
                         if (fileName) {
                             const pureFileName = fileName.replace(/^scripts\//, '');
                             const fullPath = path.join(scriptsPath, pureFileName);
-                            const isKnownUtility = ['db.js', 'api-helper.js', 'ui-server.js', 'compare-ai.js', 'SapAiCoreProvider.js', 'runner.js', 'report-generator.js', 'debug-selector.js', 'test-sap-ai.js', 'debug-dom.spec.js'].includes(pureFileName);
-                            
-                            if (!fs.existsSync(fullPath) || isKnownUtility) {
+                            if (!fs.existsSync(fullPath) || KNOWN_UTILITIES.includes(pureFileName)) {
                                 console.log(`[SYNC] - Eliminando escenario huérfano o de utilidad de la DB: ${row.id}`);
                                 db.run("DELETE FROM escenarios WHERE id = ?", [row.id]);
                             }
@@ -431,7 +447,9 @@ app.get('/api/registry', (req, res) => {
                                 id: e.id,
                                 name: e.name,
                                 config: JSON.parse(e.config_json),
-                                instrucciones_ia: e.instrucciones_ia || ""
+                                instrucciones_ia: e.instrucciones_ia || "",
+                                created_at: e.created_at || null,
+                                created_by: e.created_by || null
                             }));
                             return { id: p.id, name: p.name, escenarios: escens };
                         });
@@ -1155,7 +1173,7 @@ app.get('/api/record/status/:id', (req, res) => {
 
 // 10. Detener grabación y guardar escenario en SQLite
 app.post('/api/record/stop', (req, res) => {
-    const { recordingId, scenarioName, clientId, processId, credentials = {}, extraData = [] } = req.body;
+    const { recordingId, scenarioName, clientId, processId, credentials = {}, extraData = [], createdBy = '' } = req.body;
     const rec = activeRecordings.get(recordingId);
     if (!rec) return res.status(404).json({ error: 'Grabación no encontrada o ya finalizó' });
 
@@ -1204,8 +1222,8 @@ app.post('/api/record/stop', (req, res) => {
     ].filter(Boolean).join('\n');
 
     db.run(
-        `INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia) VALUES (?, ?, ?, ?, ?)`,
-        [scenarioId, processId || 'mf_flujos', scenarioName || 'Flujo Grabado', JSON.stringify(config), instrucciones],
+        `INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [scenarioId, processId || 'mf_flujos', scenarioName || 'Flujo Grabado', JSON.stringify(config), instrucciones, new Date().toISOString(), createdBy || null],
         function (err) {
             if (err) return res.status(500).json({ error: err.toString() });
             console.log(`[RECORD] Escenario guardado: ${scenarioName} -> ${relFile}`);

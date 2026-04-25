@@ -27,7 +27,7 @@ jobs:
         run: npm run build --prefix ui
 
       - name: Build Windows EXE
-        run: npx electron-builder --win
+        run: npx electron-builder --win --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 

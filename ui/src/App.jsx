@@ -1033,27 +1033,35 @@ export default function App() {
     }
   };
 
-  const deleteScenario = async (e) => {
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-    if (!activeScenarioId) return;
-    
-    // Alerta personalizada para confirmar borrado físico
-    const confirmMsg = "¿Eliminar este escenario permanentemente?\n\nEsta acción borrará el registro de la base de datos y ELIMINARÁ EL ARCHIVO físico de la grabación de tu disco.";
-    
-    if (!window.confirm(confirmMsg)) return;
+  const [deleteModal, setDeleteModal] = React.useState({ open: false, step: 1, scenarioId: null, scenarioName: '' });
 
+  const deleteScenario = (e, scenarioId, scenarioName) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    const id = scenarioId || activeScenarioId;
+    if (!id) return;
+    const esc = registry.flatMap(c => c.procesos).flatMap(p => p.escenarios).find(s => s.id === id);
+    setDeleteModal({ open: true, step: 1, scenarioId: id, scenarioName: scenarioName || esc?.name || id });
+  };
+
+  const confirmDelete = async () => {
+    if (deleteModal.step === 1) {
+      setDeleteModal(m => ({ ...m, step: 2 }));
+      return;
+    }
     try {
-      const res = await fetch(`${API_BASE}/registry/scenario/${activeScenarioId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/registry/scenario/${deleteModal.scenarioId}`, { method: 'DELETE' });
       const data = await res.json();
-      if (data.success) { 
-        await fetchRegistry(); 
-        setActiveScenarioId(''); 
-        setNewScenarioName(''); 
-        setInstruccionesIa(''); 
-        addToast("Escenario y archivo eliminados.", "success"); 
+      setDeleteModal({ open: false, step: 1, scenarioId: null, scenarioName: '' });
+      if (data.success) {
+        await fetchRegistry();
+        setActiveScenarioId('');
+        setNewScenarioName('');
+        setInstruccionesIa('');
+        addToast("Escenario eliminado y sincronizado.", "success");
       }
-    } catch { 
-      addToast("Error al eliminar.", "error"); 
+    } catch {
+      addToast("Error al eliminar.", "error");
+      setDeleteModal({ open: false, step: 1, scenarioId: null, scenarioName: '' });
     }
   };
 
@@ -1531,30 +1539,60 @@ export default function App() {
                     <span className="control-badge">{registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.length || 0} Guardados</span>
                   </div>
                   <div className="scenario-selector-group">
-                    <ModernSelect 
-                      value={activeScenarioId} 
-                      onChange={val => handleScenarioSelect(val)}
-                      placeholder="Nuevo flujo"
-                      options={registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.map(s => ({ label: s.name, value: s.id })) || []}
-                    />
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <button 
-                        className="btn-record" 
+                    {/* Lista de escenarios con metadata */}
+                    {(() => {
+                      const escenarios = registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios || [];
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto', paddingRight: '2px' }}>
+                          {escenarios.length === 0 && (
+                            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sin flujos grabados</div>
+                          )}
+                          {escenarios.map(s => {
+                            const isActive = s.id === activeScenarioId;
+                            const dateStr = s.created_at ? new Date(s.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+                            const author = s.created_by || '—';
+                            return (
+                              <div
+                                key={s.id}
+                                onClick={() => handleScenarioSelect(s.id)}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: '10px',
+                                  padding: '10px 12px', borderRadius: '12px', cursor: 'pointer',
+                                  background: isActive ? 'rgba(99,102,241,0.08)' : 'rgba(0,0,0,0.02)',
+                                  border: `1px solid ${isActive ? 'rgba(99,102,241,0.3)' : 'var(--card-border)'}`,
+                                  transition: 'all 0.15s'
+                                }}
+                              >
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontWeight: '600', fontSize: '0.82rem', color: isActive ? 'var(--accent-primary)' : 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
+                                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: '500' }}>{dateStr}</div>
+                                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '90px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{author}</div>
+                                </div>
+                                <button
+                                  onClick={e => deleteScenario(e, s.id, s.name)}
+                                  title="Eliminar"
+                                  style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', opacity: 0.5, padding: '4px', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
+                                  onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                                  onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '6px' }}>
+                      <button
+                        className="btn-record"
                         onClick={() => openRecordModal()}
                         title="Grabar nuevo flujo"
                       >
                         <Circle size={20} fill="white" className="rec-pulse" />
                       </button>
-                      {activeScenarioId && (
-                        <button 
-                          onClick={(e) => deleteScenario(e)} 
-                          className="btn-icon-danger"
-                          title="Eliminar permanentemente"
-                          style={{ width: '46px', height: '46px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
                     </div>
                   </div>
 
@@ -2407,6 +2445,57 @@ export default function App() {
           </div>
         ))}
       </div>
+
+      {/* Modal de doble confirmación para eliminar escenario */}
+      {deleteModal.open && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setDeleteModal({ open: false, step: 1, scenarioId: null, scenarioName: '' })}>
+          <div style={{ background: '#fff', borderRadius: '20px', padding: '28px 28px 24px', maxWidth: '380px', width: '90%', boxShadow: '0 24px 60px rgba(0,0,0,0.18)', animation: 'modalPop 0.2s cubic-bezier(0.16,1,0.3,1)' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Trash2 size={18} color="#ef4444" />
+              </div>
+              <div>
+                <div style={{ fontWeight: '700', fontSize: '0.95rem', color: '#0f172a' }}>
+                  {deleteModal.step === 1 ? 'Eliminar escenario' : '¿Estás seguro?'}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>"{deleteModal.scenarioName}"</div>
+              </div>
+            </div>
+
+            {deleteModal.step === 1 ? (
+              <div style={{ fontSize: '0.82rem', color: '#475569', lineHeight: '1.6', marginBottom: '20px' }}>
+                Esta acción eliminará el flujo de la base de datos y <strong>borrará el archivo físico</strong> de tu disco. No se puede deshacer.
+              </div>
+            ) : (
+              <div style={{ fontSize: '0.82rem', color: '#475569', lineHeight: '1.6', marginBottom: '20px' }}>
+                <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '12px 14px', marginBottom: '12px' }}>
+                  <div style={{ fontWeight: '700', color: '#dc2626', fontSize: '0.78rem', marginBottom: '4px' }}>⚠️ Acción irreversible</div>
+                  <div>El archivo <code style={{ background: 'rgba(0,0,0,0.05)', padding: '1px 4px', borderRadius: '4px', fontSize: '0.75rem' }}>.spec.js</code> será eliminado permanentemente de tu repositorio local. Tendrás que sincronizar para que el cambio se refleje en el equipo.</div>
+                </div>
+                ¿Confirmas que deseas continuar?
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDeleteModal({ open: false, step: 1, scenarioId: null, scenarioName: '' })}
+                style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid var(--card-border)', background: 'none', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                style={{ padding: '9px 18px', borderRadius: '10px', border: 'none', background: deleteModal.step === 2 ? '#ef4444' : '#0f172a', color: '#fff', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '700' }}
+              >
+                {deleteModal.step === 1 ? 'Continuar →' : 'Sí, eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

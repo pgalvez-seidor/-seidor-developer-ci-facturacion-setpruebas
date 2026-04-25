@@ -35,8 +35,13 @@ const initDb = () => {
                 name TEXT NOT NULL,
                 config_json TEXT NOT NULL,
                 instrucciones_ia TEXT,
+                created_at TEXT,
+                created_by TEXT,
                 FOREIGN KEY(process_id) REFERENCES procesos(id) ON DELETE CASCADE
             )`);
+
+            db.run(`ALTER TABLE escenarios ADD COLUMN created_at TEXT`, () => {});
+            db.run(`ALTER TABLE escenarios ADD COLUMN created_by TEXT`, () => {});
 
             // 2. Seed Data if Empty
             db.get("SELECT COUNT(*) as count FROM clientes", (err, row) => {
