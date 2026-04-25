@@ -263,6 +263,10 @@ const GitInitScreen = ({ onContinue }) => {
     try {
       const folder = await window.electron.selectFolder();
       if (!folder) { setIsSelectingFolder(false); return; }
+      
+      // Alerta solicitada por el usuario al cambiar la ruta
+      alert("⚠️ Has cambiado la ruta del proyecto.\n\nIMPORTANTE: Asegúrate de mover manualmente tus archivos de prueba a esta carpeta o realizar un 'Clone' para inicializarla correctamente.");
+
       await fetch(`${API_BASE}/config/project-dir`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -351,13 +355,39 @@ const GitInitScreen = ({ onContinue }) => {
 
         {phase === 'ready' && (
           <>
-            {/* Status pill */}
-            <div className="git-splash-status-row">
-              <div className={`git-splash-dot ${statusDot}`} style={{ background: statusColor }} />
-              <span style={{ color: statusColor, fontWeight: 600 }}>{statusLabel}</span>
-              {gitInfo.remote && (
-                <span className="git-splash-remote">{gitInfo.remote.replace('https://github.com/', '').replace('.git', '')}</span>
-              )}
+            {/* Campo de nombre (AHORA ARRIBA) */}
+            <div style={{ width: '100%', marginBottom: '20px' }}>
+              <label className="git-splash-input-label">TU NOMBRE COMPLETO</label>
+              <input
+                className="git-splash-name-input"
+                type="text"
+                placeholder=""
+                value={testerInput}
+                onChange={e => setTesterInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && testerInput.trim() && handleContinue()}
+                autoFocus
+              />
+
+            </div>
+
+            {/* Status & Path Area */}
+            <div className="git-splash-status-area">
+              <div className="git-splash-status-row">
+                <div className={`git-splash-dot ${statusDot}`} style={{ background: statusColor }} />
+                <span style={{ color: statusColor, fontWeight: 600 }}>{statusLabel}</span>
+              </div>
+              
+              {/* Ruta del proyecto (Clickable para cambiar) */}
+              <div className="git-splash-path-card" onClick={handleSelectFolder}>
+                <span className="git-splash-path-label">UBICACIÓN DEL PROYECTO</span>
+                <div className="git-splash-path-value">
+                  <span className="git-splash-path-text">{gitInfo.projectDir}</span>
+                  <div className="git-splash-path-action">
+                    <Settings size={12} />
+                    Cambiar
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Clone Section if no repo */}
@@ -425,38 +455,9 @@ const GitInitScreen = ({ onContinue }) => {
               </div>
             )}
 
-            {/* Campo de nombre */}
-            <div style={{ width: '100%', marginTop: '20px' }}>
-              <label className="git-splash-input-label">TU NOMBRE COMPLETO</label>
-              <input
-                className="modal-input"
-                type="text"
-                placeholder="ej. Pierre Gálvez"
-                value={testerInput}
-                onChange={e => setTesterInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && testerInput.trim() && handleContinue()}
-                style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center', fontWeight: '600' }}
-                autoFocus
-              />
-              {!testerInput.trim() && (
-                <p style={{ fontSize: '0.68rem', color: '#f59e0b', marginTop: '5px', textAlign: 'center' }}>
-                  Requerido para identificar tus commits
-                </p>
-              )}
-            </div>
 
-            {/* Seleccionar carpeta cuando no hay repo vinculado */}
-            {(gitInfo.gitNotLinked || !gitInfo.branches?.length) && (
-              <button
-                className="git-splash-folder-btn"
-                onClick={handleSelectFolder}
-                disabled={isSelectingFolder}
-                style={{ margin: '15px 0 10px 0', display: 'flex', alignItems: 'center', gap: '7px', width: '100%', justifyContent: 'center', padding: '10px 20px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '10px', color: '#6366f1', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
-              >
-                <Settings size={14} />
-                {isSelectingFolder ? 'Abriendo selector...' : gitInfo.projectDir ? path.basename(gitInfo.projectDir) : 'Seleccionar carpeta del proyecto'}
-              </button>
-            )}
+
+
 
             {/* CTA */}
             <button
@@ -472,7 +473,7 @@ const GitInitScreen = ({ onContinue }) => {
               <ChevronRight size={16} />
             </button>
           </>
-        )}}
+        )}
 
         {/* ── WHISPER ── */}
         {pullWhisper && (

@@ -213,7 +213,7 @@ const syncScenariosWithFileSystem = async () => {
         const files = fs.readdirSync(scriptsPath).filter(f => {
             const isSpec = f.endsWith('.spec.js');
             const isGrabacion = f.startsWith('grabacion_') && f.endsWith('.js');
-            const isKnownUtility = ['db.js', 'api-helper.js', 'ui-server.js', 'compare-ai.js', 'SapAiCoreProvider.js', 'runner.js', 'report-generator.js'].includes(f);
+            const isKnownUtility = ['db.js', 'api-helper.js', 'ui-server.js', 'compare-ai.js', 'SapAiCoreProvider.js', 'runner.js', 'report-generator.js', 'debug-selector.js', 'test-sap-ai.js', 'debug-dom.spec.js'].includes(f);
             return (isSpec || isGrabacion) && !isKnownUtility;
         });
         console.log(`[SYNC] Iniciando sincronización de ${files.length} scripts de prueba en disco...`);
@@ -247,9 +247,10 @@ const syncScenariosWithFileSystem = async () => {
                         if (fileName) {
                             const pureFileName = fileName.replace(/^scripts\//, '');
                             const fullPath = path.join(scriptsPath, pureFileName);
+                            const isKnownUtility = ['db.js', 'api-helper.js', 'ui-server.js', 'compare-ai.js', 'SapAiCoreProvider.js', 'runner.js', 'report-generator.js', 'debug-selector.js', 'test-sap-ai.js', 'debug-dom.spec.js'].includes(pureFileName);
                             
-                            if (!fs.existsSync(fullPath)) {
-                                console.log(`[SYNC] - Eliminando escenario huérfano de la DB: ${row.id} (Archivo no encontrado: ${pureFileName})`);
+                            if (!fs.existsSync(fullPath) || isKnownUtility) {
+                                console.log(`[SYNC] - Eliminando escenario huérfano o de utilidad de la DB: ${row.id}`);
                                 db.run("DELETE FROM escenarios WHERE id = ?", [row.id]);
                             }
                         }
@@ -484,7 +485,10 @@ app.post('/api/run-test', async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     const _npx = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
-    const cmd = /^win/.test(process.platform) ? '"' + _npx + '"' : _npx;
+    // Usar node + cli.js de playwright es más robusto ante problemas de PATH o npx (Error 127)
+    const playwrightCli = path.join(rootDir, 'node_modules', 'playwright', 'cli.js');
+    const cmd = 'node';
+    const baseArgs = [playwrightCli, 'test'];
     const iterations = config.iteraciones || 1;
     const isHeadless = config.headless || false;
 
@@ -524,7 +528,7 @@ app.post('/api/run-test', async (req, res) => {
             return new Promise((resolve) => {
                 const normalizedFile = file.replace(/\\/g, '/');
                 const relativePath = normalizedFile.startsWith('scripts/') ? normalizedFile : `scripts/${normalizedFile}`;
-                const cmdArgs = ['playwright', 'test', relativePath];
+                const cmdArgs = [...baseArgs, relativePath];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
@@ -578,10 +582,10 @@ app.post('/api/run-batch', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    // Usar npx local para asegurar que encuentra el binario de playwright correctamente y
-    // evitar el bug de cmd.exe donde las comillas manuales se eliminan si es el único texto citado.
-    const _npx = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
-    const playwrightBin = _npx;
+    // Usar node + cli.js de playwright es más robusto ante problemas de PATH o npx (Error 127)
+    const playwrightCli = path.join(rootDir, 'node_modules', 'playwright', 'cli.js');
+    const playwrightBin = 'node';
+    const baseArgs = [playwrightCli, 'test'];
 
     const sendLog = (taskId, type, message, docData = null) => {
         const payload = JSON.stringify({ taskId, type, message: message.toString(), docData, timestamp: new Date().toISOString() });
@@ -668,7 +672,7 @@ app.post('/api/run-batch', async (req, res) => {
                 }
                 // Windows BUG FIX: pasar relativePath (con slash '/') en vez de absScriptPath (con backslashes '\')
                 // porque Playwright en Windows interpreta las rutas absolutas con '\' como Regex.
-                const cmdArgs = ['playwright', 'test', relativePath, '--reporter=line'];
+                const cmdArgs = [...baseArgs, relativePath, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
