@@ -1298,3 +1298,56 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   gap: 6px !important;
   cursor: pointer;
 }
+/* === GIT SYNC & PROJECTS PILL UNIFICATION === */
+
+/* Botón de Sincronizar con Git como Píldora */
+.btn-git-sync {
+  height: 48px !important;
+  border-radius: 24px !important;
+  background: #eef2ff !important; /* Violeta muy suave */
+  border: none !important;
+  color: #4f46e5 !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 0 24px !important;
+  width: 100% !important;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+
+/* Elementos de Mis Proyectos como Píldoras */
+.project-pill-item {
+  height: 48px !important;
+  border-radius: 24px !important;
+  background: #f5f5f7 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 20px !important;
+  gap: 12px !important;
+  margin-bottom: 8px !important;
+  border: none !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.project-pill-item.active {
+  background: #e0f2fe !important; /* Azul suave para el seleccionado */
+  color: #0369a1 !important;
+}
+
+.project-pill-item span {
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.project-pill-item svg {
+  width: 18px !important;
+  height: 18px !important;
+  opacity: 0.7;
+}
