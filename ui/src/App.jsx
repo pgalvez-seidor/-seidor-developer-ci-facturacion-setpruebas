@@ -65,6 +65,19 @@ const IteracionesPicker = ({ value, onChange }) => {
   );
 };
 
+const NitroButton = ({ active, onClick }) => {
+  return (
+    <div className={`nitro-container ${active ? 'nitro-active' : ''}`} onClick={() => onClick(!active)}>
+      <div className="nitro-exhaust-flame"></div>
+      <div className="nitro-button-body">
+        <div className="nitro-label">NITRO</div>
+        <Zap size={24} fill={active ? "#ffeb3b" : "transparent"} stroke={active ? "#ff9800" : "#94a3b8"} className="nitro-icon" />
+        <div className="nitro-status">{active ? 'ON' : 'OFF'}</div>
+      </div>
+    </div>
+  );
+};
+
 const ModernSelect = ({ value, onChange, options, placeholder = '-- seleccionar --', style = {} }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedLabel = options.find(o => o.value === value)?.label || placeholder;
@@ -1149,13 +1162,11 @@ export default function App() {
                       onChange={val => setBuilderConfig({ ...builderConfig, iteraciones: val })}
                     />
                   </div>
-                  <div className="field-group" style={{ justifyContent: 'center' }}>
-                    <ModernSwitch 
-                      checked={builderConfig.headless} 
-                      onChange={checked => setBuilderConfig({ ...builderConfig, headless: checked })}
-                      label="Modo Headless"
-                      description="Ejecución invisible de alta velocidad"
-                      icon={Zap}
+                  <div className="field-group" style={{ alignItems: 'center', justifyContent: 'center' }}>
+                    <label>Inyección de Velocidad (Headless)</label>
+                    <NitroButton 
+                      active={builderConfig.headless}
+                      onClick={val => setBuilderConfig({ ...builderConfig, headless: val })}
                     />
                   </div>
                 </div>
