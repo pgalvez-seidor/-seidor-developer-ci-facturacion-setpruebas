@@ -24,7 +24,8 @@
         "test:caso1": "npx playwright test scripts/caso1-boleta.spec.js --headed",
         "report": "node scripts/report-generator.js",
         "dry-run": "node scripts/runner.js --caso caso1 --env QAS --dry-run",
-        "electron:build": "npm run build --prefix ui && npx electron-builder"
+        "electron:build": "npm run build --prefix ui && npx electron-builder",
+        "electron:build:win": "npm run build --prefix ui && npx electron-builder --win"
     },
     "devDependencies": {
         "concurrently": "^9.2.1",
@@ -39,6 +40,23 @@
             "icon": "icon.png",
             "category": "public.app-category.developer-tools",
             "target": ["dmg"]
+        },
+        "win": {
+            "icon": "icon.png",
+            "target": [
+                { "target": "nsis", "arch": ["x64"] }
+            ],
+            "requestedExecutionLevel": "requireAdministrator"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "AutoBotIA",
+            "installerIcon": "icon.png",
+            "uninstallerIcon": "icon.png",
+            "license": null
         },
         "files": [
             "main.js",

@@ -14,15 +14,26 @@ const rootDir = process.env.PROJECT_DIR || path.resolve(__dirname, '..');
 let projectDir = rootDir;
 let gitToken = process.env.GIT_TOKEN || '';
 
-// Electron no hereda el PATH completo del shell — agregamos rutas comunes de Node/Homebrew
-process.env.PATH = [
-    process.env.PATH,
-    '/usr/local/bin',
-    '/opt/homebrew/bin',
-    '/opt/homebrew/sbin',
-    '/usr/bin',
-    '/bin'
-].filter(Boolean).join(':');
+// Electron no hereda el PATH completo del shell — agregamos rutas comunes según plataforma
+if (process.platform === 'win32') {
+    process.env.PATH = [
+        process.env.PATH,
+        process.env.APPDATA ? path.join(process.env.APPDATA, 'npm') : '',
+        'C:\\Program Files\\nodejs',
+        'C:\\Program Files\\Git\\cmd',
+        'C:\\Program Files\\Git\\bin',
+        'C:\\Program Files\\Git\\usr\\bin'
+    ].filter(Boolean).join(';');
+} else {
+    process.env.PATH = [
+        process.env.PATH,
+        '/usr/local/bin',
+        '/opt/homebrew/bin',
+        '/opt/homebrew/sbin',
+        '/usr/bin',
+        '/bin'
+    ].filter(Boolean).join(':');
+}
 
 
 app.use(cors());
@@ -1000,10 +1011,10 @@ app.post('/api/record/start', (req, res) => {
 
     console.log(`[RECORD] Lanzando: ${pwBin} codegen "${url}" --output="${outputFile}"`);
 
-    const proc = spawn(`"${pwBin}"`, ['codegen', url, `--output="${outputFile}"`], {
+    const proc = spawn(pwBin, ['codegen', url, `--output=${outputFile}`], {
         cwd: rootDir,
         shell: true,
-        windowsVerbatimArguments: false
+        windowsVerbatimArguments: process.platform === 'win32'
     });
 
     activeRecordings.set(recordingId, { process: proc, outputFile, done: false, url, credentials, extraData });
@@ -1315,11 +1326,8 @@ app.post('/api/system/shutdown', (req, res) => {
                 }
             });
         } else {
-            // En Mac/Linux: matar Vite asumiendo puerto por defecto (5173), luego salir
-            exec(`lsof -ti:5173 | xargs kill -9 2>/dev/null`, () => {
-                console.log('[SHUTDOWN] Cerrando backend...');
-                process.exit(0);
-            });
+            console.log('[SHUTDOWN] Cerrando backend...');
+            process.exit(0);
         }
     }, 500);
 });
