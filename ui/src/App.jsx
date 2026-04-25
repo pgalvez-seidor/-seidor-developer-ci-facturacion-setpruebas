@@ -1063,7 +1063,7 @@ export default function App() {
     if (!scenarioId) { setNewScenarioName(''); setInstruccionesIa(''); return; }
     const sData = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === scenarioId);
     if (sData) {
-      setBuilderConfig(JSON.parse(JSON.stringify(sData.config)));
+      setBuilderConfig(prev => ({ ...JSON.parse(JSON.stringify(sData.config)), headless: prev.headless ?? true }));
       setNewScenarioName(sData.name);
       setInstruccionesIa(sData.instrucciones_ia || "");
     }
