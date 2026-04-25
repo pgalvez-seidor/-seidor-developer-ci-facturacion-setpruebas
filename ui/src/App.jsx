@@ -2055,7 +2055,7 @@ export default function App() {
         <div className="modal-overlay" onClick={() => setShowScriptEditor(false)}>
           <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '780px', width: '95vw' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1rem' }}>📝 Editor de Script</h2>
+              <h2 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '7px' }}><FileText size={16} /> Editor de Script</h2>
               <button onClick={() => setShowScriptEditor(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}><X size={20} /></button>
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem', wordBreak: 'break-all' }}>{scriptEditorFile}</div>
@@ -2063,16 +2063,16 @@ export default function App() {
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '1rem' }}>
               <button
                 onClick={() => { setShowScriptEditor(false); openAiModal(scriptEditorFile); }}
-                style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                style={{ padding: '7px 18px', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', color: 'white', border: 'none', borderRadius: '100px', cursor: 'pointer', fontWeight: '700', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.2px' }}
               >
-                ✨ Evaluar con IA
+                <Sparkles size={13} /> Evaluar con IA
               </button>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => setShowScriptEditor(false)} style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
+                <button onClick={() => setShowScriptEditor(false)} style={{ padding: '7px 18px', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--card-border)', borderRadius: '100px', cursor: 'pointer', fontWeight: '600', fontSize: '0.78rem' }}>
                   Cancelar
                 </button>
-                <button onClick={saveScriptEditor} disabled={scriptEditorSaving} style={{ padding: '8px 20px', background: scriptEditorSaving ? '#555' : 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none', borderRadius: '8px', cursor: scriptEditorSaving ? 'not-allowed' : 'pointer', fontWeight: '700' }}>
-                  {scriptEditorSaving ? 'Guardando...' : '💾 Guardar'}
+                <button onClick={saveScriptEditor} disabled={scriptEditorSaving} style={{ padding: '7px 20px', background: scriptEditorSaving ? 'rgba(16,185,129,0.4)' : 'rgba(16,185,129,1)', color: 'white', border: 'none', borderRadius: '100px', cursor: scriptEditorSaving ? 'not-allowed' : 'pointer', fontWeight: '700', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <FileText size={13} /> {scriptEditorSaving ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </div>
