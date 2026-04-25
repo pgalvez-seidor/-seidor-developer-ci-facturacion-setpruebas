@@ -1180,8 +1180,8 @@ export default function App() {
               {/* BLOQUE 3: IDENTIDAD Y BITÁCORA */}
               <div className="config-block">
                 <div className="config-block-header">
-                  <FileText size={16} color="#6366f1" />
-                  <h3>Identidad del Escenario</h3>
+                  <FileText size={16} color="#af52de" />
+                  <h3 className="apple-intelligence-title">Identidad del Escenario</h3>
                 </div>
                 
                 <div className="field-group-modern">
@@ -1206,9 +1206,10 @@ export default function App() {
                       value={instruccionesIa}
                       onChange={e => setInstruccionesIa(e.target.value)}
                     />
-                    <div className="prompt-magic-indicator">
-                      <Sparkles size={14} color="var(--accent-primary)" />
-                      <span>Optimizado por SAP AI Core</span>
+                    <div className="prompt-magic-indicator" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                      <span className="sap-badge-new">NEW</span>
+                      <Sparkles size={14} color="#bf4800" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#1d1d1f' }}>Optimizado por SAP AI Core</span>
                     </div>
                   </div>
                 </div>
@@ -1251,48 +1252,22 @@ export default function App() {
                 queue.map((q, idx) => (
                   <div
                     key={q.taskId}
-                    className={`batch-task-card ${q.status} ${draggedItemIndex === idx ? 'dragging' : ''}`}
-                    draggable={!isBatchRunning}
-                    onDragStart={() => handleDragStart(idx)}
-                    onDragOver={handleDragOver}
-                    onDrop={() => handleDrop(idx)}
+                    className="queue-card-apple"
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '15px' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {!isBatchRunning && (
-                          <div style={{ cursor: 'grab', color: 'var(--text-muted)', display: 'flex' }}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-                          </div>
-                        )}
-                        <span className="b-task-name">
-                          {idx + 1}. {getBatchItemLabel(q)}
-                        </span>
-                        <span style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle' }} title={q.config.headless ? "Modo Headless (Oculto)" : "Modo Headed (Visible)"}>
-                          {q.config.headless ? (
-                            <Zap size={14} color="var(--accent-primary)" strokeWidth={2} />
-                          ) : (
-                            <Eye size={14} color="var(--accent-primary)" strokeWidth={2} />
-                          )}
-                        </span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div className="queue-card-title">{q.scenarioName || 'Escenario sin nombre'}</div>
+                      <button onClick={() => removeFromBatch(q.taskId)} style={{ background: 'none', border: 'none', color: '#ff2d55', cursor: 'pointer', padding: '4px' }}><X size={16} /></button>
+                    </div>
+                    <div className="queue-card-subtitle">
+                      {q.clientName} · {q.processName}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                      <span style={{ fontSize: '0.7rem', padding: '4px 8px', background: '#f5f5f7', borderRadius: '8px', color: '#1d1d1f', fontWeight: '600' }}>
+                        {q.iterations || 1} iters
                       </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span className={`status-tag ${q.status === 'done' ? 'success' : q.status === 'error' ? 'error' : q.status === 'running' ? 'running' : ''}`}>
-                          {q.status === 'idle' ? 'Pendiente' :
-                            q.status === 'running' ? <><Clock size={12} style={{ marginRight: '4px' }} /> Procesando</> :
-                              q.status === 'done' ? <><CheckCircle2 size={12} style={{ marginRight: '4px' }} /> Éxito</> :
-                                <><AlertCircle size={12} style={{ marginRight: '4px' }} /> Fallo</>}
-                        </span>
-                        {q.status !== 'running' && (
-                          <button
-                            onClick={() => removeTask(q.taskId)}
-                            disabled={isBatchRunning}
-                            title="Quitar de la lista"
-                            className="btn-remove-task"
-                          >
-                            <X size={14} />
-                          </button>
-                        )}
-                      </div>
+                      <span style={{ fontSize: '0.7rem', padding: '4px 8px', background: q.headless ? '#fff1f2' : '#f0fdf4', borderRadius: '8px', color: q.headless ? '#e11d48' : '#16a34a', fontWeight: '600' }}>
+                        {q.headless ? 'Headless' : 'Visible'}
+                      </span>
                     </div>
 
                     {q.status === 'running' && (

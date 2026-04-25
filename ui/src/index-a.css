@@ -2747,3 +2747,142 @@ body {
   border: none !important;
   min-width: 120px !important;
 }
+/* === APPLE STORE INSPIRED AESTHETICS === */
+:root {
+  --apple-bg: #f5f5f7;
+  --apple-card-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  --apple-radius: 28px;
+}
+
+body {
+  background-color: var(--apple-bg) !important;
+  color: #1d1d1f !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+.config-panel, .batch-panel {
+  background-color: var(--apple-bg) !important;
+  border: none !important;
+}
+
+/* Tarjetas Estilo Apple */
+.config-block {
+  background: white !important;
+  border-radius: var(--apple-radius) !important;
+  box-shadow: var(--apple-card-shadow) !important;
+  padding: 30px !important;
+  border: none !important;
+  margin-bottom: 24px !important;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.config-block:hover {
+  transform: scale(1.01);
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.06) !important;
+}
+
+.config-block-header h3 {
+  font-family: var(--font-body) !important;
+  font-size: 1.3rem !important;
+  font-weight: 700 !important;
+  color: #1d1d1f !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* Badges "NEW" Estilo Apple */
+.sap-badge-new {
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  color: #bf4800 !important; /* Naranja/Rojo Apple */
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Inputs & Selects Ultra-Refinados */
+.modern-input, .modern-select-trigger, .branch-select {
+  background: #f5f5f7 !important;
+  border: none !important;
+  border-radius: 18px !important;
+  height: 48px !important;
+  font-size: 0.95rem !important;
+}
+
+.modern-input:focus, .modern-select-trigger.active {
+  background: white !important;
+  box-shadow: 0 0 0 4px rgba(0, 74, 153, 0.1) !important;
+}
+
+/* Sidebar Integrated */
+.sidebar {
+  background: white !important;
+  border-right: 1px solid rgba(0,0,0,0.03) !important;
+}
+
+.sidebar-label {
+  font-size: 0.85rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.5px !important;
+  color: #86868b !important;
+  font-weight: 600 !important;
+  margin-bottom: 12px !important;
+}
+/* === THE APPLE EXPERIENCE REFINEMENT === */
+
+/* Gradiente estilo Apple Intelligence */
+.apple-intelligence-title {
+  background: linear-gradient(135deg, #007aff, #ff2d55, #af52de);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800 !important;
+  font-size: 1.6rem !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* Tarjetas de Producto para el Lote */
+.queue-card-apple {
+  background: white !important;
+  border-radius: 20px !important;
+  padding: 20px !important;
+  margin-bottom: 15px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;
+  border: 1px solid rgba(0,0,0,0.02) !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.queue-card-apple:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06) !important;
+  border-color: rgba(0,122,255,0.1) !important;
+}
+
+.queue-card-title {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: #1d1d1f !important;
+}
+
+.queue-card-subtitle {
+  font-size: 0.85rem !important;
+  color: #86868b !important;
+  font-weight: 500 !important;
+}
+
+/* Accent Buttons Style Apple */
+.btn-apple-primary {
+  background: #0071e3 !important;
+  color: white !important;
+  border-radius: 24px !important;
+  font-weight: 600 !important;
+  padding: 12px 24px !important;
+  border: none !important;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-apple-primary:hover {
+  background: #0077ed !important;
+}
