@@ -216,6 +216,8 @@ const GitInitScreen = ({ onContinue }) => {
   const [checkTrigger, setCheckTrigger] = useState(0);
   const [pullWhisper, setPullWhisper] = useState(null);
   const [testerInput, setTesterInput] = useState('');
+  const [repoUrl, setRepoUrl] = useState('');
+  const [isCloning, setIsCloning] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -271,6 +273,30 @@ const GitInitScreen = ({ onContinue }) => {
       setCheckTrigger(t => t + 1);
     } catch (_) {}
     setIsSelectingFolder(false);
+  };
+
+  const handleClone = async () => {
+    if (!repoUrl || !gitInfo?.projectDir && !isSelectingFolder) {
+      if (!gitInfo?.projectDir) await handleSelectFolder();
+      return;
+    }
+    setIsCloning(true);
+    try {
+      const res = await fetch(`${API_BASE}/git/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoUrl, projectDir: gitInfo.projectDir })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCheckTrigger(t => t + 1);
+      } else {
+        alert(data.error || "Error al clonar");
+      }
+    } catch (e) {
+      alert("Error de conexión al clonar");
+    }
+    setIsCloning(false);
   };
 
   const handleContinue = async () => {
@@ -334,26 +360,46 @@ const GitInitScreen = ({ onContinue }) => {
               )}
             </div>
 
-            {/* Ramas */}
+            {/* Clone Section if no repo */}
+            {gitInfo.gitNotLinked && (
+              <div className="git-splash-clone-box">
+                <label className="git-splash-input-label">URL del Repositorio Git</label>
+                <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                  <input
+                    className="modal-input"
+                    type="text"
+                    placeholder="https://github.com/usuario/repo.git"
+                    value={repoUrl}
+                    onChange={e => setRepoUrl(e.target.value)}
+                    style={{ flex: 1, textAlign: 'left', padding: '10px 15px' }}
+                  />
+                  <button 
+                    className="git-splash-clone-btn" 
+                    onClick={handleClone}
+                    disabled={isCloning || !repoUrl}
+                  >
+                    {isCloning ? <div className="git-splash-spinner small" /> : <GitBranch size={16} />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Ramas - Pill Style */}
             {gitInfo.branches?.length > 0 && (
               <div className="git-splash-branches">
-                <div className="git-splash-branches-label">Rama de trabajo</div>
-                <div className="git-splash-branch-list">
+                <div className="git-splash-branches-label">RAMA DE TRABAJO</div>
+                <div className="git-splash-branch-pills">
                   {gitInfo.branches.map(b => {
                     const isActive = b === (gitInfo.current || gitInfo.branch);
                     const isSelected = b === selectedBranch;
                     return (
                       <button
                         key={b}
-                        className={`git-splash-branch-item ${isSelected ? 'selected' : ''}`}
+                        className={`git-splash-branch-pill ${isSelected ? 'selected' : ''}`}
                         onClick={() => setSelectedBranch(b)}
                       >
-                        <div className="git-splash-branch-dot" style={{
-                          background: isActive ? '#34c759' : 'rgba(0,0,0,0.12)'
-                        }} />
                         <span className="git-splash-branch-name">{b}</span>
-                        {isActive && <span className="git-splash-branch-tag">actual</span>}
-                        {isSelected && !isActive && <span className="git-splash-branch-tag switch">cambiar</span>}
+                        {isActive && <div className="git-splash-active-dot" />}
                       </button>
                     );
                   })}
@@ -379,11 +425,9 @@ const GitInitScreen = ({ onContinue }) => {
               </div>
             )}
 
-            {/* Campo de nombre — obligatorio */}
-            <div style={{ width: '100%', marginTop: '16px' }}>
-              <label style={{ fontSize: '0.7rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
-                Tu nombre completo
-              </label>
+            {/* Campo de nombre */}
+            <div style={{ width: '100%', marginTop: '20px' }}>
+              <label className="git-splash-input-label">TU NOMBRE COMPLETO</label>
               <input
                 className="modal-input"
                 type="text"
@@ -407,10 +451,10 @@ const GitInitScreen = ({ onContinue }) => {
                 className="git-splash-folder-btn"
                 onClick={handleSelectFolder}
                 disabled={isSelectingFolder}
-                style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '7px', width: '100%', justifyContent: 'center', padding: '10px 20px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '10px', color: '#6366f1', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
+                style={{ margin: '15px 0 10px 0', display: 'flex', alignItems: 'center', gap: '7px', width: '100%', justifyContent: 'center', padding: '10px 20px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '10px', color: '#6366f1', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
               >
                 <Settings size={14} />
-                {isSelectingFolder ? 'Abriendo selector...' : 'Seleccionar carpeta del proyecto'}
+                {isSelectingFolder ? 'Abriendo selector...' : gitInfo.projectDir ? path.basename(gitInfo.projectDir) : 'Seleccionar carpeta del proyecto'}
               </button>
             )}
 
@@ -418,19 +462,17 @@ const GitInitScreen = ({ onContinue }) => {
             <button
               className="git-splash-cta"
               onClick={handleContinue}
-              disabled={isChanging || !testerInput.trim()}
-              style={{ opacity: testerInput.trim() ? 1 : 0.45 }}
+              disabled={isChanging || !testerInput.trim() || (gitInfo.gitNotLinked && !gitInfo.branches?.length)}
+              style={{ opacity: (testerInput.trim() && (gitInfo.branches?.length > 0 || !gitInfo.gitNotLinked)) ? 1 : 0.45 }}
             >
               {isChanging
                 ? 'Cambiando rama...'
-                : selectedBranch !== (gitInfo.current || gitInfo.branch)
-                  ? `Cambiar a ${selectedBranch} y continuar`
-                  : `Continuar con ${selectedBranch || 'rama actual'}`
+                : 'Ingresar'
               }
               <ChevronRight size={16} />
             </button>
           </>
-        )}
+        )}}
 
         {/* ── WHISPER ── */}
         {pullWhisper && (
@@ -1610,30 +1652,21 @@ export default function App() {
                     </div>
 
                     {q.status === 'running' && (
-                      <div style={{ marginTop: '12px' }}>
-                        <div style={{ width: '100%', height: '6px', background: 'rgba(99,102,241,0.08)', borderRadius: '100px', overflow: 'hidden', position: 'relative' }}>
-                          <div style={{
-                            height: '100%',
-                            width: `${q.progress || 5}%`,
-                            background: 'linear-gradient(90deg, #6366f1, #818cf8, #a5b4fc)',
-                            borderRadius: '100px',
-                            transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                            position: 'relative',
-                            overflow: 'hidden'
-                          }}>
-                            <div style={{
-                              position: 'absolute', inset: 0,
-                              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)',
-                              animation: 'shimmerSlide 1.8s ease-in-out infinite',
-                              borderRadius: '100px'
-                            }} />
+                      <div style={{ marginTop: '4px' }}>
+                        <div className="modern-progress-track">
+                          <div 
+                            className="modern-progress-fill" 
+                            style={{ width: `${Math.max(q.progress || 5, 2)}%` }}
+                          >
+                            <div className="modern-progress-segments" />
+                            <div className="modern-progress-shimmer" />
                           </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                          <span style={{ fontSize: '0.7rem', color: 'rgba(99,102,241,0.7)', fontWeight: '600' }}>
+                        <div className="modern-progress-info">
+                          <span className="modern-progress-log">
                             {q.currentLog || 'Iniciando...'}
                           </span>
-                          <span style={{ fontSize: '0.7rem', color: 'rgba(99,102,241,0.5)', fontWeight: '700' }}>
+                          <span className="modern-progress-percent">
                             {Math.round(q.progress || 0)}%
                           </span>
                         </div>

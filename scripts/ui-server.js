@@ -209,9 +209,16 @@ const syncScenariosWithFileSystem = async () => {
             return;
         }
 
-        const files = fs.readdirSync(scriptsPath).filter(f => f.endsWith('.js') || f.endsWith('.spec.js'));
-        console.log(`[SYNC] Iniciando sincronización de ${files.length} archivos... en ${scriptsPath}`);
+        // Solo registrar archivos de prueba (.spec.js) o grabaciones (.js) que no sean librerías conocidas
+        const files = fs.readdirSync(scriptsPath).filter(f => {
+            const isSpec = f.endsWith('.spec.js');
+            const isGrabacion = f.startsWith('grabacion_') && f.endsWith('.js');
+            const isKnownUtility = ['db.js', 'api-helper.js', 'ui-server.js', 'compare-ai.js', 'SapAiCoreProvider.js', 'runner.js', 'report-generator.js'].includes(f);
+            return (isSpec || isGrabacion) && !isKnownUtility;
+        });
+        console.log(`[SYNC] Iniciando sincronización de ${files.length} scripts de prueba en disco...`);
 
+        // 1. Registrar archivos nuevos
         db.serialize(() => {
             files.forEach(file => {
                 const friendlyName = file.replace(/\.spec\.js$/, '').replace(/\.js$/, '').replace(/-/g, ' ');
@@ -219,10 +226,34 @@ const syncScenariosWithFileSystem = async () => {
 
                 db.get("SELECT id FROM escenarios WHERE id = ?", [id], (err, row) => {
                     if (!row) {
-                        console.log(`[SYNC] + Nuevo escenario: ${file}`);
+                        console.log(`[SYNC] + Nuevo escenario detectado en disco: ${file}`);
+                        // Usar 'mf_flujos' como proceso por defecto para Medifarma (o el que corresponda según la rama)
+                        const defaultProcess = 'mf_flujos'; 
                         db.run(`INSERT OR IGNORE INTO escenarios (id, process_id, name, config_json) VALUES (?, ?, ?, ?)`,
-                            [id, 1, friendlyName, JSON.stringify({ file: file })]);
+                            [id, defaultProcess, friendlyName, JSON.stringify({ file: file })]);
                     }
+                });
+            });
+
+            // 2. Limpiar huérfanos (escenarios en DB cuyos archivos ya no existen)
+            db.all("SELECT id, config_json FROM escenarios", [], (err, rows) => {
+                if (err) return;
+                rows.forEach(row => {
+                    try {
+                        const config = JSON.parse(row.config_json);
+                        // Algunos usan 'file', otros 'recordedScript', otros el ID es el nombre del archivo
+                        const fileName = config.recordedScript || config.file || (row.id.endsWith('.js') ? row.id : null);
+                        
+                        if (fileName) {
+                            const pureFileName = fileName.replace(/^scripts\//, '');
+                            const fullPath = path.join(scriptsPath, pureFileName);
+                            
+                            if (!fs.existsSync(fullPath)) {
+                                console.log(`[SYNC] - Eliminando escenario huérfano de la DB: ${row.id} (Archivo no encontrado: ${pureFileName})`);
+                                db.run("DELETE FROM escenarios WHERE id = ?", [row.id]);
+                            }
+                        }
+                    } catch (_) {}
                 });
             });
         });
@@ -267,6 +298,42 @@ app.post('/api/config/git-token', (req, res) => {
     res.json({ success: true });
 });
 
+// 1.7 Git Clone — permite inicializar un proyecto clonando un repo
+app.post('/api/git/clone', async (req, res) => {
+    const { repoUrl, projectDir: targetDir } = req.body;
+    if (!repoUrl || !targetDir) {
+        return res.status(400).json({ error: 'Faltan parámetros: repoUrl y projectDir' });
+    }
+
+    try {
+        if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+        }
+
+        console.log(`[GIT] Clonando ${repoUrl} en ${targetDir}...`);
+        
+        let authenticatedUrl = repoUrl;
+        if (gitToken && repoUrl.includes('github.com')) {
+            authenticatedUrl = repoUrl.replace('https://', `https://${gitToken}@`);
+        }
+
+        await new Promise((resolve, reject) => {
+            exec(`git clone "${authenticatedUrl}" .`, { cwd: targetDir }, (error, stdout, stderr) => {
+                if (error) reject(stderr || error.message);
+                else resolve(stdout);
+            });
+        });
+
+        projectDir = targetDir;
+        await syncScenariosWithFileSystem();
+
+        res.json({ success: true, message: 'Proyecto clonado exitosamente' });
+    } catch (e) {
+        console.error('[GIT] Error en clone:', e);
+        res.status(500).json({ error: `Error al clonar: ${e.toString()}` });
+    }
+});
+
 
 
 // 2. Cambiar de rama (Checkout + Pull Blindado)
@@ -276,14 +343,20 @@ app.post('/api/git/pull', async (req, res) => {
         const prevHead = await runCmd('git rev-parse HEAD').catch(() => '');
         const result = await runCmd(`git pull origin ${branch}`);
         const hasChanges = !result.includes('Already up to date');
+        
         let newScripts = [];
-        if (hasChanges && prevHead) {
-            const diff = await runCmd(`git diff --name-only --diff-filter=A ${prevHead} HEAD -- scripts/`).catch(() => '');
-            newScripts = diff.split('\n').filter(f => f.match(/scripts\/.+\.(spec\.js|js)$/)).map(f => f.replace(/^scripts\//, '').replace(/\.spec\.js$/, '').replace(/\.js$/, '').replace(/-/g, ' ').trim()).filter(Boolean);
+        if (hasChanges) {
+            // Sincronizar con la DB si hay cambios detectados
+            await syncScenariosWithFileSystem();
+
+            if (prevHead) {
+                const diff = await runCmd(`git diff --name-only --diff-filter=A ${prevHead} HEAD -- scripts/`).catch(() => '');
+                newScripts = diff.split('\n').filter(f => f.match(/scripts\/.+\.(spec\.js|js)$/)).map(f => f.replace(/^scripts\//, '').replace(/\.spec\.js$/, '').replace(/\.js$/, '').replace(/-/g, ' ').trim()).filter(Boolean);
+            }
         }
         res.json({ ok: true, hasChanges, newScripts });
     } catch (e) {
-        res.json({ ok: false, hasChanges: false, newScripts: [] });
+        res.json({ ok: false, hasChanges: false, newScripts: [], error: e.toString() });
     }
 });
 
@@ -1220,7 +1293,7 @@ app.post('/api/script/normalize', (req, res) => {
 
 
 // 15. GIT: Sincronización completa (Pull → Commit scripts/ → Push)
-app.post('/api/git/sync', (req, res) => {
+app.post('/api/git/sync', async (req, res) => {
     console.log('🚀 Iniciando sincronización con Git...');
     const opts = { cwd: projectDir, encoding: 'utf8' };
     const { userName = '', projectName = '', scenarioName = '' } = req.body || {};
@@ -1231,6 +1304,8 @@ app.post('/api/git/sync', (req, res) => {
         // 1. Pull primero
         try {
             execSync(`git pull origin ${branch}`, opts);
+            // Sincronizar archivos bajados con la DB
+            await syncScenariosWithFileSystem();
         } catch (_) {
             console.warn('[SYNC] Pull falló (sin remoto). Continuando...');
         }

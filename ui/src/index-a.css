@@ -1520,28 +1520,41 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* Tarjetas que RESALTAN BASTANTE */
 .queue-card-apple {
-  background-color: #ffffff !important; /* Blanco puro sobre fondo negro = Máximo contraste */
+  background-color: #ffffff !important;
   border-radius: 24px !important;
   padding: 24px !important;
   margin-bottom: 20px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important; /* Sombra más fuerte para flotar */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
   border: none !important;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .queue-card-apple { padding: 18px !important; }
 }
 
 .queue-card-apple:hover {
-  transform: scale(1.02) translateY(-4px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Detalles internos de la tarjeta para coherencia */
 .queue-card-title {
   color: #1d1d1f !important;
-  font-size: 1.15rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
 }
 
 .queue-card-subtitle {
   color: #86868b !important;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 /* Texto de "Lote Vacío" en gris claro para legibilidad */
@@ -1648,6 +1661,201 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 @keyframes snore-breath {
   0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+}
+
+/* ── GIT SPLASH ENHANCEMENTS ───────────────────────── */
+.git-splash-branches {
+  width: 100%;
+  margin: 20px 0;
+}
+
+.git-splash-branches-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.git-splash-branch-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.git-splash-branch-pill {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 18px;
+  background: #f1f5f9;
+  border: 1px solid transparent;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.git-splash-branch-pill:hover {
+  background: #e2e8f0;
+}
+
+.git-splash-branch-pill.selected {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.12);
+}
+
+.git-splash-active-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16,185,129,0.5);
+}
+
+.git-splash-input-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.git-splash-clone-box {
+  width: 100%;
+  padding: 15px;
+  background: rgba(0,0,0,0.02);
+  border-radius: 16px;
+  margin: 10px 0;
+  border: 1px dashed #cbd5e1;
+}
+
+.git-splash-clone-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #6366f1;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.git-splash-clone-btn:hover:not(:disabled) {
+  background: #4f46e5;
+  transform: translateY(-2px);
+}
+
+.git-splash-clone-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.git-splash-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── MODERN PROGRESS BAR (DESIGN FROM IMAGE) ───────── */
+.modern-progress-track {
+  width: 100%;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 100px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  margin: 12px 0 8px 0;
+}
+
+.modern-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff8a00, #ff2d55);
+  border-radius: 100px;
+  position: relative;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(255, 45, 85, 0.3);
+}
+
+/* El efecto de segmentos verticales sutiles */
+.modern-progress-segments {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, 
+    rgba(0,0,0,0.1) 1px, 
+    transparent 1px
+  );
+  background-size: 8px 100%;
+  opacity: 0.4;
+}
+
+/* Brillo animado (shimmer) */
+.modern-progress-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255,255,255,0.3) 50%, 
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerMove 2s infinite linear;
+}
+
+@keyframes shimmerMove {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.modern-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modern-progress-log {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  font-style: italic;
+  max-width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modern-progress-percent {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #ff2d55;
+  background: #fff1f2;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+
   50% { transform: scale(1.1); opacity: 1; }
 }
 
