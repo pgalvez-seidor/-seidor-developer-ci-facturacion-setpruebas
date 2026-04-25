@@ -1210,9 +1210,9 @@ app.post('/api/git/sync', (req, res) => {
         const timestamp = new Date().toLocaleString();
         const branch = execSync('git branch --show-current', { cwd: projectDir }).toString().trim() || 'CI';
 
-        execSync('git add .', { cwd: projectDir, stdio: 'inherit' });
+        execSync('git add scripts/', { cwd: projectDir, stdio: 'inherit' });
         try {
-            execSync(`git commit -m "autobot: sincronización automática desde Dashboard UI - ${timestamp}"`, { cwd: projectDir, stdio: 'inherit' });
+            execSync(`git commit -m "autobot: nuevo escenario grabado - ${timestamp}"`, { cwd: projectDir, stdio: 'inherit' });
         } catch (e) {
             if (e.message.includes('nothing to commit')) {
                 console.log('ℹ️ No hay cambios para commitear.');
