@@ -1256,7 +1256,7 @@ export default function App() {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div className="queue-card-title">{q.scenarioName || 'Escenario sin nombre'}</div>
-                      <button onClick={() => removeFromBatch(q.taskId)} style={{ background: 'none', border: 'none', color: '#ff2d55', cursor: 'pointer', padding: '4px' }}><X size={16} /></button>
+                      <button onClick={() => removeTask(q.taskId)} style={{ background: 'none', border: 'none', color: '#ff2d55', cursor: 'pointer', padding: '4px' }}><X size={16} /></button>
                     </div>
                     <div className="queue-card-subtitle">
                       {q.clientName} · {q.processName}
