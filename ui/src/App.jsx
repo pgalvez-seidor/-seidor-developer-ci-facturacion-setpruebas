@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Eye, Zap, CreditCard, Banknote, Trash2, Plus, Tag, Brain, GitBranch,
   CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power,
@@ -212,7 +212,9 @@ const GitInitScreen = ({ onContinue }) => {
   const [gitInfo, setGitInfo] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState('');
   const [isChanging, setIsChanging] = useState(false);
+  const [isSelectingFolder, setIsSelectingFolder] = useState(false);
   const [phase, setPhase] = useState('loading'); // 'loading' | 'ready' | 'error'
+  const checkRef = useRef(null);
 
   useEffect(() => {
     let attempts = 0;
@@ -234,8 +236,29 @@ const GitInitScreen = ({ onContinue }) => {
         }
       }
     };
+    checkRef.current = check;
     setTimeout(check, 800);
   }, []);
+
+  const handleSelectFolder = async () => {
+    if (!window.electron?.selectFolder) return;
+    setIsSelectingFolder(true);
+    try {
+      const folder = await window.electron.selectFolder();
+      if (!folder) { setIsSelectingFolder(false); return; }
+      await fetch(`${API_BASE}/config/project-dir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectDir: folder })
+      });
+      setPhase('loading');
+      setGitInfo(null);
+      setTimeout(() => {
+        if (checkRef.current) checkRef.current();
+      }, 600);
+    } catch (_) {}
+    setIsSelectingFolder(false);
+  };
 
   const handleContinue = async () => {
     if (!selectedBranch || !gitInfo) { onContinue(); return; }
@@ -264,7 +287,7 @@ const GitInitScreen = ({ onContinue }) => {
 
         {/* ── LOGO ── */}
         <div className="git-splash-logo-wrap">
-          <TransparentLogo src="/logo-pure.png" size={96} className="git-splash-logo" />
+          <TransparentLogo src="./logo-pure.png" size={96} className="git-splash-logo" />
           <div className="git-splash-brand">
             Auto<span>Bot</span>
             <span className="git-splash-version">v2.1.0</span>
@@ -340,6 +363,19 @@ const GitInitScreen = ({ onContinue }) => {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Seleccionar carpeta cuando no hay repo vinculado */}
+            {(gitInfo.gitNotLinked || !gitInfo.branches?.length) && (
+              <button
+                className="git-splash-folder-btn"
+                onClick={handleSelectFolder}
+                disabled={isSelectingFolder}
+                style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '7px', width: '100%', justifyContent: 'center', padding: '10px 20px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '10px', color: '#6366f1', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
+              >
+                <Settings size={14} />
+                {isSelectingFolder ? 'Abriendo selector...' : 'Seleccionar carpeta del proyecto'}
+              </button>
             )}
 
             {/* CTA */}
