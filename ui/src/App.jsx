@@ -1827,17 +1827,16 @@ export default function App() {
                     <div className="queue-card-subtitle">
                       {q.clientName} · {q.processName}
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                      <span style={{ fontSize: '0.7rem', padding: '4px 8px', background: '#f5f5f7', borderRadius: '8px', color: '#1d1d1f', fontWeight: '600' }}>
-                        {q.iterations || 1} iters
-                      </span>
-                      <span style={{ fontSize: '0.7rem', padding: '4px 8px', background: q.headless ? '#fff1f2' : '#f0fdf4', borderRadius: '8px', color: q.headless ? '#e11d48' : '#16a34a', fontWeight: '600' }}>
-                        {q.headless ? 'Headless' : 'Visible'}
-                      </span>
-                    </div>
+                    {!q.headless && (
+                      <div title="Modo visible — el navegador abre en pantalla. Útil para depurar, más lento que headless." style={{ display: 'inline-flex', alignItems: 'center', marginTop: '4px', cursor: 'default' }}>
+                        <span className="zap-electric">
+                          <Zap size={15} />
+                        </span>
+                      </div>
+                    )}
 
                     {q.status === 'running' && (
-                      <div style={{ marginTop: '8px' }}>
+                      <div style={{ marginTop: '4px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '4px', lineHeight: 1, marginBottom: '2px' }}>
                           <span style={{
                             fontFamily: '"Orbitron", "Share Tech Mono", "Courier New", monospace',

@@ -445,3 +445,49 @@ body {
 @keyframes stepFadeIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
 @keyframes recordingPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); } 50% { box-shadow: 0 0 0 6px rgba(220,38,38,0); } }
 @keyframes shimmerSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+
+/* === ZAP ELÉCTRICO === */
+@keyframes zapBreathe {
+  0%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 4px #facc15) drop-shadow(0 0 8px #f59e0b); }
+  50%       { opacity: 0.75; transform: scale(0.92); filter: drop-shadow(0 0 2px #facc15) drop-shadow(0 0 14px #f59e0b); }
+}
+@keyframes zapSpark1 {
+  0%, 100% { opacity: 0; transform: translate(0,0) scale(0); }
+  20%       { opacity: 1; transform: translate(-7px, -8px) scale(1); }
+  40%       { opacity: 0; transform: translate(-12px, -14px) scale(0.4); }
+}
+@keyframes zapSpark2 {
+  0%, 100% { opacity: 0; transform: translate(0,0) scale(0); }
+  35%       { opacity: 1; transform: translate(9px, -10px) scale(1); }
+  55%       { opacity: 0; transform: translate(14px, -16px) scale(0.3); }
+}
+@keyframes zapSpark3 {
+  0%, 100% { opacity: 0; transform: translate(0,0) scale(0); }
+  60%       { opacity: 1; transform: translate(5px, 9px) scale(0.8); }
+  80%       { opacity: 0; transform: translate(9px, 15px) scale(0.2); }
+}
+
+.zap-electric {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #f59e0b;
+  animation: zapBreathe 2s ease-in-out infinite;
+}
+.zap-electric::before,
+.zap-electric::after {
+  content: '·';
+  position: absolute;
+  font-size: 10px;
+  font-weight: 900;
+  color: #fde68a;
+  pointer-events: none;
+}
+.zap-electric::before {
+  top: -2px; left: -2px;
+  animation: zapSpark1 2s ease-in-out infinite;
+}
+.zap-electric::after {
+  top: -2px; right: -4px;
+  animation: zapSpark2 2s ease-in-out infinite 0.4s;
+}
