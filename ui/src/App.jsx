@@ -1081,6 +1081,7 @@ export default function App() {
           setGeminiKey={setGeminiKey}
           setShowChangelog={setShowChangelog}
           isGitLoading={isGitLoading}
+        />
         <main className="main split-layout">
           <div className="config-panel">
             <header className="main-header" style={{ marginBottom: '2rem' }}>
