@@ -536,8 +536,8 @@ app.post('/api/run-test', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     const _npx = /^win/.test(process.platform) ? 'npx.cmd' : 'npx';
     const playwrightCli = path.join(rootDir, 'node_modules', 'playwright', 'cli.js');
-    const cmd = process.execPath;
-    const baseArgs = [playwrightCli, 'test'];
+    const cmd = `"${process.execPath}"`;
+    const baseArgs = [`"${playwrightCli}"`, 'test'];
     const iterations = config.iteraciones || 1;
     const isHeadless = config.headless || false;
 
@@ -589,7 +589,7 @@ app.post('/api/run-test', async (req, res) => {
                 const workerProcess = spawn(cmd, cmdArgs, {
                     cwd: rootDir,
                     env: testEnv,
-                    shell: false,
+                    shell: true,
                     windowsVerbatimArguments: false
                 });
                 activeProcesses.push(workerProcess);
@@ -632,9 +632,8 @@ app.post('/api/run-batch', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     const playwrightCli = path.join(rootDir, 'node_modules', 'playwright', 'cli.js');
-    const nodeBin = process.execPath;
-    const playwrightBin = nodeBin;
-    const baseArgs = [playwrightCli, 'test'];
+    const playwrightBin = `"${process.execPath}"`;
+    const baseArgs = [`"${playwrightCli}"`, 'test'];
 
     const sendLog = (taskId, type, message, docData = null) => {
         const payload = JSON.stringify({ taskId, type, message: message.toString(), docData, timestamp: new Date().toISOString() });
@@ -736,7 +735,7 @@ app.post('/api/run-batch', async (req, res) => {
                     cwd: rootDir,
                     env: testEnv,
                     stdio: ['ignore', 'pipe', 'pipe'],
-                    shell: false,
+                    shell: true,
                     windowsVerbatimArguments: false
                 });
                 console.log(`[WORKER] PID: ${workerProcess.pid}`);
