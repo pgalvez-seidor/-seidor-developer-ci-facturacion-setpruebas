@@ -28,6 +28,23 @@ body {
 
 .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
+/* === ENTRADA DRAMÁTICA === */
+.app-entrance {
+  opacity: 0;
+  filter: blur(18px) brightness(1.15);
+  transform: scale(1.025);
+  transition:
+    opacity 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, filter, transform;
+}
+.app-entrance--visible {
+  opacity: 1;
+  filter: blur(0px) brightness(1);
+  transform: scale(1);
+}
+
 /* TOPBAR - minimalista, solo en zona de contenido */
 .topbar {
   background: white;
@@ -63,32 +80,6 @@ body {
   align-self: stretch;
 }
 
-.sidebar-header-fixed {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 1.25rem 1.25rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-.sidebar-scroll-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.08) transparent;
-}
-.sidebar-scroll-body::-webkit-scrollbar { width: 3px; }
-.sidebar-scroll-body::-webkit-scrollbar-track { background: transparent; }
-.sidebar-scroll-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
-.sidebar-footer-fixed {
-  flex-shrink: 0;
-  padding: 12px 1.25rem 1.25rem;
-  border-top: 1px solid rgba(255,255,255,0.06);
-}
 
 .sidebar-label {
   font-size: 0.62rem;

@@ -4,9 +4,60 @@ import {
   CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power,
   Sparkles, FileText, Settings, Cpu, Bot, AlertTriangle
 } from 'lucide-react';
+import { EditorState } from '@codemirror/state';
+import { EditorView, keymap, lineNumbers, highlightActiveLine } from '@codemirror/view';
+import { javascript } from '@codemirror/lang-javascript';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
 import './index-a.css';
 
 const API_BASE = 'http://localhost:3001/api';
+
+const CodeEditor = ({ value, onChange }) => {
+  const containerRef = useRef(null);
+  const viewRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: value || '',
+        extensions: [
+          lineNumbers(),
+          highlightActiveLine(),
+          history(),
+          bracketMatching(),
+          javascript({ jsx: false }),
+          oneDark,
+          keymap.of([...defaultKeymap, ...historyKeymap]),
+          EditorView.updateListener.of(update => {
+            if (update.docChanged) onChange(update.state.doc.toString());
+          }),
+          EditorView.theme({
+            '&': { height: '60vh', borderRadius: '10px', overflow: 'hidden', fontSize: '13px' },
+            '.cm-scroller': { fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace', lineHeight: '1.65', overflowY: 'auto' },
+            '.cm-content': { padding: '12px 0' },
+          }),
+        ],
+      }),
+      parent: containerRef.current,
+    });
+    viewRef.current = view;
+    return () => view.destroy();
+  }, []);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    const current = view.state.doc.toString();
+    if (current !== value) {
+      view.dispatch({ changes: { from: 0, to: current.length, insert: value || '' } });
+    }
+  }, [value]);
+
+  return <div ref={containerRef} style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }} />;
+};
 
 const TransparentLogo = ({ src, className, size = 64 }) => {
   const [processedSrc, setProcessedSrc] = useState(null);
@@ -816,6 +867,8 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [showAbout, setShowAbout] = useState(false);
   const [addedFlash, setAddedFlash] = useState(false);
+  const [appVisible, setAppVisible] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setAppVisible(true), 60); return () => clearTimeout(t); }, []);
 
   // Grabación de flujos (Playwright Codegen)
   const [showRecordModal, setShowRecordModal] = useState(false);
@@ -1504,7 +1557,7 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app app-entrance${appVisible ? ' app-entrance--visible' : ''}`}>
       <div className="body">
         <Sidebar
           registry={registry} activeClient={activeClient} setActiveClient={setActiveClient}
@@ -2012,17 +2065,7 @@ export default function App() {
               <button onClick={() => setShowScriptEditor(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}><X size={20} /></button>
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem', wordBreak: 'break-all' }}>{scriptEditorFile}</div>
-            <textarea
-              value={scriptEditorContent}
-              onChange={e => setScriptEditorContent(e.target.value)}
-              spellCheck={false}
-              style={{
-                width: '100%', height: '60vh', fontFamily: 'monospace', fontSize: '0.8rem',
-                background: 'rgba(0,0,0,0.3)', color: '#e2e8f0', border: '1px solid var(--card-border)',
-                borderRadius: '8px', padding: '12px', resize: 'vertical', boxSizing: 'border-box',
-                outline: 'none', lineHeight: '1.5',
-              }}
-            />
+            <CodeEditor value={scriptEditorContent} onChange={setScriptEditorContent} />
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '1rem' }}>
               <button
                 onClick={() => { setShowScriptEditor(false); openAiModal(scriptEditorFile); }}
