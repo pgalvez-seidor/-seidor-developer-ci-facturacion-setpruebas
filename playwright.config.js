@@ -10,7 +10,6 @@ module.exports = defineConfig({
         timeout: 15000,       // 15s para assertions
     },
     use: {
-        channel: 'chrome',
         actionTimeout: 30000,
         navigationTimeout: 60000,
         video: 'off',
@@ -21,10 +20,7 @@ module.exports = defineConfig({
             'Accept-Language': 'es-PE,es;q=0.9,en;q=0.1'
         },
         launchOptions: {
-            executablePath: process.platform === 'darwin'
-                ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-                : undefined,
-            args: ['--lang=es-PE'],
+            args: ['--lang=es-PE', '--no-sandbox'],
         },
     },
     workers: 1,               // Por defecto 1 worker (se controla desde el servidor)
