@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Eye, Zap, CreditCard, Banknote, Trash2, Plus, Tag, Brain,
   CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power,
-  Sparkles, FileText, Settings, Cpu, AlertTriangle
+  Sparkles, FileText, Settings, Cpu, Bot, AlertTriangle
 } from 'lucide-react';
 import './index-a.css';
 
