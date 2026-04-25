@@ -1,10 +1,20 @@
 node_modules/
 ui/node_modules/
+
 # Builds de Electron — se generan localmente, no van al repo
 dist/
 ui/dist/
+
+# Credenciales — nunca al repo
+.env
+.env.*
+config/.clickup_token
+
+# Lockfiles — se regeneran con npm install
 package-lock.json
 ui/package-lock.json
+
+# Logs y artefactos de ejecución
 npm-debug.log*
 yarn-error.log*
 evidence/
@@ -15,4 +25,3 @@ app.log
 *.log
 *.sqlite-wal
 *.sqlite-shm
-node_modules

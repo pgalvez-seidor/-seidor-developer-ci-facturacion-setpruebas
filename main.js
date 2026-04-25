@@ -140,8 +140,8 @@ app.on('ready', () => {
     // Configurar panel "Acerca de" personalizado
     app.setAboutPanelOptions({
         applicationName: 'AutoBotIA',
-        applicationVersion: '2.0.0',
-        version: 'Build 2026.04.24',
+        applicationVersion: '2.1.0',
+        version: 'Build 2026.04.25',
         copyright: 'Copyright © 2026 Pierre Gálvez - Seidor',
         authors: ['Pierre Gálvez'],
         website: 'https://seidor.com',

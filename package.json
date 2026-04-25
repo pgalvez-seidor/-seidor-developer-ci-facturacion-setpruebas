@@ -3,7 +3,7 @@
     "productName": "AutoBotIA",
     "version": "2.1.0",
     "author": "Pierre Gálvez - Seidor",
-    "description": "Set de pruebas automatizadas para Facturación - Seidor",
+    "description": "Orquestador de pruebas automatizadas — Seidor AI Vision",
     "main": "main.js",
     "dependencies": {
         "@google/generative-ai": "^0.24.1",
