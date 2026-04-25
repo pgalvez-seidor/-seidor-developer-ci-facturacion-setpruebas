@@ -2341,60 +2341,95 @@ export default function App() {
       )}
 
       {/* Modal de Generación de PDF Bajo Demanda */}
-      {pdfLoading && (
-        <div className="modal-overlay" style={{ zIndex: 10000 }}>
-          <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center', padding: '2.5rem' }}>
-            <div className="ai-loader" style={{ marginBottom: '1.5rem' }}>
-              <div className="ai-circle"></div>
-              <Sparkles size={32} color="#6366f1" className="ai-sparkle" />
-            </div>
-            
-            <h3 style={{ marginBottom: '10px', color: 'var(--text-main, #fff)' }}>Generando PDF</h3>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '2rem' }}>
-              Nuestra IA está analizando las capturas de pantalla de SAP para explicar el flujo de negocio...
-            </p>
-
-            <div className="pdf-progress-log" style={{
-              background: '#0a0a0a', borderRadius: '12px', padding: '1.2rem',
-              textAlign: 'left', maxHeight: '180px', overflowY: 'auto', marginBottom: '2rem',
-              border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
-            }}>
-              {pdfMessages.map((msg, i) => (
-                <div key={i} style={{ 
-                  fontSize: '0.8rem', 
-                  color: i === pdfMessages.length - 1 ? '#a78bfa' : 'rgba(255,255,255,0.5)', 
-                  marginBottom: '8px', 
-                  display: 'flex', 
-                  gap: '10px',
-                  lineHeight: '1.4'
-                }}>
-                  <span style={{ color: '#6366f1', fontWeight: '700', fontSize: '0.7rem' }}>[{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}]</span>
-                  <span style={{ color: i === pdfMessages.length - 1 ? '#fff' : 'inherit' }}>{msg}</span>
+      {pdfLoading && (() => {
+        const STEPS = [
+          { key: 'analiz', label: 'Analizando capturas', icon: Brain },
+          { key: 'maqueta', label: 'Maquetando documento', icon: FileText },
+          { key: 'export', label: 'Exportando PDF', icon: Sparkles },
+          { key: 'done', label: 'Dossier listo', icon: CheckCircle2 },
+        ];
+        const activeIdx = pdfDoneUrl ? 3 : Math.min(Math.max(pdfMessages.length - 1, 0), 2);
+        return (
+          <div className="modal-overlay" style={{ zIndex: 10000 }}>
+            <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px', padding: '2rem', background: 'var(--card-bg)' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.8rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366f1, #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Sparkles size={20} color="white" />
                 </div>
-              ))}
-              <div id="pdf-log-bottom"></div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              {pdfDoneUrl ? (
-                <>
-                  <button className="btn-add" style={{ flex: 1 }} onClick={() => { handleOpenPdf(pdfDoneUrl); setPdfLoading(false); setPdfMessages([]); setPdfDoneUrl(null); }}>
-                    📄 Abrir PDF
-                  </button>
-                  <button className="btn-secondary" onClick={() => { setPdfLoading(false); setPdfMessages([]); setPdfDoneUrl(null); }}>
-                    Cerrar
-                  </button>
-                </>
-              ) : (
-                <div style={{ flex: 1, color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>
-                  Esto puede tardar unos segundos dependiendo del número de pasos...
+                <div>
+                  <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-main)' }}>Generando Dossier IA</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>Analizando capturas SAP para explicar el flujo</div>
                 </div>
-              )}
+              </div>
+
+              {/* Stepper */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0', marginBottom: '1.8rem' }}>
+                {STEPS.map((step, i) => {
+                  const Icon = step.icon;
+                  const done = i < activeIdx || pdfDoneUrl;
+                  const active = i === activeIdx && !pdfDoneUrl;
+                  return (
+                    <div key={step.key} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+                      {i < STEPS.length - 1 && (
+                        <div style={{ position: 'absolute', top: '20px', left: '50%', width: '100%', height: '2px', background: done ? 'linear-gradient(90deg,#6366f1,#a855f7)' : 'rgba(0,0,0,0.08)', transition: 'background 0.4s', zIndex: 0 }} />
+                      )}
+                      <div style={{
+                        width: '40px', height: '40px', borderRadius: '50%', zIndex: 1, flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: done || active ? 'linear-gradient(135deg,#6366f1,#a855f7)' : 'rgba(0,0,0,0.06)',
+                        border: `2px solid ${done || active ? '#6366f1' : 'rgba(0,0,0,0.1)'}`,
+                        boxShadow: active ? '0 0 0 4px rgba(99,102,241,0.15)' : 'none',
+                        transition: 'all 0.4s',
+                      }}>
+                        {active ? (
+                          <div style={{ width: '14px', height: '14px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                        ) : (
+                          <Icon size={16} color={done || active ? 'white' : '#94a3b8'} />
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.62rem', fontWeight: '700', color: done || active ? 'var(--accent-primary)' : 'var(--text-muted)', textAlign: 'center', marginTop: '6px', lineHeight: '1.3', letterSpacing: '0.2px' }}>
+                        {step.label}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Log compacto */}
+              <div style={{ background: 'rgba(0,0,0,0.03)', borderRadius: '10px', padding: '12px 14px', border: '1px solid var(--card-border)', marginBottom: '1.5rem', minHeight: '60px' }}>
+                {pdfMessages.slice(-3).map((msg, i, arr) => (
+                  <div key={i} style={{ fontSize: '0.75rem', color: i === arr.length - 1 ? 'var(--text-main)' : 'var(--text-muted)', fontWeight: i === arr.length - 1 ? '600' : '400', marginBottom: i < arr.length - 1 ? '4px' : 0, display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                    <span style={{ color: '#6366f1', flexShrink: 0, marginTop: '1px' }}>›</span>
+                    <span>{msg.replace(/^[^\s]*\s/, '')}</span>
+                  </div>
+                ))}
+                {!pdfMessages.length && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Iniciando...</div>}
+              </div>
+
+              {/* Botones */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {pdfDoneUrl ? (
+                  <>
+                    <button onClick={() => { handleOpenPdf(pdfDoneUrl); setPdfLoading(false); setPdfMessages([]); setPdfDoneUrl(null); }}
+                      style={{ flex: 1, padding: '10px', background: 'linear-gradient(135deg,#6366f1,#a855f7)', color: 'white', border: 'none', borderRadius: '100px', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px' }}>
+                      <FileText size={15} /> Abrir PDF
+                    </button>
+                    <button onClick={() => { setPdfLoading(false); setPdfMessages([]); setPdfDoneUrl(null); }}
+                      style={{ padding: '10px 18px', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--card-border)', borderRadius: '100px', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}>
+                      Cerrar
+                    </button>
+                  </>
+                ) : (
+                  <div style={{ flex: 1, fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center', padding: '10px 0' }}>
+                    Esto puede tardar unos segundos...
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Estilos dinámicos para el cargador IA */}
       {showSettings && (
