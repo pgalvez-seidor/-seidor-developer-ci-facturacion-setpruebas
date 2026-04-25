@@ -1101,29 +1101,32 @@ export default function App() {
                     <span className="control-label">Gestión de Escenarios</span>
                     <span className="control-badge">{registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.length || 0} Guardados</span>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="scenario-selector-group">
                     <ModernSelect 
-                      style={{ flex: 1 }} 
                       value={activeScenarioId} 
                       onChange={val => handleScenarioSelect(val)}
                       placeholder="-- Iniciar Nuevo Flujo --"
                       options={registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.map(s => ({ label: s.name, value: s.id })) || []}
                     />
-                    <button 
-                      className="btn-record-mini" 
-                      onClick={() => openRecordModal()}
-                    >
-                      <Circle size={14} fill="white" className="rec-pulse" />
-                      Grabar
-                    </button>
-                    {activeScenarioId && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <button 
-                        onClick={deleteScenario} 
-                        className="btn-icon-danger"
+                        className="btn-record" 
+                        onClick={() => openRecordModal()}
+                        title="Grabar nuevo flujo"
                       >
-                        <Trash2 size={14} />
+                        <Circle size={14} fill="white" className="rec-pulse" />
+                        <span>Grabar</span>
                       </button>
-                    )}
+                      {activeScenarioId && (
+                        <button 
+                          onClick={deleteScenario} 
+                          className="btn-icon-danger"
+                          style={{ width: '46px', height: '46px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Banner: escenario sin script grabado (INTEGRADO) */}

@@ -2638,3 +2638,112 @@ body {
   border-color: var(--accent-primary);
   transform: scale(1.05);
 }
+/* === ARCHITECTURAL RECONSTRUCTION (3-COLUMN GRID) === */
+.app {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.body {
+  display: grid !important;
+  grid-template-columns: 270px 580px 1fr !important; /* Estructura rígida para evitar encimamientos */
+  height: calc(100vh - 0px); /* Ajuste si hay topbar */
+  width: 100vw;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 270px !important;
+  border-right: 1px solid rgba(0,0,0,0.05);
+  background: #f8fafc;
+  overflow-y: auto;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.config-panel {
+  width: 580px !important;
+  background: white;
+  border-right: 1px solid rgba(0,0,0,0.05);
+  overflow-y: auto;
+  padding: 30px !important;
+  box-sizing: border-box !important;
+}
+
+.main-content-right { /* El panel de Lote de pruebas */
+  flex: 1;
+  background: #f1f5f9;
+  overflow-y: auto;
+  padding: 30px !important;
+}
+
+/* === BUTTON & INPUT VOLUME RESTORATION === */
+.modern-input, .branch-select, .modern-select-trigger {
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 20px !important;
+  font-size: 0.95rem !important;
+  margin-bottom: 4px !important;
+}
+
+/* Alineación simétrica del bloque de grabación */
+.scenario-selector-group {
+  display: grid !important;
+  grid-template-columns: 1fr 120px !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.btn-record {
+  width: 100% !important;
+  height: 46px !important;
+  border-radius: 23px !important;
+  font-weight: 700 !important;
+}
+
+/* Títulos de sección con Dongle pero ordenados */
+.sidebar-label {
+  margin-top: 2rem !important;
+  margin-bottom: 0.5rem !important;
+}
+/* === FINAL STRUCTURAL SYMMETRY FIX === */
+.batch-panel {
+  flex: 1 !important;
+  background: #f1f5f9 !important;
+  overflow-y: auto !important;
+  padding: 30px !important;
+  box-sizing: border-box !important;
+  border-left: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+/* Unificación de botones de acción rápida en el Sidebar */
+.sidebar-quick-actions {
+  display: flex !important;
+  gap: 12px !important;
+  margin: 15px 0 !important;
+  justify-content: center !important;
+}
+
+.action-btn-pill {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 50% !important;
+}
+
+/* Labels de Metadata: Salida del estado de fideo */
+.sidebar-section input.branch-select {
+  height: 46px !important;
+  font-size: 1rem !important;
+  margin-bottom: 12px !important;
+  border: 1px solid rgba(0,74,153,0.1) !important;
+}
+
+/* El botón Grabar ahora tiene el peso correcto */
+.btn-record {
+  background: #ef4444 !important; /* Rojo grabación */
+  color: white !important;
+  border: none !important;
+  min-width: 120px !important;
+}
