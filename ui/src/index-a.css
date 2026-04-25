@@ -1333,3 +1333,29 @@ input[type="text"], input[type="number"], textarea, .modern-select-trigger {
   background: rgba(0,0,0,0.05);
   border-radius: 10px;
 }
+/* === PURE ORGANIC DROPDOWN (No Blur, No Extra Shadows) === */
+.modern-select-backdrop {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  animation: none !important;
+}
+
+.modern-select-dropdown {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); /* Mantengo solo una sombra suave para profundidad */
+  animation: organicSpread 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Eliminando el duplicado de checkmark de CSS */
+.modern-select-option.active::after {
+  content: none !important;
+}
+
+.modern-select-tick {
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.modern-select-trigger {
+  border-radius: var(--radius-pill) !important; /* Asegurando estilo píldora en todos */
+}
