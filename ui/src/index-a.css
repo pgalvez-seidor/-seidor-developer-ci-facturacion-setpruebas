@@ -1144,3 +1144,131 @@ body {
   from { opacity: 0; transform: scale(0.95) translateY(-10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
+/* === PILL STYLE TRANSFORMATION === */
+:root {
+  --radius-pill: 50px;
+  --radius-card: 24px;
+}
+
+/* Global Reset for Pill Style */
+.btn-primary, .btn-secondary, .btn-evolution-ok, .btn-save-scenario, .btn-add-batch, .btn-record-mini, .btn-sync-git, .badge {
+  border-radius: var(--radius-pill) !important;
+}
+
+input[type="text"], input[type="number"], textarea, .modern-select-trigger {
+  border-radius: 16px !important; /* Pill-like for inputs */
+}
+
+.config-block, .control-card, .evolution-modal, .card, .payment-tray {
+  border-radius: var(--radius-card) !important;
+}
+
+/* Specific Section Styles for Categories */
+.config-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.config-block {
+  background: white;
+  border: 1px solid var(--card-border);
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.config-block-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 8px;
+}
+
+.config-block-header h3 {
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #475569;
+}
+
+.config-grid-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-group label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 12px;
+}
+
+.config-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 1rem;
+}
+
+.btn-save-scenario {
+  flex: 1;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-save-scenario:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.btn-add-batch {
+  flex: 2;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 10px 15px -3px rgba(0, 74, 153, 0.3);
+  transition: 0.2s;
+}
+
+.btn-add-batch:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 20px -3px rgba(0, 74, 153, 0.4);
+}
+
+.btn-add-batch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Sidebar Client Items Pill Style */
+.client-item {
+  border-radius: var(--radius-pill) !important;
+  margin-bottom: 4px;
+}
+.client-item.active {
+  background: rgba(0, 74, 153, 0.08) !important;
+  border: 1px solid rgba(0, 74, 153, 0.2);
+}

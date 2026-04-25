@@ -1001,8 +1001,6 @@ export default function App() {
                     onClick={handleShutdown}
                     title="Apagar AutoBot"
                     className="power-off-btn"
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
                       border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '50%',
                       width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       cursor: 'pointer', transition: '0.3s'
@@ -1014,37 +1012,120 @@ export default function App() {
 
             </header>
 
-            <div className="control-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <span className="control-label">Gestión de Escenarios</span>
-                <span className="control-badge">{registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.length || 0} Guardados</span>
+            <div className="config-flow">
+              
+              {/* BLOQUE 1: CONTROL DE FLUJO */}
+              <div className="config-block">
+                <div className="config-block-header">
+                  <Cpu size={16} color="var(--accent-primary)" />
+                  <h3>Centro de Control de Flujo</h3>
+                </div>
+                <div className="control-card-inner">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <span className="control-label">Gestión de Escenarios</span>
+                    <span className="control-badge">{registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.length || 0} Guardados</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <ModernSelect 
+                      style={{ flex: 1 }} 
+                      value={activeScenarioId} 
+                      onChange={val => handleScenarioSelect(val)}
+                      placeholder="-- Iniciar Nuevo Flujo --"
+                      options={registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.map(s => ({ label: s.name, value: s.id })) || []}
+                    />
+                    <button 
+                      className="btn-record-mini" 
+                      onClick={() => openRecordModal()}
+                    >
+                      <Circle size={14} fill="white" className="rec-pulse" />
+                      Grabar
+                    </button>
+                    {activeScenarioId && (
+                      <button 
+                        onClick={deleteScenario} 
+                        className="btn-icon-danger"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <ModernSelect 
-                  style={{ flex: 1 }} 
-                  value={activeScenarioId} 
-                  onChange={val => handleScenarioSelect(val)}
-                  placeholder="-- Iniciar Nuevo Flujo --"
-                  options={registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.map(s => ({ label: s.name, value: s.id })) || []}
-                />
+
+              {/* BLOQUE 2: MOTOR DE EJECUCIÓN */}
+              <div className="config-block">
+                <div className="config-block-header">
+                  <Zap size={16} color="#f59e0b" />
+                  <h3>Parámetros de Ejecución</h3>
+                </div>
+                <div className="config-grid-two">
+                  <div className="field-group">
+                    <label>Batería de Pruebas (Iteraciones)</label>
+                    <input 
+                      type="number" 
+                      value={builderConfig.iteraciones || 1} 
+                      onChange={e => setBuilderConfig({ ...builderConfig, iteraciones: parseInt(e.target.value) || 1 })}
+                      min="1" max="50"
+                    />
+                  </div>
+                  <div className="field-group" style={{ justifyContent: 'center' }}>
+                    <ModernSwitch 
+                      checked={builderConfig.headless} 
+                      onChange={checked => setBuilderConfig({ ...builderConfig, headless: checked })}
+                      label="Modo Headless"
+                      description="Ejecución invisible de alta velocidad"
+                      icon={Zap}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* BLOQUE 3: IDENTIDAD Y BITÁCORA */}
+              <div className="config-block">
+                <div className="config-block-header">
+                  <FileText size={16} color="#6366f1" />
+                  <h3>Identidad del Escenario</h3>
+                </div>
+                <div className="field-group">
+                  <label>Nombre Comercial del Escenario</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ej: Pago Efectivo 100% - CI" 
+                    value={newScenarioName} 
+                    onChange={e => setNewScenarioName(e.target.value)}
+                  />
+                </div>
+                <div className="field-group" style={{ marginTop: '12px' }}>
+                  <label>Instrucciones de Negocio (IA Prompt)</label>
+                  <textarea 
+                    placeholder="Describe el flujo para que la IA lo entienda..."
+                    value={instruccionesIa}
+                    onChange={e => setInstruccionesIa(e.target.value)}
+                    style={{ height: '80px', resize: 'none' }}
+                  />
+                </div>
+              </div>
+
+              {/* ACCIONES FINALES */}
+              <div className="config-actions">
                 <button 
-                  className="btn-record-mini" 
-                  onClick={() => openRecordModal()}
-                  title="Grabar ahora"
+                  onClick={saveScenario} 
+                  className="btn-save-scenario"
+                  disabled={!newScenarioName}
                 >
-                  <Circle size={14} fill="white" className="rec-pulse" />
-                  Grabar
+                  {saveStatus === 'loading' ? 'Guardando...' : saveStatus === 'success' ? '✅ Guardado' : 'Guardar Cambios'}
                 </button>
-                {activeScenarioId && (
-                  <button 
-                    onClick={deleteScenario} 
-                    className="btn-icon-danger"
-                    title="Eliminar este escenario"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
+
+                <button 
+                  className="btn-add-batch" 
+                  onClick={addToBatch}
+                  disabled={!activeScenarioId && !newScenarioName}
+                >
+                  <Sparkles size={16} />
+                  Añadir al Lote de Ejecución
+                </button>
               </div>
+
             </div>
 
             {/* Banner: escenario sin script grabado */}
