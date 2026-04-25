@@ -131,27 +131,68 @@ function startBackend() {
     serverProcess.on('exit', (code) => { try { fs.appendFileSync(errLog, `[BACKEND EXIT] code=${code}\n`); } catch (e) {} });
 }
 
+function setSplashStatus(msg) {
+    try {
+        if (splashWindow && !splashWindow.isDestroyed()) {
+            splashWindow.webContents.executeJavaScript(
+                `document.getElementById('status') && (document.getElementById('status').textContent = ${JSON.stringify(msg)})`
+            ).catch(() => {});
+        }
+    } catch (_) {}
+}
+
+function isBrowserInstalled() {
+    try {
+        const pw = require('playwright');
+        const execPath = pw.chromium.executablePath();
+        return execPath && fs.existsSync(execPath);
+    } catch (_) {
+        return false;
+    }
+}
+
 function ensurePlaywrightBrowsers() {
     return new Promise((resolve) => {
-        const { execFileSync } = require('child_process');
+        const { execFile } = require('child_process');
         const markerFile = path.join(app.getPath('userData'), '.pw-installed');
 
-        if (fs.existsSync(markerFile)) return resolve();
-
-        try {
-            const playwrightCli = path.join(__dirname, 'node_modules', 'playwright', 'cli.js');
-            if (!fs.existsSync(playwrightCli)) return resolve();
-
-            execFileSync(process.execPath, [playwrightCli, 'install', 'chromium'], {
-                env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-                stdio: 'ignore',
-                timeout: 120000
-            });
-
-            fs.writeFileSync(markerFile, new Date().toISOString());
-        } catch (e) {
+        if (fs.existsSync(markerFile) && isBrowserInstalled()) {
+            return resolve({ ok: true, skipped: true });
         }
-        resolve();
+
+        const playwrightCli = path.join(__dirname, 'node_modules', 'playwright', 'cli.js');
+        if (!fs.existsSync(playwrightCli)) {
+            return resolve({ ok: false, reason: 'cli-not-found' });
+        }
+
+        setSplashStatus('Instalando navegador (primera vez)...');
+
+        const proc = execFile(process.execPath, [playwrightCli, 'install', 'chromium'], {
+            env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+            timeout: 180000
+        });
+
+        const dots = setInterval(() => setSplashStatus(
+            'Descargando navegador' + '.'.repeat((Date.now() / 800 | 0) % 4)
+        ), 800);
+
+        proc.on('close', (code) => {
+            clearInterval(dots);
+            if (code === 0 && isBrowserInstalled()) {
+                try { fs.writeFileSync(markerFile, new Date().toISOString()); } catch (_) {}
+                setSplashStatus('Navegador listo ✓');
+                resolve({ ok: true });
+            } else {
+                setSplashStatus('Continuando sin navegador local...');
+                resolve({ ok: false, code });
+            }
+        });
+
+        proc.on('error', (err) => {
+            clearInterval(dots);
+            setSplashStatus('Continuando...');
+            resolve({ ok: false, reason: err.message });
+        });
     });
 }
 
