@@ -265,23 +265,23 @@ const Sidebar = ({
       <div className="sidebar-section">
         <div className="sidebar-label">Metadata del Reporte</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '2px' }}>PROYECTO</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '4px', letterSpacing: '0.5px' }}>PROYECTO</div>
           <input 
             type="text" 
             className="branch-select" 
             value={projectName} 
             onChange={e => setProjectName(e.target.value)}
             placeholder="Ej: Medifarma - SAP Fiori"
-            style={{ fontSize: '0.85rem' }}
+            style={{ fontSize: '0.85rem', borderRadius: '24px', padding: '12px 20px', background: 'var(--apple-bg)' }}
           />
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '2px' }}>USUARIO (TESTER)</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '4px', marginTop: '8px', letterSpacing: '0.5px' }}>USUARIO (TESTER)</div>
           <input 
             type="text" 
             className="branch-select" 
             value={testerName} 
             onChange={e => setTesterName(e.target.value)}
             placeholder="Tu nombre completo"
-            style={{ fontSize: '0.85rem' }}
+            style={{ fontSize: '0.85rem', borderRadius: '24px', padding: '12px 20px', background: 'var(--apple-bg)' }}
           />
         </div>
       </div>
