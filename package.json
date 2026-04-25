@@ -54,8 +54,6 @@
             "createDesktopShortcut": true,
             "createStartMenuShortcut": true,
             "shortcutName": "AutoBotIA",
-            "installerIcon": "icon.png",
-            "uninstallerIcon": "icon.png",
             "license": null
         },
         "files": [
