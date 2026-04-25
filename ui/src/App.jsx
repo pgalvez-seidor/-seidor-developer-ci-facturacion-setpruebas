@@ -1816,89 +1816,66 @@ export default function App() {
                 </div>
               ) : (
                 queue.map((q, idx) => (
-                  <div
-                    key={q.taskId}
-                    className="queue-card-apple"
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div className="queue-card-title">{q.scenarioName || 'Escenario sin nombre'}</div>
-                      <button onClick={() => removeTask(q.taskId)} style={{ background: 'none', border: 'none', color: '#ff2d55', cursor: 'pointer', padding: '4px' }}><X size={16} /></button>
+                  <div key={q.taskId} className={`qrow ${q.status}`}>
+                    {/* COL IZQUIERDA: status dot */}
+                    <div className="qrow-status">
+                      {q.status === 'running' ? (
+                        <span className="qrow-dot qrow-dot--running" />
+                      ) : q.status === 'done' ? (
+                        <CheckCircle2 size={14} color="#16a34a" />
+                      ) : q.status === 'error' ? (
+                        <AlertCircle size={14} color="#dc2626" />
+                      ) : (
+                        <span className="qrow-dot qrow-dot--idle" />
+                      )}
                     </div>
-                    <div className="queue-card-subtitle">
-                      {q.clientName} · {q.processName}
-                    </div>
-                    {!q.headless && (
-                      <div title="Modo visible — el navegador abre en pantalla. Útil para depurar, más lento que headless." style={{ display: 'inline-flex', alignItems: 'center', marginTop: '4px', cursor: 'default' }}>
-                        <span className="zap-electric">
-                          <Zap size={15} />
-                        </span>
-                      </div>
-                    )}
 
-                    {q.status === 'running' && (
-                      <div style={{ marginTop: '4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '4px', lineHeight: 1, marginBottom: '2px' }}>
-                          <span style={{
-                            fontFamily: '"Orbitron", "Share Tech Mono", "Courier New", monospace',
-                            fontSize: '4.5rem',
-                            fontWeight: '900',
-                            letterSpacing: '-2px',
-                            background: 'linear-gradient(180deg, #a5b4fc 0%, #6366f1 50%, #4f46e5 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            filter: 'drop-shadow(0 0 12px rgba(99,102,241,0.7))',
-                            fontVariantNumeric: 'tabular-nums',
-                            textAlign: 'right',
-                            transition: 'all 0.4s ease',
-                          }}>
-                            {Math.round(q.progress || 0)}
+                    {/* COL CENTRO: info + barra */}
+                    <div className="qrow-info">
+                      <div className="qrow-name">
+                        {q.scenarioName || 'Sin nombre'}
+                        {!q.headless && (
+                          <span className="zap-electric qrow-zap" title="Modo visible — el navegador abre en pantalla">
+                            <Zap size={11} />
                           </span>
-                          <span style={{
-                            fontFamily: '"Orbitron", "Share Tech Mono", monospace',
-                            fontSize: '1.4rem',
-                            fontWeight: '700',
-                            color: '#6366f1',
-                            opacity: 0.7,
-                            marginBottom: '10px',
-                            letterSpacing: '1px',
-                          }}>%</span>
-                        </div>
-                        <div style={{ textAlign: 'center', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '8px', letterSpacing: '0.02em' }}>
-                          {q.currentLog || 'Iniciando...'}
-                        </div>
-                        <div className="modern-progress-track">
-                          <div
-                            className="modern-progress-fill"
-                            style={{ width: `${Math.max(q.progress || 5, 2)}%` }}
-                          >
-                            <div className="modern-progress-segments" />
-                            <div className="modern-progress-shimmer" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {q.result && (
-                      <div className="b-result-detail">
-                        <span className={q.status === 'error' ? 'b-error-msg' : ''}>
-                          {q.status === 'error' ? `Detalle: ${q.result}` : `Resultado: ${q.result}`}
-                        </span>
-                        {q.status === 'done' && (
-                          <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                            {q.pdfUrl ? (
-                              <button className="btn-open-pdf" style={{ flex: 1 }} onClick={() => handleOpenPdf(q.pdfUrl)}>
-                                <FileText size={14} style={{ marginRight: '6px' }} /> VER PDF
-                              </button>
-                            ) : (
-                              <button className="btn-open-pdf btn-gemini-gen" style={{ flex: 1 }} onClick={() => generatePdfOnDemand(q.runDir)}>
-                                <Sparkles size={14} style={{ marginRight: '6px' }} /> GENERAR PDF
-                              </button>
-                            )}
-                          </div>
                         )}
                       </div>
-                    )}
+                      <div className="qrow-sub">{q.clientName} · {q.processName}</div>
+                      {q.status === 'running' && (
+                        <div className="qrow-bar-wrap">
+                          <div className="qrow-bar-fill" style={{ width: `${Math.max(q.progress || 2, 2)}%` }} />
+                        </div>
+                      )}
+                      {q.status === 'running' && (
+                        <div className="qrow-log">{q.currentLog || 'Iniciando...'}</div>
+                      )}
+                      {q.result && q.status !== 'running' && (
+                        <div className={`qrow-result ${q.status === 'error' ? 'qrow-result--err' : ''}`}>
+                          {q.status === 'error' ? q.result : q.result}
+                        </div>
+                      )}
+                    </div>
 
+                    {/* COL DERECHA: número + acciones */}
+                    <div className="qrow-right">
+                      {q.status === 'running' && (
+                        <span className="qrow-pct">
+                          {Math.round(q.progress || 0)}<small>%</small>
+                        </span>
+                      )}
+                      {q.status === 'done' && (
+                        q.pdfUrl ? (
+                          <button className="qrow-btn qrow-btn--pdf" onClick={() => handleOpenPdf(q.pdfUrl)}>
+                            <FileText size={12} /> PDF
+                          </button>
+                        ) : (
+                          <button className="qrow-btn qrow-btn--gen" onClick={() => generatePdfOnDemand(q.runDir)}>
+                            <Sparkles size={12} /> Dossier
+                          </button>
+                        )
+                      )}
+                      <button className="qrow-del" onClick={() => removeTask(q.taskId)}><X size={13} /></button>
+                    </div>
                   </div>
                 ))
               )}

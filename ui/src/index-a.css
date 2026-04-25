@@ -1548,43 +1548,95 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 /* Tarjetas que RESALTAN BASTANTE */
-.queue-card-apple {
-  background-color: #ffffff !important;
-  border-radius: 24px !important;
-  padding: 24px !important;
-  margin-bottom: 20px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
-  border: none !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+/* === QROW — fila compacta de tablero deportivo === */
+.qrow {
   display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 5px;
+  border: 1px solid rgba(226,232,240,0.8);
+  transition: background 0.15s, box-shadow 0.15s;
+  min-height: 52px;
+}
+.qrow:hover { background: #f8fafc; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.qrow.running { border-color: rgba(99,102,241,0.28); background: rgba(99,102,241,0.02); }
+.qrow.done    { border-color: rgba(22,163,74,0.2); }
+.qrow.error   { border-color: rgba(220,38,38,0.2); background: rgba(220,38,38,0.02); }
+
+.qrow-status { flex-shrink: 0; width: 18px; display: flex; align-items: center; justify-content: center; }
+
+@keyframes qrowPulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.5; transform:scale(0.7); } }
+.qrow-dot { display:inline-block; width:8px; height:8px; border-radius:50%; }
+.qrow-dot--running { background:#6366f1; animation: qrowPulse 1.2s ease-in-out infinite; }
+.qrow-dot--idle    { background:#cbd5e1; }
+
+.qrow-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+
+.qrow-name {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.82rem; font-weight: 700; color: #0f172a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+.qrow-zap { flex-shrink: 0; }
+
+.qrow-sub {
+  font-size: 0.68rem; color: #94a3b8; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-@media (max-width: 600px) {
-  .queue-card-apple { padding: 18px !important; }
+.qrow-bar-wrap {
+  height: 3px; background: rgba(99,102,241,0.1); border-radius: 2px;
+  margin-top: 4px; overflow: hidden;
+}
+.qrow-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  box-shadow: 0 0 6px rgba(99,102,241,0.6);
 }
 
-.queue-card-apple:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08) !important;
-}
+.qrow-log  { font-size: 0.62rem; color: #94a3b8; margin-top: 2px; }
+.qrow-result { font-size: 0.68rem; color: #475569; margin-top: 2px; }
+.qrow-result--err { color: #dc2626; }
 
-/* Detalles internos de la tarjeta para coherencia */
-.queue-card-title {
-  color: #1d1d1f !important;
-  font-size: 1.1rem !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.3px;
-  margin-bottom: 4px;
-}
+.qrow-right { flex-shrink:0; display:flex; align-items:center; gap:6px; }
 
-.queue-card-subtitle {
-  color: #86868b !important;
-  font-size: 0.8rem;
-  font-weight: 500;
+.qrow-pct {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.45rem; font-weight: 900;
+  background: linear-gradient(180deg, #a5b4fc 0%, #6366f1 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 6px rgba(99,102,241,0.5));
+  letter-spacing: -1px; line-height: 1;
 }
+.qrow-pct small { font-size: 0.6rem; letter-spacing: 0; opacity: 0.7; }
+
+.qrow-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 100px; border: none; cursor: pointer;
+  font-size: 0.67rem; font-weight: 700; letter-spacing: 0.04em;
+  transition: opacity 0.15s, transform 0.15s;
+  font-family: inherit;
+}
+.qrow-btn:hover { opacity: 0.82; transform: scale(0.97); }
+.qrow-btn--pdf { background: #0f172a; color: #fff; }
+.qrow-btn--gen { background: linear-gradient(135deg,#6366f1,#a855f7); color: #fff; }
+
+.qrow-del {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  color: #cbd5e1; transition: color 0.15s;
+  display: flex; align-items: center;
+}
+.qrow-del:hover { color: #ef4444; }
+
+/* mantener para compat con el resto del código */
+.queue-card-apple { display: none; }
+.queue-card-title, .queue-card-subtitle { display: none; }
 
 /* Texto de "Lote Vacío" en gris claro para legibilidad */
 .batch-panel .empty-state-text {
