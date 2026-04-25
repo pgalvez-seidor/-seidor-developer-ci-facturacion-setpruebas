@@ -1597,22 +1597,29 @@ export default function App() {
                     <span className="control-label">Flujos</span>
                     <span className="control-badge">{registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.length || 0} Guardados</span>
                   </div>
-                  <div className="scenario-selector-group">
-                    {/* Lista de escenarios con metadata */}
+                  <div className="scenario-selector-group" style={{ position: 'relative' }}>
+                    {/* Lista de escenarios — máx 4 visibles, scroll interno */}
                     {(() => {
                       const escenarios = [...(registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios || [])].sort((a, b) => {
                         const da = a.created_at ? new Date(a.created_at) : new Date(0);
                         const db2 = b.created_at ? new Date(b.created_at) : new Date(0);
                         return db2 - da;
                       });
+                      const fmtDate = (iso) => {
+                        if (!iso) return '—';
+                        const d = new Date(iso);
+                        const day = d.getDate();
+                        const mon = d.toLocaleString('es-PE', { month: 'short' }).replace('.','');
+                        const yr = String(d.getFullYear()).slice(-2);
+                        return `${day} ${mon} '${yr}`;
+                      };
                       return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto', paddingRight: '2px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '232px', overflowY: 'auto', paddingRight: '2px', paddingBottom: '2px' }}>
                           {escenarios.length === 0 && (
-                            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sin flujos grabados</div>
+                            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Sin flujos grabados</div>
                           )}
                           {escenarios.map(s => {
                             const isActive = s.id === activeScenarioId;
-                            const dateStr = s.created_at ? new Date(s.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
                             const author = s.created_by || '—';
                             return (
                               <div
@@ -1620,29 +1627,29 @@ export default function App() {
                                 onClick={() => handleScenarioSelect(s.id)}
                                 style={{
                                   display: 'flex', alignItems: 'center', gap: '10px',
-                                  padding: '10px 16px', borderRadius: '100px', cursor: 'pointer',
+                                  padding: '11px 16px', borderRadius: '100px', cursor: 'pointer',
                                   background: isActive ? 'rgba(99,102,241,0.08)' : 'rgba(0,0,0,0.02)',
                                   border: `1px solid ${isActive ? 'rgba(99,102,241,0.3)' : 'var(--card-border)'}`,
-                                  transition: 'all 0.15s'
+                                  transition: 'all 0.15s', flexShrink: 0
                                 }}
                               >
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontWeight: '600', fontSize: '0.82rem', color: isActive ? 'var(--accent-primary)' : 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+                                  <div style={{ fontWeight: '700', fontSize: '0.95rem', color: isActive ? 'var(--accent-primary)' : 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
                                 </div>
                                 {(s.created_at || s.created_by) && (
-                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
-                                    {s.created_at && <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: '500' }}>{dateStr}</div>}
-                                    {s.created_by && <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '90px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{author}</div>}
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1px', flexShrink: 0 }}>
+                                    {s.created_at && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600', letterSpacing: '-0.01em' }}>{fmtDate(s.created_at)}</div>}
+                                    {s.created_by && <div style={{ fontSize: '0.65rem', color: 'rgba(148,163,184,0.8)', maxWidth: '90px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{author}</div>}
                                   </div>
                                 )}
                                 <button
                                   onClick={e => deleteScenario(e, s.id, s.name)}
                                   title="Eliminar"
-                                  style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', opacity: 0.5, padding: '4px', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
+                                  style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', opacity: 0.45, padding: '4px', borderRadius: '6px', display: 'flex', alignItems: 'center', transition: 'opacity 0.15s' }}
                                   onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                                  onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+                                  onMouseLeave={e => e.currentTarget.style.opacity = '0.45'}
                                 >
-                                  <Trash2 size={13} />
+                                  <X size={15} strokeWidth={3} />
                                 </button>
                               </div>
                             );
@@ -1650,15 +1657,14 @@ export default function App() {
                         </div>
                       );
                     })()}
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '6px' }}>
-                      <button
-                        className="btn-record"
-                        onClick={() => openRecordModal()}
-                        title="Grabar nuevo flujo"
-                      >
-                        <Circle size={20} fill="white" className="rec-pulse" />
-                      </button>
-                    </div>
+                    {/* BOTÓN SUICIDA — superpuesto en esquina inferior derecha del bloque */}
+                    <button
+                      className="btn-record btn-suicida"
+                      onClick={() => openRecordModal()}
+                      title="Grabar nuevo flujo"
+                    >
+                      <Circle size={18} fill="white" className="rec-pulse" />
+                    </button>
                   </div>
 
                   {/* Banner: escenario sin script grabado (INTEGRADO) */}
