@@ -113,8 +113,8 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 /* El logo prop size={64} se sobreescribe con CSS para que quepa en la fila */
 .brand-isotype {
   flex-shrink: 0;
-  width: 34px !important;
-  height: 34px !important;
+  width: 44px !important;
+  height: 44px !important;
   opacity: 0.88;
   display: block;
 }
