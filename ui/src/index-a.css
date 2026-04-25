@@ -1814,3 +1814,71 @@ body {
   padding: 10px 12px !important;
   gap: 10px !important;
 }
+/* === BRAND IDENTITY REFINEMENT (VERTICAL & TRANSPARENT) === */
+.brand-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 2.5rem;
+  padding: 0;
+  background: transparent !important;
+}
+
+.brand-isotype {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+
+.brand-name {
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #0f172a, #475569);
+  WebkitBackgroundClip: text;
+  WebkitTextFillColor: transparent;
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+}
+
+/* === PILL-STYLE DROPDOWN REFINEMENT === */
+.modern-select-dropdown {
+  border-radius: 24px !important; /* El mismo ángulo de píldora */
+  overflow: hidden; /* Para que las esquinas del fondo azul no se salgan */
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12) !important;
+  margin-top: 8px !important;
+}
+
+.modern-select-option:first-child {
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.modern-select-option:last-child {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+/* === TOTAL HEIGHT FIX === */
+html, body, #root, .app {
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.main-content {
+  height: 100% !important; /* Llenar todo el espacio del contenedor body */
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  overflow: hidden;
+}
+
+.body {
+  height: calc(100% - 52px) !important; /* Descontando el topbar de forma exacta */
+}

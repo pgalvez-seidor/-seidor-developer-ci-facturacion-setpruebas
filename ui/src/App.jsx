@@ -152,22 +152,13 @@ const Sidebar = ({
 
   return (
     <aside className="sidebar">
-      <div style={{ marginBottom: '2.5rem', display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '0 5px' }}>
+      <div className="brand-container">
         <img
           src="/logo-pure.png"
           alt="AutoBot"
-          style={{ width: '42px', height: '42px', objectFit: 'contain' }}
+          className="brand-isotype"
         />
-        <div style={{ 
-          fontSize: '1.4rem', 
-          fontWeight: '300', 
-          letterSpacing: '1px', 
-          color: 'var(--text-main)',
-          background: 'linear-gradient(135deg, #0f172a, #475569)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          fontFamily: "'Inter', sans-serif"
-        }}>
+        <div className="brand-name">
           Auto<span style={{ fontWeight: '700' }}>Bot</span>
         </div>
       </div>
