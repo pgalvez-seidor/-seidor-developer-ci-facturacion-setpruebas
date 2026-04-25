@@ -2938,3 +2938,86 @@ body {
   margin-top: 3rem !important;
   margin-bottom: 1rem !important;
 }
+/* === APPLE SUPPORT DEFINITIVE AESTHETICS === */
+:root {
+  --apple-blue: #0066cc;
+  --apple-grey: #f5f5f7;
+  --apple-text: #1d1d1f;
+}
+
+/* Tarjetas Limpias (Sin Bordes) */
+.config-block {
+  background: white !important;
+  border: none !important;
+  border-radius: 30px !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.03) !important;
+  padding: 60px !important; /* Aún más aire */
+  text-align: center !important; /* Simetría central estilo Apple Support */
+}
+
+.config-block-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 15px !important;
+  margin-bottom: 40px !important;
+}
+
+.config-block-header h3 {
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  color: var(--apple-text) !important;
+}
+
+/* Icons Protagonistas (24px) */
+.config-block-header svg {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* Inputs Estilo "Search Support" */
+.modern-select-trigger, .branch-select, .modern-input {
+  background: var(--apple-grey) !important;
+  border: none !important;
+  border-radius: 16px !important;
+  height: 56px !important; /* Más altos y cómodos */
+  font-size: 1.1rem !important;
+  color: var(--apple-text) !important;
+  justify-content: center !important; /* Texto centrado */
+}
+
+.modern-input::placeholder {
+  color: #86868b !important;
+}
+
+/* El Botón Azul Apple */
+.btn-record, .btn-save-scenario, .btn-add-batch {
+  background: var(--apple-blue) !important;
+  height: 56px !important;
+  border-radius: 28px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: white !important;
+  border: none !important;
+  padding: 0 40px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+}
+
+/* Grid de Ejecución Simétrico */
+.execution-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 40px !important;
+  max-width: 500px;
+  margin: 0 auto !important;
+}
+
+.execution-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
