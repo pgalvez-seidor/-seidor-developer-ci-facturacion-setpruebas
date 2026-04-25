@@ -2350,3 +2350,60 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   from { transform: translate(-50%, 20px); opacity: 0; }
   to { transform: translate(-50%, 0); opacity: 1; }
 }
+
+/* === NUCLEAR SWITCH: GLOW ELÉCTRICO MODO VISIBLE === */
+@keyframes visibleGlowPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(245,158,11,0),
+      0 0 8px 2px rgba(245,158,11,0.25),
+      0 0 0 3px rgba(245,158,11,0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 0 0 rgba(245,158,11,0),
+      0 0 18px 6px rgba(245,158,11,0.45),
+      0 0 0 4px rgba(245,158,11,0.22);
+  }
+}
+@keyframes visibleSparkA {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0) rotate(0deg); }
+  30%  { opacity: 1; transform: translate(-14px, -12px) scale(1) rotate(-20deg); }
+  60%  { opacity: 0.4; transform: translate(-22px, -20px) scale(0.5) rotate(-35deg); }
+  100% { opacity: 0; transform: translate(-28px, -26px) scale(0) rotate(-50deg); }
+}
+@keyframes visibleSparkB {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0) rotate(0deg); }
+  40%  { opacity: 1; transform: translate(16px, -10px) scale(0.9) rotate(15deg); }
+  70%  { opacity: 0.3; transform: translate(24px, -18px) scale(0.4) rotate(30deg); }
+  100% { opacity: 0; transform: translate(30px, -24px) scale(0) rotate(45deg); }
+}
+@keyframes visibleSparkC {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0); }
+  55%  { opacity: 1; transform: translate(10px, 14px) scale(0.7); }
+  85%  { opacity: 0.2; transform: translate(16px, 22px) scale(0.3); }
+  100% { opacity: 0; transform: translate(20px, 28px) scale(0); }
+}
+
+.nuclear-container:not(.active) {
+  animation: visibleGlowPulse 2.2s ease-in-out infinite;
+  border-color: rgba(245,158,11,0.45);
+  position: relative;
+}
+.nuclear-container:not(.active)::before,
+.nuclear-container:not(.active)::after {
+  content: '';
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #fde68a;
+  pointer-events: none;
+}
+.nuclear-container:not(.active)::before {
+  top: -3px; left: 18px;
+  animation: visibleSparkA 2.2s ease-out infinite;
+}
+.nuclear-container:not(.active)::after {
+  top: -3px; right: 18px;
+  animation: visibleSparkB 2.2s ease-out infinite 0.6s;
+}

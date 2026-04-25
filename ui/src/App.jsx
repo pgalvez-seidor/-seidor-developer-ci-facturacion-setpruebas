@@ -2322,8 +2322,8 @@ export default function App() {
         ];
         const activeIdx = pdfDoneUrl ? 3 : Math.min(Math.max(pdfMessages.length - 1, 0), 2);
         return (
-          <div className="modal-overlay" style={{ zIndex: 10000 }}>
-            <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px', padding: '2rem', background: 'var(--card-bg)' }}>
+          <div className="modal-overlay" style={{ zIndex: 10000, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(6px)' }}>
+            <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px', padding: '2rem', background: '#ffffff', boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.8rem' }}>
                 <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366f1, #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

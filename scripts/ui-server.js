@@ -709,18 +709,33 @@ app.post('/api/run-batch', async (req, res) => {
                 const normalizedFile = file.replace(/\\/g, '/');
                 const relativePath = normalizedFile.startsWith('scripts/') ? normalizedFile : `scripts/${normalizedFile}`;
                 const absScriptPath = path.join(rootDir, relativePath);
+
+                // Inyectar capturas en tiempo de ejecución usando script temporal en runDir
+                let runScriptPath = relativePath;
+                try {
+                    if (fs.existsSync(absScriptPath)) {
+                        let scriptContent = fs.readFileSync(absScriptPath, 'utf8');
+                        scriptContent = injectScreenshots(scriptContent);
+                        const tempScript = path.join(runDir, '_autobot_run.js');
+                        fs.writeFileSync(tempScript, scriptContent, 'utf8');
+                        runScriptPath = path.relative(rootDir, tempScript);
+                    }
+                } catch (e) {
+                    console.error('[Screenshots] Error inyectando capturas:', e.message);
+                }
+
                 // En Mac/Linux, asegurar que los binarios sean ejecutables (prevenir código 126)
                 if (process.platform !== 'win32') {
-                    try { 
-                        const { execSync } = require('child_process'); 
-                        execSync('chmod -R +x node_modules/.bin/', { cwd: rootDir }); 
+                    try {
+                        const { execSync } = require('child_process');
+                        execSync('chmod -R +x node_modules/.bin/', { cwd: rootDir });
                     } catch (e) {
                         console.error('[Permissions] Error fijando chmod:', e.message);
                     }
                 }
                 // Windows BUG FIX: pasar relativePath (con slash '/') en vez de absScriptPath (con backslashes '\')
                 // porque Playwright en Windows interpreta las rutas absolutas con '\' como Regex.
-                const cmdArgs = [...baseArgs, relativePath, '--reporter=line'];
+                const cmdArgs = [...baseArgs, runScriptPath, '--reporter=line'];
                 if (!isHeadless) cmdArgs.push('--headed');
 
                 const testEnv = {
