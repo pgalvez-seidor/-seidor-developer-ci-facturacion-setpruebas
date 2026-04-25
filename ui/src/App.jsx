@@ -78,7 +78,8 @@ const Sidebar = ({
   testerName, setTesterName,
   projectName, setProjectName,
   geminiKey, setGeminiKey,
-  setShowChangelog
+  setShowChangelog,
+  isGitLoading
 }) => {
   const saveGeminiKey = async () => {
     if (!geminiKey) return;
@@ -340,6 +341,7 @@ export default function App() {
   const [remoteChangesCount, setRemoteChangesCount] = useState(0);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [backendError, setBackendError] = useState(null);
+  const [isGitLoading, setIsGitLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [gitToken, setGitToken] = useState('');
   const [projectDir, setProjectDir] = useState('');
@@ -487,12 +489,27 @@ export default function App() {
 
   const handleBranchChange = async e => {
     const branch = e.target.value;
-    if (branch === currentBranch) return;
+    if (!branch || branch === currentBranch) return;
+    setIsGitLoading(true);
     try {
-      const r = await fetch(`${API_BASE}/checkout`, { method: 'POST', body: JSON.stringify({ branch }), headers: { 'Content-Type': 'application/json' } });
-      if ((await r.json()).success) setBranch(branch);
+      const r = await fetch(`${API_BASE}/checkout`, { 
+        method: 'POST', 
+        body: JSON.stringify({ branch }), 
+        headers: { 'Content-Type': 'application/json' } 
+      });
+      const data = await r.json();
+      if (data.success) {
+        setCurrentBranch(branch);
+        await loadRegistry();
+        console.log(`[GIT] ${data.message}`);
+      } else {
+        alert(`❌ Error Git: ${data.error}`);
+      }
     } catch (err) {
       console.error("Branch Change Error:", err);
+      alert("Error de conexión al cambiar de rama.");
+    } finally {
+      setIsGitLoading(false);
     }
   };
 
@@ -949,6 +966,7 @@ export default function App() {
           geminiKey={geminiKey}
           setGeminiKey={setGeminiKey}
           setShowChangelog={setShowChangelog}
+          isGitLoading={isGitLoading}
         />
 
         <main className="main split-layout">
@@ -1375,7 +1393,7 @@ export default function App() {
             {aiResponse && (
               aiResponse.fuera_de_tema ? (
                 <div style={{ padding: '1.2rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🚫</div>
+                  <div style={{ fontWeight: '700', marginBottom: '4px' }}>AutoBot v2.1.0 — Evolution Era</div>
                   <p style={{ fontWeight: '700', color: '#ef4444', margin: '0 0 4px' }}>Fuera de mi área</p>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>No estoy autorizado para responder eso. Enfoquémonos en tu trabajo, gracias.</p>
                 </div>
@@ -1825,6 +1843,19 @@ export default function App() {
         </div>
       )}
 
+      {isGitLoading && (
+        <div className="modal-overlay" style={{ zIndex: 20000, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)' }}>
+          <div style={{ textAlign: 'center', color: 'white' }}>
+            <div className="sparkle-spin" style={{ marginBottom: '20px' }}>
+              <Zap size={48} color="#fbbf24" fill="#fbbf24" />
+            </div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '8px' }}>Sincronizando con el Futuro</h2>
+            <p style={{ opacity: 0.8, fontSize: '0.9rem' }}>Git está realizando un Checkout + Pull blindado...</p>
+            <div style={{ marginTop: '20px', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.5 }}>No cierres la aplicación</div>
+          </div>
+        </div>
+      )}
+
       {showChangelog && (
         <div className="modal-overlay" onClick={() => setShowChangelog(false)}>
           <div className="evolution-modal animate-slide-up" onClick={e => e.stopPropagation()}>
@@ -1837,16 +1868,17 @@ export default function App() {
             </div>
             
             <div className="evolution-timeline">
-              <div className="timeline-item">
-                <div className="timeline-icon rocket" style={{ border: '2px solid #f59e0b', color: '#f59e0b' }}><Zap size={12} /></div>
+              <div className="timeline-item milestone">
+                <div className="timeline-icon"><Sparkles size={16} /></div>
                 <div className="timeline-content">
-                  <div className="timeline-version">v2.1.0 — La Era de la Sincronización</div>
+                  <div className="timeline-version">v2.1.0 — El Amanecer de la IA Corporativa</div>
                   <div className="timeline-date">Hoy</div>
-                  <p>Unificación total de ramas CI y Medifarma con el nuevo diseño <strong>Enterprise Glass</strong>.</p>
+                  <span className="timeline-feature">✨ Integración con SAP Core AI</span>
+                  <p>AutoBot se une oficialmente a la infraestructura de inteligencia de la empresa para análisis profundo y generación de escenarios autónomos.</p>
                   <ul className="timeline-list">
-                    <li>Centro de mando unificado para escenarios.</li>
-                    <li>Interruptores de alta velocidad (Headless Mode).</li>
-                    <li>Branding remasterizado con logo "Pure".</li>
+                    <li><strong>Escudo de Sincronización Blindada</strong>: Checkout + Pull automático.</li>
+                    <li><strong>Lockdown UI</strong>: Bloqueo de seguridad durante sincronización Git.</li>
+                    <li><strong>Identidad Unificada</strong>: Versión v2.1.0 sincronizada en todo el sistema.</li>
                   </ul>
                 </div>
               </div>
@@ -1854,9 +1886,9 @@ export default function App() {
               <div className="timeline-item">
                 <div className="timeline-icon gear" style={{ border: '2px solid #64748b', color: '#64748b' }}><Settings size={12} /></div>
                 <div className="timeline-content">
-                  <div className="timeline-version">v2.0.0 — Estabilidad Definitiva</div>
+                  <div className="timeline-version">v2.0.0 — Estabilidad Enterprise</div>
                   <div className="timeline-date">Ayer</div>
-                  <p>Implementación de la arquitectura nativa para macOS y persistencia de base de datos local.</p>
+                  <p>Arquitectura nativa para macOS y persistencia SQLite para una experiencia sin interrupciones.</p>
                 </div>
               </div>
             </div>

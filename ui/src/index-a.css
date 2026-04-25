@@ -1001,3 +1001,52 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* === EVOLUTION MILESTONES (PREMIUM HIGHLIGHT) === */
+.timeline-item.milestone {
+  border: 2px solid #fbbf24;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(251, 191, 36, 0.02));
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-left: -10px;
+  box-shadow: 0 10px 30px rgba(251, 191, 36, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.timeline-item.milestone::after {
+  content: 'MAJOR MILESTONE';
+  position: absolute;
+  top: 10px;
+  right: -30px;
+  background: #fbbf24;
+  color: #78350f;
+  font-size: 0.6rem;
+  font-weight: 900;
+  padding: 4px 40px;
+  transform: rotate(45deg);
+}
+.timeline-item.milestone .timeline-icon {
+  width: 32px;
+  height: 32px;
+  left: -46px;
+  background: #fbbf24;
+  color: #78350f;
+  border-color: #fcd34d;
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+}
+.timeline-item.milestone .timeline-version {
+  font-size: 1.1rem;
+  color: #92400e;
+}
+.timeline-item.milestone .timeline-content {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.timeline-item.milestone .timeline-feature {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #78350f;
+  margin-bottom: 0.5rem;
+  display: block;
+}

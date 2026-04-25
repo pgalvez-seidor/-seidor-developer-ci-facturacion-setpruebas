@@ -136,28 +136,43 @@ app.post('/api/config/git-token', (req, res) => {
 
 
 
-// 2. Cambiar de rama (Checkout)
+// 2. Cambiar de rama (Checkout + Pull Blindado)
 app.post('/api/checkout', async (req, res) => {
     const { branch } = req.body;
     if (!branch) return res.status(400).json({ error: 'Falta la rama' });
 
     try {
+        console.log(`[GIT] Iniciando checkout a: ${branch}...`);
         await runCmd(`git checkout ${branch}`);
-        // Intentar pull si es posible
-        await runCmd(`git pull origin ${branch}`).catch(() => { });
         
-        // CRÍTICO: Sincronizar escenarios después de cambiar rama
+        console.log(`[GIT] Ejecutando PULL obligatorio para ${branch}...`);
+        // Intentar pull. Si falla (ej: sin remoto), no bloqueamos, pero informamos.
+        let pullResult = "";
+        try {
+            pullResult = await runCmd(`git pull origin ${branch}`);
+            console.log(`[GIT] Pull completado: ${pullResult}`);
+        } catch (pullErr) {
+            console.warn(`[GIT] No se pudo hacer pull (quizás no hay remoto): ${pullErr}`);
+            pullResult = "No hay cambios remotos o rama solo local.";
+        }
+        
+        // Sincronizar escenarios después de cambiar rama y actualizar archivos
         await syncScenariosWithFileSystem();
         
-        res.json({ success: true, message: `Cambiado a ${branch}` });
+        res.json({ 
+            success: true, 
+            message: `Checkout exitoso a ${branch}. ${pullResult}` 
+        });
     } catch (e) {
-        // Fallback si hay cambios sin commitear, forzar un stash temporal
+        // Fallback: si hay conflictos o cambios locales, intentamos stash
         try {
-            await runCmd(`git stash && git checkout ${branch}`);
+            console.log(`[GIT] Conflicto detectado, aplicando stash temporal...`);
+            await runCmd(`git stash && git checkout ${branch} && git pull origin ${branch}`);
             await syncScenariosWithFileSystem();
-            res.json({ success: true, message: `Stash aplicado y cambiado a ${branch}` });
+            res.json({ success: true, message: `Stash aplicado, checkout y pull completados en ${branch}` });
         } catch (stashErr) {
-            res.status(500).json({ error: stashErr.toString() });
+            console.error(`[GIT] Error crítico en checkout:`, stashErr);
+            res.status(500).json({ error: `Error crítico: Limpia tus cambios locales antes de cambiar de rama. Detalle: ${stashErr}` });
         }
     }
 });

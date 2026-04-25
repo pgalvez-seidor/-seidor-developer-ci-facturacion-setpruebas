@@ -1,0 +1,61 @@
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Eye, Zap, CreditCard, Banknote, Trash2,
+  CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power,
+  Sparkles, FileText, Settings, Cpu, AlertTriangle
+} from 'lucide-react';
+import './index-a.css';
+
+const API_BASE = 'http://localhost:3001/api';
+
+const ModernSwitch = ({ checked, onChange, label, icon: Icon }) => (
+  <div className="modern-switch-wrapper" onClick={() => onChange(!checked)}>
+    <div className="modern-switch-info">
+      {Icon && <Icon size={14} className="modern-switch-icon" />}
+      <span>{label}</span>
+    </div>
+    <div className={`modern-switch-track ${checked ? 'active' : ''}`}>
+      <div className="modern-switch-thumb" />
+    </div>
+  </div>
+);
+
+const ModernCheckbox = ({ checked, onChange, label }) => (
+  <label className="modern-checkbox-container" onClick={() => onChange(!checked)}>
+    <div className={`modern-checkbox-box ${checked ? 'checked' : ''}`}>
+      {checked && <div className="modern-checkbox-tick" />}
+    </div>
+    {label && <span className="modern-checkbox-label">{label}</span>}
+  </label>
+);
+
+const ModernSelect = ({ value, onChange, options, placeholder = '-- seleccionar --', style = {} }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedLabel = options.find(o => o.value === value)?.label || placeholder;
+
+  return (
+    <div className="modern-select-container" style={style}>
+      <div className="modern-select-trigger" onClick={() => setIsOpen(!isOpen)}>
+        <span>{selectedLabel}</span>
+        <ChevronRight size={16} style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: '0.3s' }} />
+      </div>
+      {isOpen && (
+        <div className="modern-select-dropdown">
+          {options.length === 0 ? (
+            <div className="modern-select-option empty">{placeholder}</div>
+          ) : (
+            options.map(o => (
+              <div 
+                key={o.value} 
+                className={`modern-select-option ${value === o.value ? 'active' : ''}`}
+                onClick={() => { onChange({ target: { value: o.value } }); setIsOpen(false); }}
+              >
+                {o.label}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
