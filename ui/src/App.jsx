@@ -1001,6 +1001,8 @@ export default function App() {
                     onClick={handleShutdown}
                     title="Apagar AutoBot"
                     className="power-off-btn"
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
                       border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '50%',
                       width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       cursor: 'pointer', transition: '0.3s'
