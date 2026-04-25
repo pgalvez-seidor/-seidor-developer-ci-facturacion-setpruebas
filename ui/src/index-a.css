@@ -2373,3 +2373,48 @@ div[style*="fontSize: '0.65rem'"] {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
+@import url('https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap');
+
+:root {
+  --font-main: 'Dongle', sans-serif;
+}
+
+body {
+  font-family: var(--font-main) !important;
+  font-size: 22px !important; /* Dongle es compacta, necesitamos más tamaño */
+  line-height: 1 !important;
+}
+
+/* === UNIFIED PILL SELECTORS (DONGLE EDITION) === */
+.modern-select-trigger, .branch-select {
+  font-family: var(--font-main) !important;
+  font-size: 1.4rem !important; /* Ajuste para Dongle */
+  border-radius: 24px !important;
+  padding: 8px 20px !important;
+  background: rgba(99, 102, 241, 0.08) !important;
+  border: 1px solid rgba(99, 102, 241, 0.15) !important;
+  color: var(--accent-primary) !important;
+  font-weight: 400 !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.modern-select-option {
+  font-family: var(--font-main) !important;
+  font-size: 1.3rem !important;
+}
+
+.sidebar-label {
+  font-family: var(--font-main) !important;
+  font-size: 1.5rem !important;
+  letter-spacing: 0;
+  text-transform: none !important; /* Dongle luce mejor en Sentence Case */
+  font-weight: 700 !important;
+}
+
+.brand-name {
+  font-family: var(--font-main) !important;
+  font-size: 3rem !important;
+  line-height: 0.8 !important;
+}
