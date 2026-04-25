@@ -1042,7 +1042,7 @@ export default function App() {
         <main className="main split-layout">
           <div className="config-panel">
             <header className="main-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h2 style={{ margin: 0 }}>Configuración del Escenario</h2>
+              <h2 style={{ margin: 0 }}>Configuración de escenario</h2>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button 
                     onClick={() => setShowSettings(true)}
@@ -1165,23 +1165,34 @@ export default function App() {
                   <FileText size={16} color="#6366f1" />
                   <h3>Identidad del Escenario</h3>
                 </div>
-                <div className="field-group">
-                  <label>Nombre Comercial del Escenario</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ej: Pago Efectivo 100% - CI" 
-                    value={newScenarioName} 
-                    onChange={e => setNewScenarioName(e.target.value)}
-                  />
+                
+                <div className="field-group-modern">
+                  <label className="modern-label"><Tag size={12} /> Nombre Comercial</label>
+                  <div className="input-with-icon">
+                    <input 
+                      type="text" 
+                      className="modern-input"
+                      placeholder="Ej: Pago Efectivo 100% - CI"
+                      value={newScenarioName}
+                      onChange={e => setNewScenarioName(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="field-group" style={{ marginTop: '12px' }}>
-                  <label>Instrucciones de Negocio (IA Prompt)</label>
-                  <textarea 
-                    placeholder="Describe el flujo para que la IA lo entienda..."
-                    value={instruccionesIa}
-                    onChange={e => setInstruccionesIa(e.target.value)}
-                    style={{ height: '80px', resize: 'none' }}
-                  />
+
+                <div className="field-group-modern">
+                  <label className="modern-label"><Brain size={12} /> Instrucciones de Negocio (IA Prompt)</label>
+                  <div className="prompt-box-container">
+                    <textarea 
+                      className="modern-textarea"
+                      placeholder="Describe el flujo para que la IA lo entienda..."
+                      value={instruccionesIa}
+                      onChange={e => setInstruccionesIa(e.target.value)}
+                    />
+                    <div className="prompt-magic-indicator">
+                      <Sparkles size={14} color="var(--accent-primary)" />
+                      <span>Optimizado por SAP AI Core</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1201,7 +1212,7 @@ export default function App() {
                   disabled={!activeScenarioId && !newScenarioName}
                 >
                   <Sparkles size={16} />
-                  Añadir al Lote de Ejecución
+                  Añadir al Lote de pruebas
                 </button>
               </div>
 
@@ -1211,7 +1222,7 @@ export default function App() {
 
           <div className="batch-panel">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h2 style={{ margin: 0 }}>Lote de Ejecución ({queue.length})</h2>
+              <h2 style={{ margin: 0 }}>Lote de pruebas ({queue.length})</h2>
               {queue.length > 0 && <button onClick={clearBatch} disabled={isBatchRunning} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem' }}>🗑 Limpiar Lote</button>}
             </div>
 

@@ -22,7 +22,7 @@ Dependiendo de lo que necesites probar, elige el "Proceso Analítico":
 
 ---
 
-## 📝 Paso 3: Configuración del Escenario
+## 📝 Paso 3: Configuración de escenario
 
 En el panel central (**Configuración**), llena los datos necesarios:
 
@@ -41,7 +41,7 @@ En el panel central (**Configuración**), llena los datos necesarios:
 ## 🏎️ Paso 4: Añadir y Preparar el Lote
 
 1. Una vez configurado, haz clic en el botón verde: **"＋ Añadir al Lote de Pruebas"**.
-2. Verás que las pruebas aparecen en la lista de la derecha (**Lote de Ejecución**).
+2. Verás que las pruebas aparecen en la lista de la derecha (**Lote de jecución**).
 3. **Scroll infinito**: Puedes añadir cientos de pruebas; el panel tiene scroll interno para que nunca las pierdas de vista.
 
 ---
