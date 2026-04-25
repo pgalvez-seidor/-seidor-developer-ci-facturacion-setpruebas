@@ -70,7 +70,7 @@ app.get('/api/branches', async (req, res) => {
         let gitConnected = false;
         try {
             await Promise.race([
-                runCmd('git fetch origin'),
+                runCmd('git fetch --prune origin'),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
             ]);
             gitConnected = true;
@@ -144,7 +144,7 @@ app.get('/api/git/init-check', async (req, res) => {
         let gitConnected = false;
         try {
             await Promise.race([
-                runCmd('git fetch origin'),
+                runCmd('git fetch --prune origin'),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
             ]);
             gitConnected = true;
@@ -262,10 +262,17 @@ app.post('/api/config/git-token', (req, res) => {
 app.post('/api/git/pull', async (req, res) => {
     try {
         const branch = await runCmd('git rev-parse --abbrev-ref HEAD');
+        const prevHead = await runCmd('git rev-parse HEAD').catch(() => '');
         const result = await runCmd(`git pull origin ${branch}`);
-        res.json({ ok: true, result });
+        const hasChanges = !result.includes('Already up to date');
+        let newScripts = [];
+        if (hasChanges && prevHead) {
+            const diff = await runCmd(`git diff --name-only --diff-filter=A ${prevHead} HEAD -- scripts/`).catch(() => '');
+            newScripts = diff.split('\n').filter(f => f.match(/scripts\/.+\.(spec\.js|js)$/)).map(f => f.replace(/^scripts\//, '').replace(/\.spec\.js$/, '').replace(/\.js$/, '').replace(/-/g, ' ').trim()).filter(Boolean);
+        }
+        res.json({ ok: true, hasChanges, newScripts });
     } catch (e) {
-        res.json({ ok: false, result: e.toString() });
+        res.json({ ok: false, hasChanges: false, newScripts: [] });
     }
 });
 

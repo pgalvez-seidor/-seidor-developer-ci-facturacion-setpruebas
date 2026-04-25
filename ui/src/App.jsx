@@ -214,6 +214,7 @@ const GitInitScreen = ({ onContinue }) => {
   const [isSelectingFolder, setIsSelectingFolder] = useState(false);
   const [phase, setPhase] = useState('loading'); // 'loading' | 'ready' | 'error'
   const [checkTrigger, setCheckTrigger] = useState(0);
+  const [pullWhisper, setPullWhisper] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -231,7 +232,16 @@ const GitInitScreen = ({ onContinue }) => {
         setSelectedBranch(data.current || data.branch || '');
         setPhase('ready');
         if (data.gitConnected) {
-          fetch(`${API_BASE}/git/pull`, { method: 'POST' }).catch(() => {});
+          fetch(`${API_BASE}/git/pull`, { method: 'POST' })
+            .then(r => r.json())
+            .then(pull => {
+              if (pull.newScripts?.length > 0) {
+                const nombres = pull.newScripts.slice(0, 2).join(', ');
+                const resto = pull.newScripts.length > 2 ? ` y ${pull.newScripts.length - 2} más` : '';
+                setPullWhisper(`Escenarios nuevos: ${nombres}${resto}`);
+              }
+            })
+            .catch(() => {});
         }
       } catch (e) {
         if (cancelled) return;
@@ -395,6 +405,14 @@ const GitInitScreen = ({ onContinue }) => {
               <ChevronRight size={16} />
             </button>
           </>
+        )}
+
+        {/* ── WHISPER ── */}
+        {pullWhisper && (
+          <div className="git-splash-whisper">
+            <Sparkles size={11} />
+            <span>Hey, {pullWhisper}</span>
+          </div>
         )}
 
         {/* ── FOOTER ── */}
