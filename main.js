@@ -131,7 +131,31 @@ function startBackend() {
     serverProcess.on('exit', (code) => { try { fs.appendFileSync(errLog, `[BACKEND EXIT] code=${code}\n`); } catch (e) {} });
 }
 
-app.on('ready', () => {
+function ensurePlaywrightBrowsers() {
+    return new Promise((resolve) => {
+        const { execFileSync } = require('child_process');
+        const markerFile = path.join(app.getPath('userData'), '.pw-installed');
+
+        if (fs.existsSync(markerFile)) return resolve();
+
+        try {
+            const playwrightCli = path.join(__dirname, 'node_modules', 'playwright', 'cli.js');
+            if (!fs.existsSync(playwrightCli)) return resolve();
+
+            execFileSync(process.execPath, [playwrightCli, 'install', 'chromium'], {
+                env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+                stdio: 'ignore',
+                timeout: 120000
+            });
+
+            fs.writeFileSync(markerFile, new Date().toISOString());
+        } catch (e) {
+        }
+        resolve();
+    });
+}
+
+app.on('ready', async () => {
     app.setAboutPanelOptions({
         applicationName: 'AutoBotIA',
         applicationVersion: '2.1.0',
@@ -143,6 +167,7 @@ app.on('ready', () => {
     });
 
     createSplash();
+    await ensurePlaywrightBrowsers();
     startBackend();
     waitForBackend();
 });

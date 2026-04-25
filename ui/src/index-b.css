@@ -26,7 +26,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.app { display: flex; flex-direction: column; height: 100vh; }
+.app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
 /* TOPBAR - minimalista, solo en zona de contenido */
 .topbar {
@@ -48,22 +48,46 @@ body {
 .badge-green { background: #dcfce7; color: #16a34a; }
 .badge-blue { background: #dbeafe; color: #1d4ed8; }
 
-.body { display: flex; flex: 1; overflow: hidden; }
+.body { display: flex; flex: 1; overflow: hidden; height: 100%; }
 
 /* SIDEBAR OSCURO */
 .sidebar {
   width: 230px;
+  min-width: 230px;
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   padding: 0;
   overflow: hidden;
+  height: 100%;
+  align-self: stretch;
 }
 
-/* Logo area */
-.sidebar > div:first-child {
-  padding: 1.5rem 1.25rem 1.25rem;
+.sidebar-header-fixed {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1.25rem 1.25rem 1rem;
   border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.sidebar-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+.sidebar-scroll-body::-webkit-scrollbar { width: 3px; }
+.sidebar-scroll-body::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+.sidebar-footer-fixed {
+  flex-shrink: 0;
+  padding: 12px 1.25rem 1.25rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
 }
 
 .sidebar-label {

@@ -253,7 +253,7 @@ const syncScenariosWithFileSystem = async () => {
         // 1. Registrar archivos nuevos
         db.serialize(() => {
             files.forEach(async (file) => {
-                db.get("SELECT id FROM escenarios WHERE config_json LIKE ? OR id = ?", [`%"${file}"%`, file], async (err, row) => {
+                db.get("SELECT id FROM escenarios WHERE config_json LIKE ? OR id = ?", [`%${file}%`, file], async (err, row) => {
                     if (!row) {
                         console.log(`[SYNC] + Nuevo escenario detectado en disco: ${file}`);
                         const friendlyName = toFriendlyName(file);
@@ -496,7 +496,7 @@ app.post('/api/registry/scenario', (req, res) => {
 
 // 3.6. Eliminar un Escenario (y su archivo físico si es una grabación)
 app.delete('/api/registry/scenario/:id', (req, res) => {
-    const { id } = req.params;
+    const id = decodeURIComponent(req.params.id);
     
     // Primero buscar el archivo físico para eliminarlo
     db.get("SELECT config_json FROM escenarios WHERE id = ?", [id], (err, row) => {

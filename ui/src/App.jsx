@@ -567,123 +567,133 @@ const Sidebar = ({
 
   return (
     <aside className="sidebar">
-      <div className="brand-container">
-        <TransparentLogo 
+
+      {/* HEADER FIJO */}
+      <div className="sidebar-header-fixed">
+        <TransparentLogo
           src="./logo-pure.png"
           className="brand-isotype"
-          size={64} 
+          size={52}
         />
         <div className="brand-name">
           Auto<span style={{ fontWeight: '700' }}>Bot</span>
         </div>
-        
-        <div className="sidebar-quick-actions">
-          <button onClick={() => setShowSettings(true)} className="action-btn-pill settings" title="Configuración">
-            <Settings size={16} />
-          </button>
-          <button onClick={() => window.handleShutdown()} className="action-btn-pill power" title="Apagar Sistema">
-            <Power size={16} />
-          </button>
-        </div>
       </div>
 
-      <div className="sidebar-section">
-        <div className="sidebar-label">Metadata del Reporte</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '4px', letterSpacing: '0.5px' }}>PROYECTO</div>
-          <input 
-            type="text" 
-            className="branch-select" 
-            value={projectName} 
-            onChange={e => setProjectName(e.target.value)}
-            placeholder="Ej: Medifarma - SAP Fiori"
-            style={{ fontSize: '0.85rem', borderRadius: '24px', padding: '12px 20px', background: 'var(--apple-bg)' }}
-          />
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '4px', marginTop: '8px', letterSpacing: '0.5px' }}>USUARIO (TESTER)</div>
-          <input 
-            type="text" 
-            className="branch-select" 
-            value={testerName} 
-            onChange={e => setTesterName(e.target.value)}
-            placeholder="Tu nombre completo"
-            style={{ fontSize: '0.85rem', borderRadius: '24px', padding: '12px 20px', background: 'var(--apple-bg)' }}
-          />
-        </div>
-      </div>
+      {/* CONTENIDO SCROLLABLE */}
+      <div className="sidebar-scroll-body">
 
-      <div className="sidebar-section">
-        
-        <div className="sidebar-label">Entorno Git</div>
-        {gitNotLinked ? (
-          <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', marginTop: '10px' }}>
-            <div style={{ fontSize: '0.65rem', color: '#d97706', fontWeight: '800', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <AlertTriangle size={12} /> Git no vinculado
-            </div>
-            <p style={{ fontSize: '0.65rem', color: '#92400e', margin: 0 }}>
-              Abre <span style={{ textDecoration: 'underline', cursor: 'pointer', fontWeight: '700' }} onClick={() => setShowSettings(true)}>⚙️ Configuración</span> y pega la ruta de tu proyecto.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.7rem', fontWeight: '700', color: remoteChangesCount > 0 ? '#d97706' : '#10b981' }}>
-              <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: remoteChangesCount > 0 ? '#f59e0b' : '#10b981', boxShadow: remoteChangesCount > 0 ? '0 0 6px rgba(245,158,11,0.6)' : '0 0 6px rgba(16,185,129,0.6)' }} />
-              {remoteChangesCount > 0 ? `${remoteChangesCount} cambios pendientes` : 'Sincronizado'}
-            </div>
-            <ModernSelect
-              value={currentBranch}
-              onChange={val => handleBranchChange({ target: { value: val } })}
-              options={branches.map(b => ({ label: b, value: b }))}
-              placeholder="Seleccionar Rama "
+        <div className="sidebar-section">
+          <div className="sidebar-label">Metadata del Reporte</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '4px', letterSpacing: '0.5px' }}>PROYECTO</div>
+            <input
+              type="text"
+              className="branch-select"
+              value={projectName}
+              onChange={e => setProjectName(e.target.value)}
+              placeholder="Ej: Medifarma - SAP Fiori"
+              style={{ fontSize: '0.85rem', borderRadius: '24px', padding: '12px 20px', background: 'var(--apple-bg)' }}
             />
-            
-            <button 
-              onClick={onGitSync} 
-              className="btn-sync-git"
-              style={{
-                marginTop: '10px', width: '100%', padding: '10px',
-                background: remoteChangesCount > 0 ? 'var(--accent-primary)' : 'rgba(99, 102, 241, 0.1)',
-                color: remoteChangesCount > 0 ? 'white' : '#6366f1',
-                border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '100px',
-                fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                boxShadow: remoteChangesCount > 0 ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none',
-                transition: 'all 0.2s'
-              }}
-            >
-              <Zap size={14} fill={remoteChangesCount > 0 ? 'white' : '#6366f1'} />
-              {remoteChangesCount > 0 ? `Sincronizar con Git (${remoteChangesCount})` : 'Sincronizar con Git'}
-            </button>
-          </>
-        )}
-      </div>
-
-      <div className="sidebar-section" style={{ flex: 1, marginTop: '2rem' }}>
-        <div className="sidebar-label">Mis Proyectos</div>
-        {registry.map(c => (
-          <div key={c.id} className={`client-item ${activeClient === c.id ? 'active' : ''}`} onClick={() => { setActiveClient(c.id); setActiveProcess(c.procesos[0]?.id || ''); }}>
-            <span style={{ display: 'flex', alignItems: 'center' }}>{c.icon || <Info size={18} />}</span>
-            <div className="client-name">{c.name}</div>
-          </div>
-        ))}
-
-        {activeClient && (
-          <div style={{ marginTop: '2rem' }}>
-            <div className="sidebar-label">Proceso Analítico</div>
-            <ModernSelect 
-              value={activeProcess} 
-              onChange={val => setActiveProcess(val)}
-              options={registry.find(c => c.id === activeClient)?.procesos?.map(p => ({ label: p.name, value: p.id })) || []}
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '4px', marginTop: '8px', letterSpacing: '0.5px' }}>USUARIO (TESTER)</div>
+            <input
+              type="text"
+              className="branch-select"
+              value={testerName}
+              onChange={e => setTesterName(e.target.value)}
+              placeholder="Tu nombre completo"
+              style={{ fontSize: '0.85rem', borderRadius: '24px', padding: '12px 20px', background: 'var(--apple-bg)' }}
             />
           </div>
-        )}
+        </div>
+
+        <div className="sidebar-section">
+          <div className="sidebar-label">Entorno Git</div>
+          {gitNotLinked ? (
+            <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', marginTop: '10px' }}>
+              <div style={{ fontSize: '0.65rem', color: '#d97706', fontWeight: '800', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <AlertTriangle size={12} /> Git no vinculado
+              </div>
+              <p style={{ fontSize: '0.65rem', color: '#92400e', margin: 0 }}>
+                Abre <span style={{ textDecoration: 'underline', cursor: 'pointer', fontWeight: '700' }} onClick={() => setShowSettings(true)}>⚙️ Configuración</span> y pega la ruta de tu proyecto.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.7rem', fontWeight: '700', color: remoteChangesCount > 0 ? '#d97706' : '#10b981' }}>
+                <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: remoteChangesCount > 0 ? '#f59e0b' : '#10b981', boxShadow: remoteChangesCount > 0 ? '0 0 6px rgba(245,158,11,0.6)' : '0 0 6px rgba(16,185,129,0.6)' }} />
+                {remoteChangesCount > 0 ? `${remoteChangesCount} cambios pendientes` : 'Sincronizado'}
+              </div>
+              <ModernSelect
+                value={currentBranch}
+                onChange={val => handleBranchChange({ target: { value: val } })}
+                options={branches.map(b => ({ label: b, value: b }))}
+                placeholder="Seleccionar Rama "
+              />
+              <button
+                onClick={onGitSync}
+                className="btn-sync-git"
+                style={{
+                  marginTop: '10px', width: '100%', padding: '10px',
+                  background: remoteChangesCount > 0 ? 'var(--accent-primary)' : 'rgba(99, 102, 241, 0.1)',
+                  color: remoteChangesCount > 0 ? 'white' : '#6366f1',
+                  border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '100px',
+                  fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  boxShadow: remoteChangesCount > 0 ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <Zap size={14} fill={remoteChangesCount > 0 ? 'white' : '#6366f1'} />
+                {remoteChangesCount > 0 ? `Sincronizar con Git (${remoteChangesCount})` : 'Sincronizar con Git'}
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="sidebar-section">
+          <div className="sidebar-label">Mis Proyectos</div>
+          {registry.map(c => (
+            <div key={c.id} className={`client-item ${activeClient === c.id ? 'active' : ''}`} onClick={() => { setActiveClient(c.id); setActiveProcess(c.procesos[0]?.id || ''); }}>
+              <span style={{ display: 'flex', alignItems: 'center' }}>{c.icon || <Info size={18} />}</span>
+              <div className="client-name">{c.name}</div>
+            </div>
+          ))}
+          {activeClient && (
+            <div style={{ marginTop: '2rem' }}>
+              <div className="sidebar-label">Proceso Analítico</div>
+              <ModernSelect
+                value={activeProcess}
+                onChange={val => setActiveProcess(val)}
+                options={registry.find(c => c.id === activeClient)?.procesos?.map(p => ({ label: p.name, value: p.id })) || []}
+              />
+            </div>
+          )}
+        </div>
+
       </div>
 
-      <div className="sidebar-footer">
+      {/* FOOTER FIJO */}
+      <div className="sidebar-footer-fixed">
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+          <button
+            onClick={() => setShowSettings(true)}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 0', borderRadius: '12px', border: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.03)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)' }}
+          >
+            <Settings size={14} /> Configuración
+          </button>
+          <button
+            onClick={() => window.handleShutdown()}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', borderRadius: '12px', border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', color: '#ef4444' }}
+          >
+            <Power size={14} />
+          </button>
+        </div>
         <div className="sap-branding-badge">
           <Cpu size={14} color="var(--accent-primary)" />
           <span className="sap-branding-text">Potencia por SAP AI Core</span>
         </div>
-        <button 
+        <button
           onClick={() => setShowChangelog(true)}
           className="evolution-text"
           style={{ background: 'none', border: 'none', cursor: 'pointer' }}
@@ -1033,7 +1043,7 @@ export default function App() {
     }
   };
 
-  const [deleteModal, setDeleteModal] = React.useState({ open: false, step: 1, scenarioId: null, scenarioName: '' });
+  const [deleteModal, setDeleteModal] = useState({ open: false, step: 1, scenarioId: null, scenarioName: '' });
 
   const deleteScenario = (e, scenarioId, scenarioName) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -1049,7 +1059,7 @@ export default function App() {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/registry/scenario/${deleteModal.scenarioId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/registry/scenario/${encodeURIComponent(deleteModal.scenarioId)}`, { method: 'DELETE' });
       const data = await res.json();
       setDeleteModal({ open: false, step: 1, scenarioId: null, scenarioName: '' });
       if (data.success) {
@@ -1317,7 +1327,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tasks: tasksToRun.map(t => ({ taskId: t.taskId, config: t.config, file: t.config.recordedScript || processScripts[activeProcess] || null })),
+          tasks: tasksToRun.map(t => ({ taskId: t.taskId, config: t.config, file: t.config.recordedScript || (t.config.file ? `scripts/${t.config.file}` : null) || processScripts[activeProcess] || null })),
           parallel: !runSequential,
           concurrency: runSequential ? 1 : batchConcurrency,
           metadata: {
@@ -1566,10 +1576,12 @@ export default function App() {
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ fontWeight: '600', fontSize: '0.82rem', color: isActive ? 'var(--accent-primary)' : 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
-                                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: '500' }}>{dateStr}</div>
-                                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '90px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{author}</div>
-                                </div>
+                                {(s.created_at || s.created_by) && (
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
+                                    {s.created_at && <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: '500' }}>{dateStr}</div>}
+                                    {s.created_by && <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '90px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{author}</div>}
+                                  </div>
+                                )}
                                 <button
                                   onClick={e => deleteScenario(e, s.id, s.name)}
                                   title="Eliminar"
@@ -1599,16 +1611,28 @@ export default function App() {
                   {/* Banner: escenario sin script grabado (INTEGRADO) */}
                   {activeScenarioId && (() => {
                     const esc = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === activeScenarioId);
-                    if (esc?.config?.recordedScript) return (
-                      <div style={{ marginTop: '12px', padding: '10px 14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <div style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: '700' }}>✅ Flujo grabado asignado</div>
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button onClick={() => openAiModal(esc.config.recordedScript)} style={{ padding: '4px 8px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.65rem' }}>
-                              🤖 Afinar IA
-                            </button>
-                          </div>
+                    const scriptRef = esc?.config?.recordedScript || (esc?.config?.file ? `scripts/${esc.config.file}` : null);
+                    if (scriptRef) return (
+                      <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '100px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', flexShrink: 0 }}>
+                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px rgba(16,185,129,0.7)' }} />
+                          <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#10b981', whiteSpace: 'nowrap' }}>Flujo listo</span>
                         </div>
+                        <button
+                          onClick={() => openAiModal(scriptRef)}
+                          style={{
+                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                            padding: '6px 12px', borderRadius: '100px', border: 'none', cursor: 'pointer',
+                            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 60%, #ec4899 100%)',
+                            color: 'white', fontSize: '0.72rem', fontWeight: '700',
+                            boxShadow: '0 2px 12px rgba(139,92,246,0.35)',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(139,92,246,0.55)'}
+                          onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 12px rgba(139,92,246,0.35)'}
+                        >
+                          ✨ Mejorar con IA
+                        </button>
                       </div>
                     );
                     return (
