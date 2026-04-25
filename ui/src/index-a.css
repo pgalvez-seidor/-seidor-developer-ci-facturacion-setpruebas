@@ -98,9 +98,40 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   flex-direction: column;
   overflow: hidden;
   height: 100%;
+  min-height: 0;
   align-self: stretch;
 }
 .sidebar::-webkit-scrollbar { width: 0; }
+
+/* Header fijo */
+.sidebar-header-fixed {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 12px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+/* Zona scrolleable central */
+.sidebar-scroll-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.1) transparent;
+}
+.sidebar-scroll-body::-webkit-scrollbar { width: 3px; }
+.sidebar-scroll-body::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 10px; }
+
+/* Footer fijo */
+.sidebar-footer-fixed {
+  flex-shrink: 0;
+  padding: 12px 16px 16px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
 
 /* Brand — fila horizontal: [logo] [nombre] [acciones] */
 .brand-container {
@@ -114,11 +145,10 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 /* El logo prop size={64} se sobreescribe con CSS para que quepa en la fila */
 .brand-isotype {
   flex-shrink: 0;
-  width: 95px !important;
-  height: 95px !important;
+  width: 48px !important;
+  height: 48px !important;
   opacity: 1;
   display: block;
-  margin-left: -5px;
 }
 
 .brand-name {
@@ -1875,47 +1905,30 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 /* ── MODERN PROGRESS BAR (DESIGN FROM IMAGE) ───────── */
 .modern-progress-track {
   width: 100%;
-  height: 12px;
-  background: #e2e8f0;
+  height: 6px;
+  background: rgba(99,102,241,0.1);
   border-radius: 100px;
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-  margin: 12px 0 8px 0;
+  margin: 8px 0 6px 0;
 }
 
 .modern-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff8a00, #ff2d55);
+  background: linear-gradient(90deg, #6366f1, #a855f7);
   border-radius: 100px;
   position: relative;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 10px rgba(255, 45, 85, 0.3);
+  box-shadow: 0 0 8px rgba(99,102,241,0.5);
 }
 
-/* El efecto de segmentos verticales sutiles */
-.modern-progress-segments {
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(90deg, 
-    rgba(0,0,0,0.1) 1px, 
-    transparent 1px
-  );
-  background-size: 8px 100%;
-  opacity: 0.4;
-}
+.modern-progress-segments { display: none; }
 
-/* Brillo animado (shimmer) */
 .modern-progress-shimmer {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255,255,255,0.3) 50%, 
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmerMove 2s infinite linear;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+  animation: shimmerMove 1.6s infinite linear;
 }
 
 @keyframes shimmerMove {
@@ -1925,29 +1938,21 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 .modern-progress-info {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
 }
 
 .modern-progress-log {
-  font-size: 0.72rem;
-  color: #64748b;
-  font-weight: 600;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 500;
   font-style: italic;
-  max-width: 80%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.modern-progress-percent {
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #ff2d55;
-  background: #fff1f2;
-  padding: 2px 8px;
-  border-radius: 10px;
-}
+.modern-progress-percent { display: none; }
 
 
   50% { transform: scale(1.1); opacity: 1; }
