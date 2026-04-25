@@ -1774,7 +1774,7 @@ export default function App() {
               </div>
 
               {/* ACCIONES FINALES */}
-              <div style={{ display: 'flex', justifyContent: 'center', position: 'sticky', bottom: '12px', zIndex: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', position: 'sticky', bottom: '12px', zIndex: 10, width: '100%' }}>
               <div className="config-actions" style={{ position: 'static', margin: 0 }}>
                 <button 
                   onClick={saveScenario} 
