@@ -156,8 +156,7 @@ app.on('activate', () => { if (mainWindow === null) createWindow(); });
 ipcMain.on('quit-app', () => app.quit());
 
 ipcMain.handle('select-folder', async () => {
-    if (!mainWindow) return null;
-    const result = await dialog.showOpenDialog(mainWindow, {
+    const result = await dialog.showOpenDialog({
         properties: ['openDirectory'],
         title: 'Selecciona la carpeta de tu proyecto AutoBot',
         buttonLabel: 'Usar esta carpeta'

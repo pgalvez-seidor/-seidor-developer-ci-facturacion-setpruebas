@@ -214,31 +214,33 @@ const GitInitScreen = ({ onContinue }) => {
   const [isChanging, setIsChanging] = useState(false);
   const [isSelectingFolder, setIsSelectingFolder] = useState(false);
   const [phase, setPhase] = useState('loading'); // 'loading' | 'ready' | 'error'
-  const checkRef = useRef(null);
+  const [checkTrigger, setCheckTrigger] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     let attempts = 0;
     const MAX = 16;
+    const delay = checkTrigger === 0 ? 800 : 400;
     const check = async () => {
+      if (cancelled) return;
       try {
         const res = await fetch(`${API_BASE}/git/init-check`);
         if (!res.ok) throw new Error('not ready');
         const data = await res.json();
+        if (cancelled) return;
         setGitInfo(data);
         setSelectedBranch(data.current || data.branch || '');
         setPhase('ready');
       } catch (e) {
+        if (cancelled) return;
         attempts++;
-        if (attempts < MAX) {
-          setTimeout(check, 500);
-        } else {
-          setPhase('error');
-        }
+        if (attempts < MAX) setTimeout(check, 500);
+        else setPhase('error');
       }
     };
-    checkRef.current = check;
-    setTimeout(check, 800);
-  }, []);
+    setTimeout(check, delay);
+    return () => { cancelled = true; };
+  }, [checkTrigger]);
 
   const handleSelectFolder = async () => {
     if (!window.electron?.selectFolder) return;
@@ -253,9 +255,7 @@ const GitInitScreen = ({ onContinue }) => {
       });
       setPhase('loading');
       setGitInfo(null);
-      setTimeout(() => {
-        if (checkRef.current) checkRef.current();
-      }, 600);
+      setCheckTrigger(t => t + 1);
     } catch (_) {}
     setIsSelectingFolder(false);
   };
