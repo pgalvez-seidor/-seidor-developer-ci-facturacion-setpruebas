@@ -2475,3 +2475,55 @@ h3 {
   display: flex !important;
   align-items: center !important;
 }
+/* === UNIFIED SELECTOR SYSTEM (PILL & DONGLE) === */
+.modern-select-trigger, 
+.branch-select,
+.btn-payment-method,
+.modern-input {
+  height: 48px !important; /* Altura fija para todos */
+  border-radius: 24px !important;
+  background: rgba(99, 102, 241, 0.05) !important;
+  border: 1px solid rgba(99, 102, 241, 0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 20px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  font-family: var(--font-main) !important;
+  font-size: 1.3rem !important;
+  color: var(--accent-primary) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Centrado visual del texto Dongle sin mover el contenedor */
+.modern-select-trigger span, 
+.branch-select,
+.modern-input {
+  transform: translateY(2px); /* Solo baja el texto un poco */
+}
+
+.modern-select-trigger:hover, .branch-select:hover {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Reset de paddings globales que causaron el caos */
+input, button, select, textarea {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* El botón de grabación debe ser hermano de los selectores */
+.btn-record {
+  height: 48px !important;
+  border-radius: 24px !important;
+  font-size: 1.3rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 24px !important;
+}
+
+.btn-record span {
+  transform: translateY(2px);
+}
