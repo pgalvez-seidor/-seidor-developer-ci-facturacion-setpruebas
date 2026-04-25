@@ -1911,3 +1911,29 @@ html, body, #root, .app {
   -webkit-text-fill-color: transparent;
   font-family: 'Inter', sans-serif;
 }
+/* === NUCLEAR MINIMALIST FIX === */
+.nuclear-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 16px !important; /* Más espacio para evitar solapamiento */
+  width: 100% !important;
+  padding: 12px !important;
+}
+
+.nuclear-base {
+  flex-shrink: 0 !important; /* No permite que el switch se aplaste */
+  width: 48px !important;
+  height: 26px !important;
+}
+
+.nuclear-label-group {
+  flex: 1 !important;
+}
+
+.nuclear-main-label {
+  font-size: 0.8rem !important; /* Un poco más grande para legibilidad */
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+  letter-spacing: 0.3px !important;
+}

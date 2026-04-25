@@ -73,8 +73,7 @@ const NuclearSwitch = ({ active, onClick }) => {
         <div className="nuclear-led"></div>
       </div>
       <div className="nuclear-label-group">
-        <span className="nuclear-main-label">HEADLESS MODE</span>
-        <span className="nuclear-sub-label">{active ? 'SECURE IGNITION' : 'STANDBY'}</span>
+        <span className="nuclear-main-label">HEADLESS</span>
       </div>
     </div>
   );
