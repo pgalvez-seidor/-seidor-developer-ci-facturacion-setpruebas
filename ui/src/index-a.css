@@ -2527,3 +2527,114 @@ input, button, select, textarea {
 .btn-record span {
   transform: translateY(2px);
 }
+@import url('https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&family=Outfit:wght@300;400;600;800&display=swap');
+
+:root {
+  --font-display: 'Dongle', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --accent-primary: #004a99;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 74, 153, 0.1);
+}
+
+body {
+  font-family: var(--font-body) !important;
+  font-size: 15px !important; /* Outfit es estándar, 15px es elegante */
+  line-height: 1.5 !important;
+  color: #1e293b !important;
+}
+
+/* === BRAND & TITLES (DONGLE PERSONALITY) === */
+.brand-name {
+  font-family: var(--font-display) !important;
+  font-size: 2.8rem !important;
+  font-weight: 700 !important;
+  line-height: 0.8 !important;
+  color: #0f172a !important;
+}
+
+.sidebar-label {
+  font-family: var(--font-display) !important;
+  font-size: 1.6rem !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  margin-top: 1.5rem !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* === THE PILL SYSTEM (SYMMETRY & REFINEMENT) === */
+.modern-select-trigger, 
+.branch-select, 
+.modern-input,
+.btn-record {
+  height: 44px !important; /* Altura áurea */
+  border-radius: 22px !important; /* Perfect Pill */
+  font-family: var(--font-body) !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  border: 1px solid var(--glass-border) !important;
+  background: white !important;
+  padding: 0 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.modern-select-trigger:hover, .branch-select:hover {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 4px 12px rgba(0, 74, 153, 0.05);
+  transform: translateY(-1px);
+}
+
+/* Botón Grabar unificado con el sistema */
+.btn-record {
+  background: var(--accent-primary) !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 800 !important;
+  justify-content: center !important;
+  cursor: pointer;
+}
+
+.btn-record:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 15px rgba(0, 74, 153, 0.2);
+}
+
+/* Metadata Labels */
+.sidebar-section label, .modern-label {
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  color: #64748b !important;
+  text-transform: uppercase;
+  letter-spacing: 1px !important;
+  margin-bottom: 6px !important;
+  display: block;
+}
+
+/* === QUICK ACTIONS SYMMETRY === */
+.sidebar-quick-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.action-btn-pill {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  background: white !important;
+  border: 1px solid var(--glass-border) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.action-btn-pill:hover {
+  background: #f8fafc !important;
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: scale(1.05);
+}
