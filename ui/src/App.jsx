@@ -1883,32 +1883,25 @@ export default function App() {
 
             {queue.length > 0 && (
               <div className="batch-actions-footer">
-                <div style={{ flex: 1 }}>
-                  <label>Modo de Ejecución</label>
-                  <div 
-                    className={`nuclear-container ${!runSequential ? 'active' : ''}`}
-                    onClick={() => !isBatchRunning && setRunSequential(!runSequential)}
-                    style={{ width: '100%', maxWidth: '180px' }}
-                  >
-                    <div className="nuclear-track"><div className="nuclear-thumb" /></div>
-                    <span>{runSequential ? 'Secuencial' : 'Paralelo'}</span>
-                  </div>
+                <div
+                  className={`footer-toggle ${!runSequential ? 'active' : ''}`}
+                  onClick={() => !isBatchRunning && setRunSequential(!runSequential)}
+                >
+                  <div className="footer-toggle-track"><div className="footer-toggle-thumb" /></div>
+                  <span className="footer-toggle-label">{runSequential ? 'Secuencial' : 'Paralelo'}</span>
                 </div>
 
                 {!runSequential && (
-                  <div style={{ flex: 1 }}>
-                    <label>Hilos en Paralelo</label>
-                    <ThreadsPicker 
-                      value={batchConcurrency} 
-                      onChange={val => setBatchConcurrency(val)}
-                    />
-                  </div>
+                  <ThreadsPicker
+                    value={batchConcurrency}
+                    onChange={val => setBatchConcurrency(val)}
+                  />
                 )}
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   {globalPdf && (
-                    <button 
-                      className="btn-execute-batch" 
+                    <button
+                      className="btn-execute-batch"
                       onClick={() => handleOpenPdf(globalPdf)}
                       style={{ background: '#323232', fontSize: '0.8rem', padding: '0 20px', height: '48px' }}
                     >
