@@ -106,7 +106,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 14px 16px 14px 8px;
   border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 
