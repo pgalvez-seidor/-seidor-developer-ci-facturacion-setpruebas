@@ -1231,7 +1231,7 @@ export default function App() {
                   disabled={!activeScenarioId && !newScenarioName}
                 >
                   <Sparkles size={16} />
-                  Añadir al Lote de pruebas
+                  Apilar
                 </button>
               </div>
 

@@ -1069,3 +1069,61 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   background: #0071e3 !important;
   color: white !important;
 }
+/* === RESTORING TEXT HIERARCHY & COMPONENT VISIBILITY === */
+
+/* La píldora solo afecta al CONTENEDOR, no al texto interno globalmente */
+.modern-select-trigger, 
+.branch-select, 
+.modern-input, 
+.iterations-container, 
+.nuclear-container {
+  height: 48px !important;
+  border-radius: 24px !important;
+  background: #f5f5f7 !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 24px !important;
+  /* Eliminado font-size global para no romper la jerarquía */
+}
+
+/* Restaurando Labels que se hicieron invisibles */
+.modern-label, .sidebar-label {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+  margin-bottom: 12px !important;
+  text-align: left !important; /* Volver a la izquierda */
+}
+
+/* Asegurando visibilidad de los iconos de cabecera */
+.config-block-header svg {
+  width: 20px !important; /* Tamaño equilibrado */
+  height: 20px !important;
+  margin-bottom: 8px;
+}
+
+/* Botones inferiores con presencia real */
+.btn-save-scenario {
+  background: #e2e8f0 !important;
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.btn-add-batch {
+  background: #0071e3 !important;
+  color: white !important;
+  opacity: 1 !important;
+}
+
+/* Fix para el badge de guardados */
+.control-badge {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  font-weight: 700 !important;
+}
