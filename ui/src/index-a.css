@@ -1215,3 +1215,86 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   height: 38px !important; /* Un poco más pequeño que los selectores principales */
   margin-top: 10px !important;
 }
+/* === FLOW CONTROLS ALIGNMENT & PILL UNIFICATION === */
+
+/* Grupo de botones de grabación */
+.recording-actions-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+}
+
+/* Botón Grabar como Píldora Premium */
+.btn-record-pill {
+  height: 46px !important;
+  border-radius: 23px !important;
+  padding: 0 24px !important;
+  background: #ff2d55 !important; /* Rojo Apple Music */
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  cursor: pointer;
+}
+
+/* Botón Eliminar como Círculo Píldora */
+.btn-delete-pill {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 50% !important;
+  background: #fff1f2 !important;
+  color: #ff2d55 !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-pill:hover {
+  background: #ffe4e6 !important;
+  transform: scale(1.05);
+}
+
+/* Status Bar como Píldora de Éxito */
+.status-pill-container {
+  height: 52px !important;
+  border-radius: 26px !important;
+  background: #f0fdf4 !important; /* Verde ultra-suave */
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 6px 0 20px !important; /* Espacio para el botón interno */
+  margin-top: 24px !important;
+}
+
+.status-text-pill {
+  color: #16a34a !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px;
+}
+
+/* Botón Afinar IA como Cápsula Interna */
+.btn-refine-ia-pill {
+  height: 40px !important;
+  border-radius: 20px !important;
+  padding: 0 16px !important;
+  background: #8b5cf6 !important; /* Violeta IA */
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer;
+}
