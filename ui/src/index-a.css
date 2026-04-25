@@ -101,21 +101,43 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .sidebar::-webkit-scrollbar { width: 0; }
 
-/* Brand */
+/* Brand — fila horizontal: [logo] [nombre] [acciones] */
 .brand-container {
-  padding: 20px 16px 14px;
-  border-bottom: 1px solid var(--apple-sep);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
 }
-.brand-isotype { opacity: 0.9; display: block; margin-bottom: 6px; }
+
+/* El logo prop size={64} se sobreescribe con CSS para que quepa en la fila */
+.brand-isotype {
+  flex-shrink: 0;
+  width: 34px !important;
+  height: 34px !important;
+  opacity: 0.88;
+  display: block;
+}
+
 .brand-name {
-  font-size: 22px;
+  flex: 1;
+  font-size: 16px;
   font-weight: 400;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.4px;
   color: var(--apple-text);
-  line-height: 1.2;
-  margin-bottom: 12px;
+  line-height: 1;
+  margin: 0;
+  white-space: nowrap;
 }
-.sidebar-quick-actions { display: flex; gap: 6px; align-items: center; }
+
+/* Botones pegados al borde derecho */
+.sidebar-quick-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
 
 .action-btn-pill {
   width: 28px; height: 28px;
