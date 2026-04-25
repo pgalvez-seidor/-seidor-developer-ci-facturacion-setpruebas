@@ -98,6 +98,8 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
+  height: 100vh !important;
+  min-height: 100vh !important;
 }
 .sidebar::-webkit-scrollbar { width: 0; }
 
@@ -615,6 +617,19 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .tray-header { font-size: 13px; font-weight: 600; color: var(--apple-text); margin-bottom: 10px; }
 .tray-adders { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
+.branch-select {
+  border: 1px solid rgba(0,0,0,0.08); border-radius: var(--r-md);
+  padding: 10px 14px; font-size: 14px; font-weight: 500;
+  background: #f5f5f7; color: var(--apple-text); cursor: pointer;
+  transition: all 0.2s ease; width: 100%;
+}
+.branch-select:focus {
+  background: #ffffff;
+  border-color: var(--apple-blue);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+  outline: none;
+}
+
 .btn-payment-method {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 12px;
@@ -978,22 +993,16 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* Selectores, Inputs y Pickers gemelos */
 .modern-select-trigger, 
-.branch-select, 
 .modern-input, 
-.iterations-container, 
-.nuclear-container,
-.btn-apple-action {
+.step-input-pill {
   height: 48px !important;
-  border-radius: 24px !important;
   background: #f5f5f7 !important;
   border: none !important;
-  display: flex !important;
-  align-items: center !important;
-  padding: 0 24px !important;
-  font-family: var(--font-body) !important;
-  font-size: 1rem !important;
-  box-sizing: border-box !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-radius: 24px !important;
+  padding: 0 20px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  width: 100% !important;
 }
 
 /* Iteraciones Picker como Píldora */

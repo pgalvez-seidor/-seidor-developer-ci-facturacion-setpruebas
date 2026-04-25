@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { spawn, exec } = require('child_process');
+const { spawn, exec, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { createPrefactura } = require('./api-helper.js');
