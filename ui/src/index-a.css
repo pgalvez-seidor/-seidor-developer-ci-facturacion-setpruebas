@@ -2116,3 +2116,23 @@ div[style*="fontSize: '0.65rem'"] {
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
+/* === BRAND IDENTITY — FINAL TRANSPARENCY FIX === */
+.brand-isotype {
+  width: 64px !important;
+  height: 64px !important;
+  object-fit: contain !important;
+  /* El secreto para eliminar el fondo blanco de una imagen JPG/PNG sin alfa */
+  mix-blend-mode: multiply !important; 
+  background: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  filter: contrast(1.1) brightness(1.05) !important; /* Limpia el blanco */
+}
+
+.brand-container {
+  background: transparent !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}

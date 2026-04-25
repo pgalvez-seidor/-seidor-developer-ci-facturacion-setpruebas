@@ -152,7 +152,11 @@ const Sidebar = ({
   return (
     <aside className="sidebar">
       <div className="brand-container">
-        <div className="brand-isotype" title="AutoBot"></div>
+        <img
+          src="/logo-pure.png"
+          alt="AutoBot"
+          className="brand-isotype"
+        />
         <div className="brand-name">
           Auto<span style={{ fontWeight: '700' }}>Bot</span>
         </div>
