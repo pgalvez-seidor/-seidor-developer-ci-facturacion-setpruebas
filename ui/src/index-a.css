@@ -1985,3 +1985,46 @@ html, body, #root, .app {
   font-size: 1.8rem !important;
   width: 80px !important;
 }
+/* === MODERN-EDGE SECTION TITLES === */
+.sidebar-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem !important;
+  font-weight: 900 !important;
+  color: #1e293b !important;
+  text-transform: none !important; /* Sentence Case para look moderno */
+  letter-spacing: -0.2px !important;
+  margin-top: 2.5rem !important;
+  margin-bottom: 12px !important;
+  padding-left: 4px !important;
+  position: relative;
+}
+
+/* Barra de acento moderna */
+.sidebar-label::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: var(--accent-primary);
+  border-radius: 10px;
+  display: inline-block;
+  box-shadow: 0 0 8px rgba(0, 74, 153, 0.3);
+}
+
+/* Ajuste específico para el primer label para que no tenga tanto margen superior */
+.sidebar-section:first-child .sidebar-label {
+  margin-top: 0 !important;
+}
+
+/* Títulos internos de campos (PROYECTO, USUARIO) */
+.field-group label, 
+div[style*="fontSize: '0.65rem'"] {
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 4px !important;
+  opacity: 0.8;
+}
