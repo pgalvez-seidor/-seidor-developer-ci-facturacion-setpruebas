@@ -2418,3 +2418,60 @@ body {
   font-size: 3rem !important;
   line-height: 0.8 !important;
 }
+/* === DONGLE PRECISION ADJUSTMENTS === */
+body {
+  font-size: 19px !important;
+  line-height: 1.2 !important;
+}
+
+/* Ajuste para que el texto no "vuele" al techo */
+input, button, select, textarea, .modern-select-trigger {
+  padding-top: 10px !important; /* Compensa la línea base de Dongle */
+  padding-bottom: 6px !important;
+}
+
+.brand-name {
+  font-size: 2.5rem !important;
+  margin-top: -10px; /* Alineación visual con el isotipo */
+}
+
+.sidebar-label {
+  font-size: 1.3rem !important;
+  margin-top: 1rem !important;
+  opacity: 0.8;
+}
+
+/* Fix para el botón Grabar que se hizo gigante */
+.btn-record {
+  font-size: 1.2rem !important;
+  padding: 8px 20px !important;
+  height: auto !important;
+  min-height: 40px !important;
+}
+
+/* Fix para los inputs de Metadata */
+.branch-select {
+  font-size: 1.1rem !important;
+  height: 42px !important;
+}
+
+/* Los encabezados de bloques necesitan más peso */
+h3 {
+  font-family: var(--font-main) !important;
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+}
+
+.modern-select-trigger span {
+  margin-top: 4px; /* Baja el texto del select */
+}
+/* Fix para badges con Dongle */
+.control-badge {
+  font-family: var(--font-main) !important;
+  font-size: 0.9rem !important;
+  padding: 4px 10px 0 10px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+}
