@@ -47,7 +47,8 @@ function createWindow() {
         icon: path.join(__dirname, 'ui/public/favicon.png'),
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            preload: path.join(__dirname, 'preload.js')
         },
         title: 'AutoBotIA - Seidor AI Vision'
     });
@@ -106,11 +107,12 @@ function startBackend() {
     }
 
     serverProcess = fork(serverPath, [], {
-        env: { 
-            ...process.env, 
+        env: {
+            ...process.env,
             PORT: '3005',
             ROOT_DIR: userDataPath,
             PROJECT_DIR: projectDir,
+            USER_DATA_DIR: userDataPath,
             ELECTRON_RUN_AS_NODE: '1'
         },
         execPath: process.execPath,

@@ -10,8 +10,8 @@ const { db, initDb } = require('./db.js');
 const app = express();
 const PORT = 3001;
 
-const rootDir = path.resolve(__dirname, '..');
-let projectDir = rootDir; // Default
+const rootDir = process.env.PROJECT_DIR || path.resolve(__dirname, '..');
+let projectDir = rootDir;
 let gitToken = process.env.GIT_TOKEN || '';
 
 
@@ -23,7 +23,7 @@ app.use('/evidence', express.static(path.join(rootDir, 'evidence'), { fallthroug
 // Utilidad para ejecutar comandos
 const runCmd = (cmd) => {
     return new Promise((resolve, reject) => {
-        exec(cmd, { cwd: rootDir }, (error, stdout, stderr) => {
+        exec(cmd, { cwd: projectDir }, (error, stdout, stderr) => {
             if (error) reject(error.message || stderr);
             else resolve(stdout.trim());
         });
@@ -223,7 +223,15 @@ app.post('/api/config/project-dir', (req, res) => {
     if (newDir) {
         projectDir = newDir;
         console.log(`[CONFIG] Nuevo projectDir: ${projectDir}`);
-        syncScenariosWithFileSystem(); // Sincronizar de inmediato
+        const userDataDir = process.env.USER_DATA_DIR;
+        if (userDataDir) {
+            try {
+                const cfgDir = path.join(userDataDir, 'config');
+                if (!fs.existsSync(cfgDir)) fs.mkdirSync(cfgDir, { recursive: true });
+                fs.writeFileSync(path.join(cfgDir, 'settings.json'), JSON.stringify({ projectDir: newDir }));
+            } catch (e) { console.error('[CONFIG] No se pudo persistir settings:', e.message); }
+        }
+        syncScenariosWithFileSystem();
         res.json({ success: true });
     } else {
         res.status(400).json({ error: 'Falta projectDir' });
@@ -1171,20 +1179,19 @@ app.post('/api/git/sync', (req, res) => {
     console.log('🚀 Iniciando sincronización automática con Git...');
     try {
         const timestamp = new Date().toLocaleString();
-        const branch = execSync('git branch --show-current').toString().trim() || 'Medifarma';
-        
-        execSync('git add .', { stdio: 'inherit' });
+        const branch = execSync('git branch --show-current', { cwd: projectDir }).toString().trim() || 'CI';
+
+        execSync('git add .', { cwd: projectDir, stdio: 'inherit' });
         try {
-            execSync(`git commit -m "autobot: sincronización automática desde Dashboard UI - ${timestamp}"`, { stdio: 'inherit' });
+            execSync(`git commit -m "autobot: sincronización automática desde Dashboard UI - ${timestamp}"`, { cwd: projectDir, stdio: 'inherit' });
         } catch (e) {
-            // Si falla el commit, probablemente es porque no hay cambios
             if (e.message.includes('nothing to commit')) {
                 console.log('ℹ️ No hay cambios para commitear.');
             } else {
                 throw e;
             }
         }
-        execSync(`git push origin ${branch}`, { stdio: 'inherit' });
+        execSync(`git push origin ${branch}`, { cwd: projectDir, stdio: 'inherit' });
         
         console.log('✅ Sincronización completada con éxito.');
         res.json({ success: true, message: 'Cambios subidos al repositorio correctamente.' });

@@ -1218,6 +1218,8 @@ export default function App() {
     }
   };
 
+  useEffect(() => { window.handleShutdown = handleShutdown; }, [handleShutdown]);
+
   useEffect(() => {
     if (showChangelog) {
       fetch(`${API_BASE}/changelog`)

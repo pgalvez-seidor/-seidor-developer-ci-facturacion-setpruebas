@@ -41,6 +41,7 @@
         },
         "files": [
             "main.js",
+            "preload.js",
             "CHANGELOG.md",
             "scripts/**/*",
             "config/**/*",
