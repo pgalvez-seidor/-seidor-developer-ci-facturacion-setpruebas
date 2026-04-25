@@ -865,8 +865,13 @@ function normalizeScript(content, portalUrl) {
   await page.locator('input[type="password"]').first().fill('${passFill}');
   await page.locator('button[type="submit"]').first().click();
   await page.waitForLoadState('networkidle').catch(() => {});
-  // SAP BTP a veces muestra "Where To?" post-login — recargar resuelve
-  if (page.url().includes('where_to') || await page.locator('text=/Where To/i').isVisible().catch(() => false)) {
+  // SAP BTP puede redirigir al auth home o a "Where To?" — en ambos casos volver al portal
+  const _currentUrl = page.url();
+  if (
+    _currentUrl.includes('where_to') ||
+    _currentUrl.includes('.authentication.') ||
+    await page.locator('text=/Where To/i').isVisible().catch(() => false)
+  ) {
     await page.goto('${portalUrl}');
     await page.waitForLoadState('networkidle').catch(() => {});
   }`;
@@ -1218,38 +1223,46 @@ app.post('/api/script/normalize', (req, res) => {
 app.post('/api/git/sync', (req, res) => {
     console.log('🚀 Iniciando sincronización con Git...');
     const opts = { cwd: projectDir, encoding: 'utf8' };
+    const { userName = '', projectName = '', scenarioName = '' } = req.body || {};
+
     try {
         const branch = execSync('git branch --show-current', opts).trim() || 'CI';
 
-        // 1. Pull primero para traer lo último del remoto
+        // 1. Pull primero
         try {
             execSync(`git pull origin ${branch}`, opts);
-            console.log('[SYNC] Pull completado.');
         } catch (_) {
-            console.warn('[SYNC] Pull falló (quizás no hay remoto). Continuando...');
+            console.warn('[SYNC] Pull falló (sin remoto). Continuando...');
         }
 
         // 2. Agregar solo scripts/
         execSync('git add scripts/', opts);
 
-        // 3. Detectar si hay algo nuevo para commitear
+        // 3. Detectar si hay algo nuevo
         const statusOut = execSync('git status --porcelain scripts/', opts).trim();
         if (!statusOut) {
-            console.log('[SYNC] No hay escenarios nuevos. Ya estás al día.');
-            return res.json({ success: true, upToDate: true, message: 'No hay escenarios nuevos. Ya estás al día.' });
+            return res.json({ success: true, upToDate: true, message: 'Ya estás al día. No hay escenarios nuevos que subir.' });
         }
 
-        // 4. Commit y push
-        const timestamp = new Date().toLocaleString('es-PE');
-        execSync(`git commit -m "autobot: nuevo escenario grabado - ${timestamp}"`, opts);
+        // 4. Armar mensaje de commit estilo: PIERRE GALVEZ - MEDIFARMA - INICIO DE SESION QAS 250426
+        const now = new Date();
+        const dateStr = String(now.getDate()).padStart(2, '0') +
+                        String(now.getMonth() + 1).padStart(2, '0') +
+                        String(now.getFullYear()).slice(-2);
+        const namePart   = userName.toUpperCase().trim() || 'TESTER';
+        const projPart   = projectName.toUpperCase().trim() || 'PROYECTO';
+        const scenePart  = scenarioName.toUpperCase().trim() || 'ESCENARIO';
+        const commitMsg  = `${namePart} - ${projPart} - ${scenePart} ${dateStr}`;
+
+        execSync(`git commit -m "${commitMsg}"`, opts);
         execSync(`git push origin ${branch}`, opts);
 
-        console.log('✅ Sincronización completada.');
-        res.json({ success: true, upToDate: false, message: 'Escenarios subidos al repositorio correctamente.' });
+        console.log(`✅ Sync completado: ${commitMsg}`);
+        res.json({ success: true, upToDate: false, message: `✅ "${scenarioName || 'Escenario'}" subido al repositorio.`, commitMsg });
     } catch (e) {
-        const detail = e.stderr || e.stdout || e.message || String(e);
-        console.error('❌ Error en sincronización Git:', detail);
-        res.status(500).json({ error: `Error en Git: ${detail.split('\n')[0]}` });
+        const detail = (e.stderr || e.stdout || e.message || String(e)).split('\n')[0];
+        console.error('❌ Error en sync Git:', detail);
+        res.status(500).json({ error: `Error en Git: ${detail}` });
     }
 });
 

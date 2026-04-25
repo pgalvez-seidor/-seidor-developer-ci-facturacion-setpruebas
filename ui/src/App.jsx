@@ -215,6 +215,7 @@ const GitInitScreen = ({ onContinue }) => {
   const [phase, setPhase] = useState('loading'); // 'loading' | 'ready' | 'error'
   const [checkTrigger, setCheckTrigger] = useState(0);
   const [pullWhisper, setPullWhisper] = useState(null);
+  const [testerInput, setTesterInput] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -273,7 +274,8 @@ const GitInitScreen = ({ onContinue }) => {
   };
 
   const handleContinue = async () => {
-    if (!selectedBranch || !gitInfo) { onContinue(); return; }
+    if (!testerInput.trim()) return;
+    if (!selectedBranch || !gitInfo) { onContinue(null, testerInput.trim()); return; }
     const currentBranch = gitInfo.current || gitInfo.branch;
     if (selectedBranch !== currentBranch) {
       setIsChanging(true);
@@ -286,7 +288,7 @@ const GitInitScreen = ({ onContinue }) => {
       } catch (_) {}
       setIsChanging(false);
     }
-    onContinue(selectedBranch);
+    onContinue(selectedBranch, testerInput.trim());
   };
 
   const statusColor  = gitInfo?.gitConnected ? '#34c759' : gitInfo?.gitNotLinked ? '#ff9500' : '#8e8e93';
@@ -377,6 +379,28 @@ const GitInitScreen = ({ onContinue }) => {
               </div>
             )}
 
+            {/* Campo de nombre — obligatorio */}
+            <div style={{ width: '100%', marginTop: '16px' }}>
+              <label style={{ fontSize: '0.7rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
+                Tu nombre completo
+              </label>
+              <input
+                className="modal-input"
+                type="text"
+                placeholder="ej. Pierre Gálvez"
+                value={testerInput}
+                onChange={e => setTesterInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && testerInput.trim() && handleContinue()}
+                style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center', fontWeight: '600' }}
+                autoFocus
+              />
+              {!testerInput.trim() && (
+                <p style={{ fontSize: '0.68rem', color: '#f59e0b', marginTop: '5px', textAlign: 'center' }}>
+                  Requerido para identificar tus commits
+                </p>
+              )}
+            </div>
+
             {/* Seleccionar carpeta cuando no hay repo vinculado */}
             {(gitInfo.gitNotLinked || !gitInfo.branches?.length) && (
               <button
@@ -394,7 +418,8 @@ const GitInitScreen = ({ onContinue }) => {
             <button
               className="git-splash-cta"
               onClick={handleContinue}
-              disabled={isChanging}
+              disabled={isChanging || !testerInput.trim()}
+              style={{ opacity: testerInput.trim() ? 1 : 0.45 }}
             >
               {isChanging
                 ? 'Cambiando rama...'
@@ -1293,7 +1318,15 @@ export default function App() {
   const handleGitSync = async () => {
     addToast("Sincronizando con Git...", "info");
     try {
-      const res = await fetch(`${API_BASE}/git/sync`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/git/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userName: testerName,
+          projectName,
+          scenarioName: newScenarioName
+        })
+      });
       const data = await res.json();
       if (data.success) {
         addToast(data.message, data.upToDate ? "info" : "success");
@@ -1347,8 +1380,9 @@ export default function App() {
   };
 
   if (!gitInitDone) {
-    return <GitInitScreen onContinue={(branch) => {
+    return <GitInitScreen onContinue={(branch, name) => {
       if (branch) setBranch(branch);
+      if (name) setTesterName(name);
       setGitInitDone(true);
     }} />;
   }
@@ -1576,8 +1610,33 @@ export default function App() {
                     </div>
 
                     {q.status === 'running' && (
-                      <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden', marginTop: '10px' }}>
-                        <div style={{ height: '100%', background: 'var(--accent-primary)', width: `${q.progress}%`, transition: 'width 0.4s ease' }} />
+                      <div style={{ marginTop: '12px' }}>
+                        <div style={{ width: '100%', height: '6px', background: 'rgba(99,102,241,0.08)', borderRadius: '100px', overflow: 'hidden', position: 'relative' }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${q.progress || 5}%`,
+                            background: 'linear-gradient(90deg, #6366f1, #818cf8, #a5b4fc)',
+                            borderRadius: '100px',
+                            transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                            position: 'relative',
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              position: 'absolute', inset: 0,
+                              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)',
+                              animation: 'shimmerSlide 1.8s ease-in-out infinite',
+                              borderRadius: '100px'
+                            }} />
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'rgba(99,102,241,0.7)', fontWeight: '600' }}>
+                            {q.currentLog || 'Iniciando...'}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: 'rgba(99,102,241,0.5)', fontWeight: '700' }}>
+                            {Math.round(q.progress || 0)}%
+                          </span>
+                        </div>
                       </div>
                     )}
 
@@ -1940,7 +1999,11 @@ export default function App() {
                   ))}
                 </div>
 
-                <button className="btn-run" style={{ width: '100%', background: '#ef4444', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={startRecording}>
+                <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', fontSize: '0.78rem', color: '#dc2626', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '1rem', flexShrink: 0 }}>⚠️</span>
+                  <span>Cuando termines, <strong>vuelve aquí</strong> y usa el botón Detener. No cierres el navegador directamente — el flujo no se guardará.</span>
+                </div>
+                <button className="btn-run" style={{ width: '100%', background: '#ef4444', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', animation: 'none' }} onClick={startRecording}>
                   <Circle size={14} fill="white" color="white" />
                   Iniciar Grabación
                 </button>
@@ -1949,15 +2012,24 @@ export default function App() {
 
             {/* ── STEP 3: GRABANDO ── */}
             {recordingStep === 'recording' && (
-              <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#ef4444', margin: '0 auto 1.5rem', animation: 'pulse 1.2s ease-in-out infinite' }} />
-                <p style={{ fontWeight: '800', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Grabando...</p>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Realiza las acciones en el navegador que se abrió.</p>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Flujo: <strong style={{ color: 'var(--text-main)' }}>{recordingName}</strong></p>
+              <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '2px solid rgba(239,68,68,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.2rem', animation: 'recordingPulse 1.5s ease infinite' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#ef4444' }} />
+                </div>
+                <p style={{ fontWeight: '800', fontSize: '1.15rem', marginBottom: '4px', color: '#ef4444' }}>Grabando en curso</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '4px' }}>Flujo: <strong style={{ color: 'var(--text-main)' }}>{recordingName}</strong></p>
                 {recordingCredentials.username && (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '2rem' }}>Usuario: <strong style={{ color: 'var(--text-main)' }}>{recordingCredentials.username}</strong></p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Usuario: <strong style={{ color: 'var(--text-main)' }}>{recordingCredentials.username}</strong></p>
                 )}
-                <button className="btn-run" style={{ background: '#1e293b', color: 'white', display: 'inline-flex', alignItems: 'center', gap: '8px' }} onClick={stopRecording}>
+                <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: '10px', padding: '10px 14px', margin: '1.2rem 0', fontSize: '0.78rem', color: '#dc2626', display: 'flex', gap: '8px', alignItems: 'flex-start', textAlign: 'left' }}>
+                  <span style={{ flexShrink: 0 }}>⚠️</span>
+                  <span>No cierres el navegador. Cuando termines de grabar, regresa aquí y haz clic en <strong>Detener</strong>.</span>
+                </div>
+                <button
+                  className="btn-run"
+                  onClick={stopRecording}
+                  style={{ background: '#1e293b', color: 'white', display: 'inline-flex', alignItems: 'center', gap: '8px', animation: 'recBtnGlow 2s ease-in-out infinite' }}
+                >
                   <Square size={14} fill="white" color="white" />
                   Detener y Guardar Flujo
                 </button>
@@ -2065,24 +2137,27 @@ export default function App() {
 
       {/* Estilos dinámicos para el cargador IA */}
       {showSettings && (
-        <div className="modal-overlay" style={{ zIndex: 10000 }}>
-          <div className="modal-content" style={{ width: '480px' }}>
-            <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ padding: '8px', background: 'rgba(99,102,241,0.08)', borderRadius: '10px', display: 'flex' }}>
-                  <Settings size={18} color="#6366f1" />
-                </div>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', margin: 0 }}>Configuración</h2>
-              </div>
-              <button className="btn-close" onClick={() => setShowSettings(false)}><X size={16}/></button>
+        <div className="modal-overlay" style={{ zIndex: 10000 }} onClick={() => setShowSettings(false)}>
+          <div className="modal-content about-modal" style={{ maxWidth: '480px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Settings size={18} /> Configuración
+              </h2>
+              <button onClick={() => setShowSettings(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+                <X size={20} />
+              </button>
             </div>
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div>
-                <label className="modal-field-label">Carpeta del proyecto</label>
-                <div className="modal-input-row">
-                  <input className="modal-input" type="text" value={projectDir} readOnly />
+                <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>REPOSITORIO</div>
+                <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>Carpeta del proyecto</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text" value={projectDir} readOnly
+                    style={{ flex: 1, fontSize: '0.8rem', padding: '8px 12px', border: '1px solid var(--card-border)', borderRadius: '8px', background: '#f8fafc', color: 'var(--text-muted)', fontFamily: 'inherit' }}
+                  />
                   <button
-                    className="modal-btn-change"
                     onClick={async () => {
                       const p = await window.electron?.selectFolder();
                       if (p) {
@@ -2092,44 +2167,38 @@ export default function App() {
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ projectDir: p })
                         });
-                        if (res.ok) {
-                          addToast('📁 Directorio actualizado.', 'success');
-                          fetchInitialData();
-                        }
+                        if (res.ok) { addToast('📁 Directorio actualizado.', 'success'); fetchInitialData(); }
                       }
                     }}
+                    style={{ padding: '8px 14px', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit' }}
                   >
                     Cambiar
                   </button>
                 </div>
-                <p className="modal-hint">Carpeta raíz del repositorio git con los scripts de prueba.</p>
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '5px' }}>Carpeta raíz del repo git con los scripts de prueba.</p>
               </div>
 
               <div>
-                <label className="modal-field-label">Git Token</label>
+                <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>AUTENTICACIÓN</div>
+                <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>Git Token</label>
                 <input
-                  className="modal-input"
-                  type="password"
-                  value={gitToken}
-                  onChange={e => setGitToken(e.target.value)}
+                  type="password" value={gitToken} onChange={e => setGitToken(e.target.value)}
                   placeholder="ghp_..."
+                  style={{ width: '100%', boxSizing: 'border-box', fontSize: '0.85rem', padding: '8px 12px', border: '1px solid var(--card-border)', borderRadius: '8px', background: 'white', color: 'var(--text-main)', fontFamily: 'inherit' }}
                 />
-                <p className="modal-hint">Requerido para el pull automático de ramas remotas.</p>
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '5px' }}>Requerido para el pull automático de ramas remotas.</p>
               </div>
 
               <button
-                className="modal-btn-save"
+                className="btn-run"
+                style={{ width: '100%', background: 'var(--accent-primary)', color: 'white', marginTop: '6px' }}
                 onClick={async () => {
                   const res = await fetch(`${API_BASE}/config/git-token`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ gitToken })
                   });
-                  if (res.ok) {
-                    addToast('✅ Configuración guardada.', 'success');
-                    setShowSettings(false);
-                    fetchInitialData();
-                  }
+                  if (res.ok) { addToast('✅ Configuración guardada.', 'success'); setShowSettings(false); fetchInitialData(); }
                 }}
               >
                 Guardar Configuración
