@@ -90,7 +90,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* ── SIDEBAR ──────────────────────────────────────── */
 .sidebar {
-  width: 240px;
+  width: 280px;
   flex-shrink: 0;
   background: #ffffff;
   border-right: 1px solid rgba(0,0,0,0.07);
@@ -113,17 +113,18 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 /* El logo prop size={64} se sobreescribe con CSS para que quepa en la fila */
 .brand-isotype {
   flex-shrink: 0;
-  width: 75px !important;
-  height: 75px !important;
-  opacity: 0.88;
+  width: 95px !important;
+  height: 95px !important;
+  opacity: 1;
   display: block;
+  margin-left: -5px;
 }
 
 .brand-name {
   flex: 1;
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 400;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.6px;
   color: var(--apple-text);
   line-height: 1;
   margin: 0;
@@ -201,7 +202,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 /* Client items */
 .client-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: var(--r-md);
+  padding: 8px 16px; border-radius: var(--r-pill);
   cursor: pointer; border: 1px solid transparent;
   margin-bottom: 2px; font-size: 13px; font-weight: 500;
   color: var(--apple-text);
@@ -213,7 +214,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   border-color: rgba(0,113,227,0.2);
   color: var(--apple-blue);
 }
-.client-name { font-size: 13px; font-weight: 500; }
+.client-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* Botón sincronizar git */
 .btn-sync-git {
@@ -336,8 +337,8 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 .config-block-header h3 {
-  font-size: 11px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.07em;
+  font-size: 14px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.12em;
   color: var(--apple-text-2);
 }
 
@@ -579,16 +580,16 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 /* Botón Grabar (btn-record — clase real en App.jsx) */
 .btn-record {
   background: var(--apple-red); color: white; border: none;
-  border-radius: var(--r-pill);
-  height: 38px; padding: 0 16px;
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 13px; font-weight: 500;
+  border-radius: 50% !important;
+  width: 48px !important; height: 48px !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
   cursor: pointer;
-  transition: filter var(--t), transform var(--t);
-  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+  padding: 0 !important;
 }
-.btn-record:hover { filter: brightness(0.9); }
-.btn-record:active { transform: scale(0.97); }
+.btn-record:hover { transform: scale(1.1); filter: brightness(1.1); }
+.btn-record:active { transform: scale(0.9); }
 /* Compatibilidad si alguien usa btn-record-mini */
 .btn-record-mini { background: var(--apple-red); color: white; border: none; border-radius: var(--r-pill); height: 36px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: filter var(--t); }
 .btn-record-mini:hover { filter: brightness(0.9); }
@@ -1047,17 +1048,41 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   display: flex !important;
   gap: 16px !important;
   justify-content: center !important;
-  margin-top: 40px !important;
+  margin: 20px 0 0 0 !important;
+  padding: 16px !important;
+  position: sticky !important;
+  bottom: 12px !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  z-index: 10;
+  border-radius: 24px !important;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.03), 0 10px 30px rgba(0,0,0,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.4) !important;
 }
 
 .btn-save-scenario, .btn-add-batch {
-  height: 48px !important;
-  border-radius: 24px !important;
-  padding: 0 32px !important;
-  font-weight: 700 !important;
-  font-size: 0.95rem !important;
+  height: 44px !important;
+  border-radius: 22px !important;
+  padding: 0 28px !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
   border: none !important;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.btn-add-batch:active {
+  animation: pushAndBack 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pushAndBack {
+  0% { transform: translateX(0); }
+  30% { transform: translateX(20px) scale(0.98); }
+  100% { transform: translateX(0) scale(1); }
 }
 
 .btn-save-scenario {
@@ -1196,10 +1221,12 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* El label superior (PROCESO ANALÍTICO) ya está bien, pero le damos un toque de aire */
 .sidebar-label {
-  font-size: 0.7rem !important;
-  letter-spacing: 1px !important;
-  margin-bottom: 8px !important;
-  opacity: 0.6;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 1.5px !important;
+  margin-bottom: 12px !important;
+  opacity: 0.8;
+  color: var(--apple-text) !important;
 }
 
 /* Fix específico para que FLUJOS GRABADOS no se vea gigante */

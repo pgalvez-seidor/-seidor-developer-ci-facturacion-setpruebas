@@ -155,16 +155,37 @@ const ModernSelect = ({ value, onChange, options, placeholder = '-- seleccionar 
 
   return (
     <div className="modern-select-container" style={style}>
-      <div className="modern-select-trigger" onClick={() => setIsOpen(!isOpen)}>
+      <div 
+        className={`modern-select-trigger ${!value ? 'is-placeholder' : ''}`} 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ color: !value ? '#98989d' : 'inherit' }}
+      >
         <span>{selectedLabel}</span>
-        <ChevronRight size={16} style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: '0.3s' }} />
+        <ChevronRight size={16} style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: '0.3s', opacity: 0.5 }} />
       </div>
       {isOpen && (
         <>
           <div className="modern-select-backdrop" onClick={() => setIsOpen(false)} />
           <div className="modern-select-dropdown animate-scale-in">
+            {/* Opción de "Reset" o "Nuevo" (el placeholder) */}
+            <div 
+              className={`modern-select-option ${!value ? 'active' : ''} ${value ? 'disabled-placeholder' : ''}`}
+              onClick={() => { if (!value) return; onChange(''); setIsOpen(false); }}
+              style={{ 
+                color: !value ? 'white' : '#98989d',
+                opacity: value ? 0.5 : 1,
+                cursor: value ? 'not-allowed' : 'pointer',
+                pointerEvents: value ? 'none' : 'auto' // No seleccionable si ya hay otro
+              }}
+            >
+              <span>{placeholder}</span>
+              {!value && <div className="modern-select-tick">✓</div>}
+            </div>
+
+            <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '4px 8px' }} />
+
             {options.length === 0 ? (
-              <div className="modern-select-option empty">{placeholder}</div>
+              <div className="modern-select-option empty">Sin opciones</div>
             ) : (
               options.map(o => (
                 <div 
@@ -244,23 +265,23 @@ const Sidebar = ({
       <div className="sidebar-section">
         <div className="sidebar-label">Metadata del Reporte</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '-5px' }}>PROYECTO</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '2px' }}>PROYECTO</div>
           <input 
             type="text" 
             className="branch-select" 
             value={projectName} 
             onChange={e => setProjectName(e.target.value)}
             placeholder="Ej: Medifarma - SAP Fiori"
-            style={{ fontSize: '0.75rem' }}
+            style={{ fontSize: '0.85rem' }}
           />
-          <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '-5px' }}>USUARIO (TESTER)</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '2px' }}>USUARIO (TESTER)</div>
           <input 
             type="text" 
             className="branch-select" 
             value={testerName} 
             onChange={e => setTesterName(e.target.value)}
             placeholder="Tu nombre completo"
-            style={{ fontSize: '0.75rem' }}
+            style={{ fontSize: '0.85rem' }}
           />
         </div>
       </div>
@@ -283,7 +304,7 @@ const Sidebar = ({
               value={currentBranch} 
               onChange={val => handleBranchChange({ target: { value: val } })}
               options={branches.map(b => ({ label: b, value: b }))}
-              placeholder="-- Seleccionar Rama --"
+              placeholder="Seleccionar Rama "
             />
             
             <button 
@@ -293,7 +314,7 @@ const Sidebar = ({
                 marginTop: '10px', width: '100%', padding: '10px',
                 background: remoteChangesCount > 0 ? 'var(--accent-primary)' : 'rgba(99, 102, 241, 0.1)',
                 color: remoteChangesCount > 0 ? 'white' : '#6366f1',
-                border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '10px',
+                border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '100px',
                 fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 boxShadow: remoteChangesCount > 0 ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none',
@@ -339,7 +360,7 @@ const Sidebar = ({
           style={{ background: 'none', border: 'none', cursor: 'pointer' }}
         >
           <Sparkles size={12} color="#f59e0b" />
-          <span>Evolución del Sistema</span>
+          <span>AutoBotAI v2.1.0</span>
         </button>
       </div>
 
@@ -1128,28 +1149,27 @@ export default function App() {
               <div className="config-block">
                 <div className="config-block-header">
                   <Cpu size={16} color="var(--accent-primary)" />
-                  <h3>Centro de Control de Flujo</h3>
+                  <h3>Escenarios</h3>
                 </div>
                 <div className="control-card-inner">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <span className="control-label">Gestión de Escenarios</span>
+                    <span className="control-label">Flujos</span>
                     <span className="control-badge">{registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.length || 0} Guardados</span>
                   </div>
                   <div className="scenario-selector-group">
                     <ModernSelect 
                       value={activeScenarioId} 
                       onChange={val => handleScenarioSelect(val)}
-                      placeholder="-- Iniciar Nuevo Flujo --"
+                      placeholder="Nuevo flujo"
                       options={registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.map(s => ({ label: s.name, value: s.id })) || []}
                     />
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', alignItems: 'center' }}>
                       <button 
                         className="btn-record" 
                         onClick={() => openRecordModal()}
                         title="Grabar nuevo flujo"
                       >
-                        <Circle size={14} fill="white" className="rec-pulse" />
-                        <span>Grabar</span>
+                        <Circle size={20} fill="white" className="rec-pulse" />
                       </button>
                       {activeScenarioId && (
                         <button 
@@ -1191,7 +1211,7 @@ export default function App() {
               <div className="config-block">
                 <div className="config-block-header">
                   <Zap size={16} color="#f59e0b" />
-                  <h3>Parámetros de Ejecución</h3>
+                  <h3>Configuración</h3>
                 </div>
                 <div className="execution-grid">
                   <div className="execution-item">
@@ -1219,12 +1239,12 @@ export default function App() {
                 </div>
                 
                 <div className="field-group-modern">
-                  <label className="modern-label"><Tag size={12} /> Nombre Comercial</label>
+                  <label className="modern-label"><Tag size={12} /> Nombre escenario</label>
                   <div className="input-with-icon">
                     <input 
                       type="text" 
                       className="modern-input"
-                      placeholder="Ej: Pago Efectivo 100% - CI"
+                      placeholder="Ej: Nombre escenario - CI"
                       value={newScenarioName}
                       onChange={e => setNewScenarioName(e.target.value)}
                     />
@@ -1242,7 +1262,6 @@ export default function App() {
                     />
                     <div className="prompt-magic-indicator" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
                       <span className="sap-badge-new">NEW</span>
-                      <Sparkles size={14} color="#bf4800" />
                       <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#1d1d1f' }}>Optimizado por SAP AI Core</span>
                     </div>
                   </div>
@@ -1264,8 +1283,8 @@ export default function App() {
                   onClick={addToBatch}
                   disabled={!activeScenarioId && !newScenarioName}
                 >
-                  <Sparkles size={16} />
-                  Apilar
+                  <span>Apilar</span>
+                  <ChevronRight size={16} />
                 </button>
               </div>
 
