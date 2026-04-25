@@ -21,11 +21,7 @@ module.exports = defineConfig({
             'Accept-Language': 'es-PE,es;q=0.9,en;q=0.1'
         },
         launchOptions: {
-            args: [
-                '--lang=es-PE',
-                '--no-sandbox',
-                `--user-data-dir=/tmp/autobot-chrome-profile`,
-            ],
+            args: ['--lang=es-PE', '--no-sandbox'],
         },
     },
     workers: 1,               // Por defecto 1 worker (se controla desde el servidor)
