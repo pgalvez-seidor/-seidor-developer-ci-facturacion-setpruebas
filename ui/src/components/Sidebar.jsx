@@ -23,7 +23,19 @@ const ModernSelect = ({ value, onChange, options, placeholder = '-- seleccionar 
       {isOpen && (
         <>
           <div className="modern-select-backdrop" onClick={() => setIsOpen(false)} />
-          <div className="modern-select-dropdown animate-scale-in">
+          <div className="modern-select-dropdown animate-scale-in" style={{
+              position: 'absolute',
+              top: '105%',
+              left: 0,
+              right: 0,
+              background: 'white',
+              borderRadius: '16px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+              padding: '8px',
+              zIndex: 10000,
+              border: '1px solid rgba(0,0,0,0.05)',
+              marginTop: '4px'
+            }}>
             <div 
               className={`modern-select-option ${!value ? 'active' : ''} ${value ? 'disabled-placeholder' : ''}`}
               onClick={() => { if (!value) return; onChange(''); setIsOpen(false); }}
@@ -121,18 +133,52 @@ const Sidebar = ({
 
       <div className="sidebar-scroll-body">
         
-        {/* 1. METADATA */}
+        {/* 1. METADATA DEL TEST (Para el PDF) */}
         <div className="sidebar-section stagger-item">
-          <div className="sidebar-label">Información del Tester</div>
+          <div className="sidebar-label">Información del Test</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '2px', letterSpacing: '0.5px' }}>PROYECTO / CASO</div>
+            <input
+              type="text"
+              className="branch-select"
+              value={projectName}
+              onChange={e => setProjectName(e.target.value)}
+              placeholder="Ej: Central de Pesado"
+              style={{ fontSize: '0.85rem', borderRadius: '12px', padding: '10px 16px', background: 'var(--apple-bg)', marginBottom: '4px' }}
+            />
+
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '2px', letterSpacing: '0.5px' }}>MÓDULO / SISTEMA</div>
+            <input
+              type="text"
+              className="branch-select"
+              placeholder="Ej: SAP MM / Fiori"
+              style={{ fontSize: '0.85rem', borderRadius: '12px', padding: '10px 16px', background: 'var(--apple-bg)', marginBottom: '4px' }}
+            />
+
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '2px', letterSpacing: '0.5px' }}>AMBIENTE</div>
+            <div style={{ marginBottom: '4px' }}>
+              <ModernSelect
+                value="QAS"
+                onChange={() => {}}
+                options={[
+                  { label: 'QAS (Calidad)', value: 'QAS' },
+                  { label: 'PRD (Producción)', value: 'PRD' },
+                  { label: 'DEV (Desarrollo)', value: 'DEV' }
+                ]}
+              />
+            </div>
+
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '2px', letterSpacing: '0.5px' }}>USUARIO (TESTER)</div>
             <input
               type="text"
               className="branch-select"
               value={testerName}
               onChange={e => setTesterName(e.target.value)}
-              placeholder="Tu nombre completo"
-              style={{ fontSize: '0.85rem', borderRadius: '24px', padding: '12px 20px', background: 'var(--apple-bg)' }}
+              placeholder="Tu nombre"
+              style={{ fontSize: '0.85rem', borderRadius: '12px', padding: '10px 16px', background: 'var(--apple-bg)' }}
             />
+
           </div>
         </div>
 
@@ -140,7 +186,11 @@ const Sidebar = ({
         <div className="sidebar-section stagger-item">
           <div className="sidebar-label">Clientes</div>
           {registry.map(c => (
-            <div key={c.id} className={`client-item ${activeClient === c.id ? 'active' : ''}`} onClick={() => { setActiveClient(c.id); setActiveProcess(c.procesos[0]?.id || ''); }}>
+            <div key={c.id} className={`client-item ${activeClient === c.id ? 'active' : ''}`} onClick={() => { 
+              setActiveClient(c.id); 
+              const bestProcess = c.procesos.find(p => p.escenarios && p.escenarios.length > 0) || c.procesos[0];
+              setActiveProcess(bestProcess?.id || ''); 
+            }}>
               <div className="client-name">{c.name}</div>
             </div>
           ))}

@@ -5,14 +5,84 @@ const { spawn, exec, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { createPrefactura } = require('./api-helper.js');
-const { db, initDb, syncFromHana, pushToHana, getLastSyncTimestamp } = require('./db.js');
+const { db, initDb, syncFromCloud, pushToCloud, getLastSyncTimestamp } = require('./db.js');
 
 const app = express();
+app.use(cors()); // CORS al principio
 const PORT = 3001;
+
+// Lista de clientes SSE (Navegadores abiertos)
+let sseClients = [];
+
+// RUTA DE EVENTOS (Canal exclusivo para evitar colisiones con /api)
+app.get('/events-push', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const clientId = Date.now();
+    console.log(`[SSE] 🔌 Nuevo cliente conectado: ${clientId}`);
+    sseClients.push({ id: clientId, res });
+
+    req.on('close', () => {
+        console.log(`[SSE] 🔌 Cliente desconectado: ${clientId}`);
+        sseClients = sseClients.filter(c => c.id !== clientId);
+    });
+});
+
+const supabaseClient = require('./supabase-client.js');
+supabaseClient.connect()
+    .then(async () => {
+        console.log('✅ Supabase Client Connected');
+        
+        // Sincronización inicial
+        try {
+            const { syncFromCloud } = require('./db.js');
+            await syncFromCloud();
+        } catch (e) {
+            console.error('[Sync] Error inicial:', e.message);
+        }
+
+        // Activar escucha Realtime
+        supabaseClient.subscribeToChanges(async (payload) => {
+            console.log(`[Realtime] ⚡ Cambio en ${payload.type}`);
+            const { syncFromCloud } = require('./db.js');
+            const changed = await syncFromCloud();
+            if (changed) {
+                console.log('[SSE] 📢 Notificando refresco a clientes...');
+                sseClients.forEach(client => client.res.write(`data: refresh\n\n`));
+            }
+        });
+    })
+    .catch(e => console.error('Supabase Init Error:', e));
 
 const rootDir = process.env.PROJECT_DIR || path.resolve(__dirname, '..');
 let projectDir = rootDir;
 let gitToken = process.env.GIT_TOKEN || '';
+
+// Sincronización automática se gestiona vía Realtime (Primary)
+// + Backup Polling (Secondary) en caso de bloqueo de WebSockets
+setInterval(async () => {
+    try {
+        const { syncFromCloud } = require('./db.js');
+        const changed = await syncFromCloud();
+        
+        if (changed) {
+            console.log('[SSE] 📢 ¡CAMBIO DETECTADO EN LA NUBE! Notificando a los navegadores...');
+            if (sseClients.length === 0) console.warn('[SSE] ⚠️ No hay navegadores conectados para recibir el aviso.');
+            sseClients.forEach(client => {
+                try {
+                    client.res.write(`data: refresh\n\n`);
+                } catch (e) {
+                    console.error('[SSE] Error enviando a cliente:', e.message);
+                }
+            });
+        }
+    } catch (e) {
+        // Silencioso
+    }
+}, 10000);
 
 // Electron no hereda el PATH completo del shell — agregamos rutas comunes según plataforma
 if (process.platform === 'win32') {
@@ -482,16 +552,22 @@ app.post('/api/registry/scenario', (req, res) => {
             db.run(`UPDATE escenarios SET name = ?, config_json = ?, instrucciones_ia = ? WHERE id = ?`,
                 [name, configStr, instStr, id], function (err) {
                     if (err) return res.status(500).json({ error: err.toString() });
-                    // Write-through a HANA (async, no bloquea)
-                    pushToHana({ id, proyectoId: processId, nombre: name, configJson: configStr, instrucciones: instStr }).catch(() => {});
+                    // Write-through a Supabase (async, no bloquea)
+                    if (supabaseClient.isConnected()) {
+                        supabaseClient.upsertEscenario({ id, proyectoId: processId, nombre: name, configJson: configStr, instrucciones: instStr, createdBy: process.env.TESTER_NAME || "AutoBot" })
+                            .catch(e => console.error('[Supabase Sync Error]', e));
+                    }
                     res.json({ success: true, message: 'Escenario actualizado' });
                 });
         } else {
             db.run(`INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia) VALUES (?, ?, ?, ?, ?)`,
                 [id, processId, name, configStr, instStr], function (err) {
                     if (err) return res.status(500).json({ error: err.toString() });
-                    // Write-through a HANA (async, no bloquea)
-                    pushToHana({ id, proyectoId: processId, nombre: name, configJson: configStr, instrucciones: instStr }).catch(() => {});
+                    // Write-through a Supabase (async, no bloquea)
+                    if (supabaseClient.isConnected()) {
+                        supabaseClient.upsertEscenario({ id, proyectoId: processId, nombre: name, configJson: configStr, instrucciones: instStr, createdBy: process.env.TESTER_NAME || "AutoBot" })
+                            .catch(e => console.error('[Supabase Sync Error]', e));
+                    }
                     res.json({ success: true, message: 'Escenario guardado' });
                 });
         }
@@ -1545,7 +1621,7 @@ app.post('/api/supabase/sync', async (req, res) => {
     }
     try {
         await supabase.flushPending();
-        await syncFromHana(); // Se llama syncFromHana internamente en db.js (que ya lee Supabase)
+        await syncFromCloud();
         res.json({ success: true, lastSync: getLastSyncTimestamp() });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -1564,7 +1640,7 @@ initDb().then(async () => {
             new Promise(resolve => setTimeout(resolve, 10000)) // timeout 10s
         ]);
         if (supabase.isConnected()) {
-            await syncFromHana(); // (El nombre se mantuvo en db.js pero usa supabase)
+            await syncFromCloud();
         } else {
             console.warn('[Supabase] Arrancando en modo offline (sin credenciales o sin red).');
             await syncScenariosWithFileSystem(); // fallback al sync de disco

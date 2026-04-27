@@ -102,78 +102,106 @@ const seedData = () => {
     });
 };
 
-// ─── HANA Sync Functions ──────────────────────────────────────────────────────
+// ─── Cloud Sync Functions ──────────────────────────────────────────────────────
 
 let lastSyncTimestamp = null;
 
 /**
- * syncFromSupabase — descarga toda la data de Supabase y hace UPSERT en SQLite local.
- * Es el reemplazo de syncScenariosWithFileSystem().
+ * syncFromCloud — descarga toda la data de Supabase y hace UPSERT quirúrgico en SQLite local.
  */
-const syncFromHana = async () => {
+const syncFromCloud = async () => {
     let supabase;
     try { supabase = require('./supabase-client'); } catch (e) { return; }
     if (!supabase.isConnected()) return;
 
     try {
-        console.log('[Supabase→SQLite] Iniciando sincronización descendente...');
+        let hasChanges = false;
         const { clientes, proyectos, escenarios } = await supabase.fetchAll();
 
-        await new Promise((resolve) => {
-            db.serialize(() => {
-                // Upsert clientes
-                for (const c of clientes) {
-                    db.run(`INSERT OR REPLACE INTO clientes (id, name) VALUES (?, ?)`,
-                        [c.ID, c.NOMBRE]);
-                }
-                // Upsert procesos
-                for (const p of proyectos) {
-                    db.run(`INSERT OR IGNORE INTO procesos (id, client_id, name) VALUES (?, ?, ?)`,
-                        [p.ID, p.CLIENTE_ID, p.NOMBRE]);
-                }
-                // Upsert escenarios (la config_json viene de HANA como CONFIG_JSON)
-                for (const e of escenarios) {
-                    // Si el script está en Supabase, escribirlo al disco también para compatibilidad
-                    if (e.SCRIPT_CONTENT) {
-                        const fs = require('fs');
-                        const path = require('path');
-                        const scriptName = JSON.parse(e.CONFIG_JSON || '{}').file || JSON.parse(e.CONFIG_JSON || '{}').recordedScript;
-                        if (scriptName) {
-                            const scriptPath = path.join(__dirname, '..', scriptName.startsWith('scripts/') ? scriptName : `scripts/${scriptName}`);
-                            try {
-                                if (!fs.existsSync(scriptPath)) {
-                                    fs.writeFileSync(scriptPath, e.SCRIPT_CONTENT, 'utf8');
-                                    console.log(`[Supabase→SQLite] Script restaurado: ${scriptName}`);
-                                }
-                            } catch (_) {}
-                        }
+        // 1. Sincronización de Clientes (Surgical)
+        for (const c of clientes) {
+            await new Promise((resolve) => {
+                db.get("SELECT name FROM clientes WHERE id = ?", [c.ID], (err, row) => {
+                    const localName = row ? row.name : 'null';
+                    console.log(`[Sync-Debug] ${c.ID}: Local='${localName}' Cloud='${c.NOMBRE}'`);
+                    
+                    if (!row) {
+                        console.log(`[Sync] 🌱 Nuevo cliente: ${c.NOMBRE}`);
+                        db.run("INSERT INTO clientes (id, name) VALUES (?, ?)", [c.ID, c.NOMBRE], () => { 
+                            hasChanges = true; 
+                            resolve(); 
+                        });
+                    } else if (localName !== c.NOMBRE) {
+                        console.log(`[Sync] 🔄 Diferencia en ${c.ID}: "${localName}" -> "${c.NOMBRE}"`);
+                        db.run("UPDATE clientes SET name = ? WHERE id = ?", [c.NOMBRE, c.ID], () => { 
+                            hasChanges = true; 
+                            resolve(); 
+                        });
+                    } else {
+                        resolve();
                     }
-                    db.run(
-                        `INSERT OR REPLACE INTO escenarios (id, process_id, name, config_json, instrucciones_ia, created_at, created_by)
-                         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                        [e.ID, e.PROYECTO_ID, e.NOMBRE,
-                         e.CONFIG_JSON || '{}',
-                         e.INSTRUCCIONES || '',
-                         e.CREATED_AT || new Date().toISOString(),
-                         e.CREATED_BY || '']
-                    );
-                }
-                resolve();
+                });
             });
-        });
+        }
+
+        // 2. Sincronización de Procesos (Surgical)
+        for (const p of proyectos) {
+            await new Promise((resolve) => {
+                db.get("SELECT name FROM procesos WHERE id = ?", [p.ID], (err, row) => {
+                    if (!row) {
+                        db.run("INSERT INTO procesos (id, client_id, name) VALUES (?, ?, ?)", [p.ID, p.CLIENTE_ID, p.NOMBRE], () => { 
+                            hasChanges = true; 
+                            resolve(); 
+                        });
+                    } else if (row.name !== p.NOMBRE) {
+                        db.run("UPDATE procesos SET name = ? WHERE id = ?", [p.NOMBRE, p.ID], () => { 
+                            hasChanges = true; 
+                            resolve(); 
+                        });
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        // 3. Sincronización de Escenarios (Surgical)
+        for (const e of escenarios) {
+            await new Promise((resolve) => {
+                db.get("SELECT name, config_json, instrucciones_ia FROM escenarios WHERE id = ?", [e.ID], (err, row) => {
+                    if (!row) {
+                        db.run(`INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia, created_at, created_by) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?)`, 
+                                [e.ID, e.PROYECTO_ID, e.NOMBRE, e.CONFIG_JSON || '{}', e.INSTRUCCIONES || '', e.CREATED_AT, e.CREATED_BY], () => { 
+                                    hasChanges = true; 
+                                    resolve(); 
+                                });
+                    } else if (row.name !== e.NOMBRE || row.config_json !== e.CONFIG_JSON || row.instrucciones_ia !== e.INSTRUCCIONES) {
+                        db.run(`UPDATE escenarios SET name = ?, config_json = ?, instrucciones_ia = ? WHERE id = ?`,
+                                [e.NOMBRE, e.CONFIG_JSON || '{}', e.INSTRUCCIONES || '', e.ID], () => { 
+                                    hasChanges = true; 
+                                    resolve(); 
+                                });
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        }
 
         lastSyncTimestamp = new Date().toISOString();
-        console.log(`[Supabase→SQLite] ✅ Sync completo. Clientes: ${clientes.length}, Proyectos: ${proyectos.length}, Escenarios: ${escenarios.length}`);
+        if (hasChanges) console.log('[Sync] ✅ Sincronización completada con cambios.');
+        return hasChanges;
     } catch (e) {
-        console.error('[Supabase→SQLite] Error en sync:', e.message);
+        console.error('[Sync] Error:', e.message);
+        return false;
     }
 };
 
 /**
- * pushToHana — escribe un escenario a Supabase de forma asíncrona (fire-and-forget seguro).
- * Si Supabase no está disponible, encola para sync posterior.
+ * pushToCloud — escribe un escenario a Supabase de forma asíncrona.
  */
-const pushToHana = async (escenario) => {
+const pushToCloud = async (escenario) => {
     let supabase;
     try { supabase = require('./supabase-client'); } catch (e) { return; }
 
@@ -193,9 +221,9 @@ const pushToHana = async (escenario) => {
 };
 
 /**
- * pushClienteToHana — sincroniza un cliente y su proyecto a Supabase.
+ * pushClienteToCloud — sincroniza un cliente y su proyecto a Supabase.
  */
-const pushClienteToHana = async (cliente, proyecto) => {
+const pushClienteToCloud = async (cliente, proyecto) => {
     let supabase;
     try { supabase = require('./supabase-client'); } catch (e) { return; }
     if (!supabase.isConnected()) return;
@@ -209,4 +237,11 @@ const pushClienteToHana = async (cliente, proyecto) => {
 
 const getLastSyncTimestamp = () => lastSyncTimestamp;
 
-module.exports = { db, initDb, syncFromHana, pushToHana, pushClienteToHana, getLastSyncTimestamp };
+module.exports = {
+    db,
+    initDb,
+    syncFromCloud,
+    pushToCloud,
+    pushClienteToCloud,
+    getLastSyncTimestamp
+};

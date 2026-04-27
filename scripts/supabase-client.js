@@ -25,7 +25,12 @@ const connect = async () => {
 
     try {
         supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: { persistSession: false }
+            auth: { persistSession: false },
+            realtime: {
+                params: {
+                    eventsPerSecond: 10,
+                },
+            },
         });
 
         // Ping para verificar conectividad
@@ -204,6 +209,41 @@ const init = async () => {
     }
 };
 
+const subscribeToChanges = (onUpdate) => {
+    if (!supabase) return;
+
+    // Usar un ID único para el canal para evitar conflictos de sesiones previas
+    const channelId = `db-changes-${Math.random().toString(36).substring(7)}`;
+    console.log(`[Realtime] 📡 Abriendo canal único: ${channelId}...`);
+
+    const channel = supabase
+        .channel(channelId)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'autobot_clientes' }, (payload) => {
+            console.log('[Realtime] 🔔 Evento en CLIENTES:', payload.eventType);
+            onUpdate({ type: 'cliente', ...payload });
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'autobot_proyectos' }, (payload) => {
+            console.log('[Realtime] 🔔 Evento en PROYECTOS:', payload.eventType);
+            onUpdate({ type: 'proyecto', ...payload });
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'autobot_escenarios' }, (payload) => {
+            console.log('[Realtime] 🔔 Evento en ESCENARIOS:', payload.eventType);
+            onUpdate({ type: 'escenario', ...payload });
+        })
+        .subscribe((status, err) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('[Realtime] ✅ CONECTADO: Escuchando cambios en vivo.');
+            } else if (status === 'TIMED_OUT') {
+                console.warn('[Realtime] ⚠️ Timeout detectado. Reintentando en 5s...');
+                setTimeout(() => subscribeToChanges(onUpdate), 5000);
+            } else if (err) {
+                console.error(`[Realtime] ❌ Error (${status}):`, err.message || err);
+            }
+        });
+
+    return channel;
+};
+
 module.exports = {
     init,
     connect,
@@ -216,5 +256,6 @@ module.exports = {
     registrarEjecucion,
     enqueue,
     flushPending,
+    subscribeToChanges,
     getPendingCount: () => pendingQueue.length,
 };

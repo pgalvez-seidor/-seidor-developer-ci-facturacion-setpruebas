@@ -52,8 +52,10 @@ export default function App() {
   const [activeScenarioId, setActiveScenarioId] = useState('');
   const [newScenarioName, setNewScenarioName] = useState('');
   const [instruccionesIa, setInstruccionesIa] = useState('');
-  const [testerName, setTesterName] = useState('');
+  const [testerName, setTesterName] = useState('Pierre');
   const [projectName, setProjectName] = useState('');
+  const [moduleName, setModuleName] = useState('');
+  const [environment, setEnvironment] = useState('QAS');
   const [geminiKey, setGeminiKey] = useState('');
 
   const [builderConfig, setBuilderConfig] = useState({
@@ -119,6 +121,10 @@ export default function App() {
   const [scriptEditorFile, setScriptEditorFile] = useState('');
   const [scriptEditorContent, setScriptEditorContent] = useState('');
   const [scriptEditorSaving, setScriptEditorSaving] = useState(false);
+  
+  // Nuevo Escenario Modal
+  const [showNewScenarioModal, setShowNewScenarioModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   
   // Generación de PDF bajo demanda
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -194,8 +200,20 @@ export default function App() {
   useEffect(() => {
     fetchInitialData();
     fetchRegistry();
-    const timer = setInterval(fetchRegistry, 30000); // Cada 30s
-    return () => clearInterval(timer);
+    
+    // Conexión al canal de eventos (SSE) para refresco automático Nivel 3
+    const eventSource = new EventSource(`http://localhost:3001/events-push`);
+    eventSource.onmessage = (event) => {
+      if (event.data === 'refresh') {
+        console.log('%c[SSE] 🔔 ¡Señal de cambio recibida del servidor!', 'color: #00d1ff; font-weight: bold;');
+        console.log('[UI] 🔄 Iniciando actualización de datos...');
+        fetchRegistry().then(() => {
+          console.log('%c[UI] ✅ Interfaz sincronizada con la nube.', 'color: #00ff88; font-weight: bold;');
+        });
+      }
+    };
+
+    return () => eventSource.close();
   }, [fetchInitialData, fetchRegistry]);
 
   // Poll Supabase status each 60s
@@ -228,15 +246,13 @@ export default function App() {
     setActiveScenarioId('');
     setNewScenarioName('');
     setInstruccionesIa('');
-    const client = registry.find(c => c.id === activeClient);
-    if (client?.procesos?.length > 0) {
-      setActiveProcess(client.procesos[0].id);
-    }
+    // El proceso ahora se gestiona de forma inteligente en el Sidebar para no perder escenarios
   }, [activeClient]);
 
 
   const handleScenarioSelect = (scenarioId) => {
     setActiveScenarioId(scenarioId);
+    setIsCreating(false);
     if (!scenarioId) { setNewScenarioName(''); setInstruccionesIa(''); return; }
     const sData = registry.find(c => c.id === activeClient)?.procesos.find(p => p.id === activeProcess)?.escenarios.find(e => e.id === scenarioId);
     if (sData) {
@@ -764,16 +780,34 @@ export default function App() {
               
               {/* BLOQUE 1: CONTROL DE FLUJO */}
               <div className="config-block">
-                <div className="config-block-header">
-                  <Cpu size={16} color="var(--accent-primary)" />
-                  <h3>Escenarios</h3>
+                <div className="config-block-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Cpu size={16} color="var(--accent-primary)" />
+                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                      ESCENARIOS 
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '500' }}>
+                        ({registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.length || 0})
+                      </span>
+                    </h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowNewScenarioModal(true)}
+                    title="Nuevo Escenario"
+                    style={{ 
+                      background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '50%', 
+                      width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                      fontSize: '1.8rem', fontWeight: '400', cursor: 'pointer', 
+                      boxShadow: '0 4px 12px rgba(99,102,241,0.4)', transition: 'transform 0.15s, box-shadow 0.15s',
+                      lineHeight: '0'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(99,102,241,0.6)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,102,241,0.4)'; }}
+                  >
+                    <span style={{ position: 'relative', top: '-2px' }}>+</span>
+                  </button>
                 </div>
                 <div className="control-card-inner">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <span className="control-label">Flujos</span>
-                    <span className="control-badge">{registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios?.length || 0} Guardados</span>
-                  </div>
-                  <div className="scenario-selector-group" style={{ position: 'relative' }}>
+                  <div className="scenario-selector-group" style={{ position: 'relative', marginTop: '-4px' }}>
                     {/* Lista de escenarios — máx 4 visibles, scroll interno */}
                     {(() => {
                       const escenarios = [...(registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios || [])].sort((a, b) => {
@@ -790,7 +824,7 @@ export default function App() {
                         return `${day} ${mon} '${yr}`;
                       };
                       return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '232px', overflowY: 'auto', paddingRight: '2px', paddingBottom: '2px' }}>
+                        <div className="modern-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '250px', overflowY: 'auto', paddingRight: '4px', paddingBottom: '2px' }}>
                           {escenarios.length === 0 && (
                             <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Sin flujos grabados</div>
                           )}
@@ -833,14 +867,6 @@ export default function App() {
                         </div>
                       );
                     })()}
-                    {/* BOTÓN SUICIDA — superpuesto en esquina inferior derecha del bloque */}
-                    <button
-                      className="btn-record btn-suicida"
-                      onClick={() => openRecordModal()}
-                      title="Grabar nuevo flujo"
-                    >
-                      <Circle size={18} fill="white" className="rec-pulse" />
-                    </button>
                   </div>
 
                   {/* Banner: escenario sin script grabado (INTEGRADO) */}
@@ -894,88 +920,92 @@ export default function App() {
                 </div>
               </div>
 
-              {/* BLOQUE 2: MOTOR DE EJECUCIÓN */}
-              <div className="config-block">
-                <div className="config-block-header">
-                  <Zap size={16} color="#f59e0b" />
-                  <h3>Configuración</h3>
-                </div>
-                <div className="execution-grid">
-                  <div className="execution-item">
-                    <label className="sidebar-label" style={{ marginBottom: '12px', display: 'block' }}>Iteraciones</label>
-                    <IteracionesPicker 
-                      value={builderConfig.iteraciones || 1} 
-                      onChange={val => setBuilderConfig({ ...builderConfig, iteraciones: val })}
-                    />
+              {(activeScenarioId || isCreating) && (
+                <div className="stagger-container" style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {/* BLOQUE 2: MOTOR DE EJECUCIÓN */}
+                  <div className="config-block stagger-item" style={{ margin: 0 }}>
+                    <div className="config-block-header">
+                      <Zap size={16} color="#f59e0b" />
+                      <h3>Configuración</h3>
+                    </div>
+                    <div className="execution-grid">
+                      <div className="execution-item">
+                        <label className="sidebar-label" style={{ marginBottom: '12px', display: 'block' }}>Iteraciones</label>
+                        <IteracionesPicker 
+                          value={builderConfig.iteraciones || 1} 
+                          onChange={val => setBuilderConfig({ ...builderConfig, iteraciones: val })}
+                        />
+                      </div>
+                      <div className="execution-item">
+                        <label className="sidebar-label" style={{ marginBottom: '12px', display: 'block' }}>Velocidad</label>
+                        <NuclearSwitch 
+                          active={builderConfig.headless}
+                          onClick={val => setBuilderConfig({ ...builderConfig, headless: val })}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="execution-item">
-                    <label className="sidebar-label" style={{ marginBottom: '12px', display: 'block' }}>Velocidad</label>
-                    <NuclearSwitch 
-                      active={builderConfig.headless}
-                      onClick={val => setBuilderConfig({ ...builderConfig, headless: val })}
-                    />
-                  </div>
-                </div>
-              </div>
 
-              {/* BLOQUE 3: IDENTIDAD Y BITÁCORA */}
-              <div className="config-block">
-                <div className="config-block-header">
-                  <FileText size={16} color="#af52de" />
-                  <h3 className="apple-intelligence-title">Identidad del Escenario</h3>
-                </div>
-                
-                <div className="field-group-modern">
-                  <label className="modern-label"><Tag size={12} /> Nombre escenario</label>
-                  <div className="input-with-icon">
-                    <input 
-                      type="text" 
-                      className="modern-input"
-                      placeholder="Ej: Nombre escenario - CI"
-                      value={newScenarioName}
-                      onChange={e => setNewScenarioName(e.target.value)}
-                    />
-                  </div>
-                </div>
+                  {/* BLOQUE 3: IDENTIDAD Y BITÁCORA */}
+                  <div className="config-block stagger-item">
+                    <div className="config-block-header">
+                      <FileText size={16} color="#af52de" />
+                      <h3 className="apple-intelligence-title">Identidad del Escenario</h3>
+                    </div>
+                    
+                    <div className="field-group-modern">
+                      <label className="modern-label"><Tag size={12} /> Nombre escenario</label>
+                      <div className="input-with-icon">
+                        <input 
+                          type="text" 
+                          className="modern-input"
+                          placeholder="Ej: Nombre escenario - CI"
+                          value={newScenarioName}
+                          onChange={e => setNewScenarioName(e.target.value)}
+                        />
+                      </div>
+                    </div>
 
-                <div className="field-group-modern">
-                  <label className="modern-label"><Brain size={12} /> Instrucciones de Negocio (IA Prompt)</label>
-                  <div className="prompt-box-container">
-                    <textarea 
-                      className="modern-textarea"
-                      placeholder="Describe el flujo para que la IA lo entienda..."
-                      value={instruccionesIa}
-                      onChange={e => setInstruccionesIa(e.target.value)}
-                    />
-                    <div className="prompt-magic-indicator" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
-                      <span className="sap-badge-new">NEW</span>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#1d1d1f' }}>Optimizado por SAP AI Core</span>
+                    <div className="field-group-modern">
+                      <label className="modern-label"><Brain size={12} /> Instrucciones de Negocio (IA Prompt)</label>
+                      <div className="prompt-box-container">
+                        <textarea 
+                          className="modern-textarea"
+                          placeholder="Describe el flujo para que la IA lo entienda..."
+                          value={instruccionesIa}
+                          onChange={e => setInstruccionesIa(e.target.value)}
+                        />
+                        <div className="prompt-magic-indicator" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                          <span className="sap-badge-new">NEW</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#1d1d1f' }}>Optimizado por SAP AI Core</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ACCIONES FINALES */}
+                  <div className="stagger-item" style={{ position: 'sticky', bottom: '12px', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <div className="config-actions" style={{ position: 'static', margin: 0 }}>
+                      <button 
+                        onClick={saveScenario} 
+                        className="btn-save-scenario"
+                        disabled={!newScenarioName}
+                      >
+                        {saveStatus === 'loading' ? 'Guardando...' : saveStatus === 'success' ? '✅ Guardado' : 'Guardar'}
+                      </button>
+
+                      <button 
+                        className="btn-add-batch" 
+                        onClick={addToBatch}
+                        disabled={!activeScenarioId && !newScenarioName}
+                      >
+                        <span>Apilar</span>
+                        <ChevronRight size={16} />
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* ACCIONES FINALES */}
-              <div style={{ position: 'sticky', bottom: '12px', zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <div className="config-actions" style={{ position: 'static', margin: 0 }}>
-                <button 
-                  onClick={saveScenario} 
-                  className="btn-save-scenario"
-                  disabled={!newScenarioName}
-                >
-                  {saveStatus === 'loading' ? 'Guardando...' : saveStatus === 'success' ? '✅ Guardado' : 'Guardar'}
-                </button>
-
-                <button 
-                  className="btn-add-batch" 
-                  onClick={addToBatch}
-                  disabled={!activeScenarioId && !newScenarioName}
-                >
-                  <span>Apilar</span>
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-              </div>
+              )}
 
             </div>
 
@@ -1248,6 +1278,60 @@ export default function App() {
                   <FileText size={13} /> {scriptEditorSaving ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNewScenarioModal && (
+        <div className="modal-overlay" onClick={() => setShowNewScenarioModal(false)}>
+          <div className="modal-content about-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+              <h2 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.3rem', fontWeight: '800' }}>Nuevo Escenario</h2>
+              <button onClick={() => setShowNewScenarioModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}><X size={20} /></button>
+            </div>
+            
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              ¿Cómo deseas crear este nuevo flujo de automatización?
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button 
+                onClick={() => { setShowNewScenarioModal(false); openRecordModal(); }}
+                style={{ padding: '16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', textAlign: 'left', transition: 'all 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.12)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+              >
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Circle size={18} fill="#ef4444" color="#ef4444" className="rec-pulse" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: '800', color: '#ef4444', fontSize: '1rem', marginBottom: '3px' }}>Grabar Flujo</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Abre el navegador y registra tus clics automáticamente sin programar.</div>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => { 
+                  setShowNewScenarioModal(false); 
+                  setActiveScenarioId(null);
+                  setIsCreating(true);
+                  setNewScenarioName('');
+                  setInstruccionesIa('');
+                  setBuilderConfig({ headless: true });
+                }}
+                style={{ padding: '16px', background: 'var(--apple-bg)', border: '1px solid var(--card-border)', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', textAlign: 'left', transition: 'all 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.03)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--apple-bg)'}
+              >
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'var(--card-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FileText size={18} color="var(--text-main)" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '1rem', marginBottom: '3px' }}>Script Manual</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Crea un escenario en blanco para escribir o pegar código directamente.</div>
+                </div>
+              </button>
             </div>
           </div>
         </div>
@@ -1755,13 +1839,23 @@ export default function App() {
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setDeleteModal({ open: false, step: 1, scenarioId: null, scenarioName: '' })}
-                style={{ padding: '9px 18px', borderRadius: '10px', border: '1px solid var(--card-border)', background: 'none', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}
+                style={{ padding: '10px 22px', borderRadius: '100px', border: '1px solid var(--card-border)', background: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: '700' }}
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                style={{ padding: '9px 18px', borderRadius: '10px', border: 'none', background: deleteModal.step === 2 ? '#ef4444' : '#0f172a', color: '#fff', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '700' }}
+                style={{ 
+                  padding: '10px 22px', 
+                  borderRadius: '100px', 
+                  border: 'none', 
+                  background: deleteModal.step === 2 ? '#ef4444' : 'var(--accent-primary)', 
+                  color: '#fff', 
+                  cursor: 'pointer', 
+                  fontSize: '0.85rem', 
+                  fontWeight: '700',
+                  boxShadow: deleteModal.step === 2 ? '0 4px 12px rgba(239,68,68,0.3)' : '0 4px 12px rgba(99,102,241,0.3)'
+                }}
               >
                 {deleteModal.step === 1 ? 'Continuar →' : 'Sí, eliminar'}
               </button>
