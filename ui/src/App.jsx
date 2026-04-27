@@ -772,6 +772,10 @@ export default function App() {
           setTesterName={setTesterName}
           projectName={projectName}
           setProjectName={setProjectName}
+          moduleName={moduleName}
+          setModuleName={setModuleName}
+          environment={environment}
+          setEnvironment={setEnvironment}
           setShowChangelog={setShowChangelog}
         />
         <main className="main split-layout">
