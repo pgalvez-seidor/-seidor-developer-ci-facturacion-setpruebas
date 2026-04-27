@@ -1,12 +1,11 @@
 node_modules/
 ui/node_modules/
 
-# Builds de Electron — se generan localmente, no van al repo
+# builds de electron — se generan localmente, no van al repo
 dist/
 ui/dist/
 
-# Credenciales — nunca al repo
-.env
+# credenciales — nunca al repo
 .env.*
 config/.clickup_token
 
