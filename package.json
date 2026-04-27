@@ -8,6 +8,7 @@
     "dependencies": {
         "@google/generative-ai": "^0.24.1",
         "@playwright/test": "^1.40.0",
+        "@supabase/supabase-js": "^2.105.0",
         "axios": "^1.15.2",
         "cors": "^2.8.6",
         "dotenv": "^16.3.0",
@@ -39,12 +40,19 @@
         "mac": {
             "icon": "icon.png",
             "category": "public.app-category.developer-tools",
-            "target": ["dmg"]
+            "target": [
+                "dmg"
+            ]
         },
         "win": {
             "icon": "icon.png",
             "target": [
-                { "target": "nsis", "arch": ["x64"] }
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                }
             ],
             "requestedExecutionLevel": "requireAdministrator"
         },

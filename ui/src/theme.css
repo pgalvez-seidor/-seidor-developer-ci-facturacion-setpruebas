@@ -1,0 +1,53 @@
+:root {
+  /* Colors - Seidor Brand Inspired */
+  --primary: #007aff;
+  --primary-hover: #0063d1;
+  --primary-glow: rgba(0, 122, 255, 0.3);
+  
+  --bg-app: #f5f5f7;
+  --bg-sidebar: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.7);
+  
+  --text-main: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-muted: #98989d;
+  
+  --accent-green: #34c759;
+  --accent-red: #ff3b30;
+  --accent-orange: #ff9500;
+  --accent-purple: #af52de;
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --blur: blur(12px);
+  
+  /* Borders & Spacing */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme='dark'] {
+  --bg-app: #000000;
+  --bg-sidebar: #1c1c1e;
+  --bg-card: rgba(28, 28, 30, 0.7);
+  
+  --text-main: #f5f5f7;
+  --text-secondary: #86868b;
+  
+  --glass-bg: rgba(28, 28, 30, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}

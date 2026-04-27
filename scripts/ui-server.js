@@ -5,7 +5,7 @@ const { spawn, exec, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { createPrefactura } = require('./api-helper.js');
-const { db, initDb } = require('./db.js');
+const { db, initDb, syncFromHana, pushToHana, getLastSyncTimestamp } = require('./db.js');
 
 const app = express();
 const PORT = 3001;
@@ -464,7 +464,7 @@ app.get('/api/registry', (req, res) => {
     });
 });
 
-// 3.5. Guardar un Nuevo Escenario (UPSERT en SQLite)
+// 3.5. Guardar un Nuevo Escenario (UPSERT en SQLite + write-through a HANA)
 app.post('/api/registry/scenario', (req, res) => {
     const { clientId, processId, scenario } = req.body;
     if (!clientId || !processId || !scenario) {
@@ -482,12 +482,16 @@ app.post('/api/registry/scenario', (req, res) => {
             db.run(`UPDATE escenarios SET name = ?, config_json = ?, instrucciones_ia = ? WHERE id = ?`,
                 [name, configStr, instStr, id], function (err) {
                     if (err) return res.status(500).json({ error: err.toString() });
+                    // Write-through a HANA (async, no bloquea)
+                    pushToHana({ id, proyectoId: processId, nombre: name, configJson: configStr, instrucciones: instStr }).catch(() => {});
                     res.json({ success: true, message: 'Escenario actualizado' });
                 });
         } else {
             db.run(`INSERT INTO escenarios (id, process_id, name, config_json, instrucciones_ia) VALUES (?, ?, ?, ?, ?)`,
                 [id, processId, name, configStr, instStr], function (err) {
                     if (err) return res.status(500).json({ error: err.toString() });
+                    // Write-through a HANA (async, no bloquea)
+                    pushToHana({ id, proyectoId: processId, nombre: name, configJson: configStr, instrucciones: instStr }).catch(() => {});
                     res.json({ success: true, message: 'Escenario guardado' });
                 });
         }
@@ -710,13 +714,14 @@ app.post('/api/run-batch', async (req, res) => {
                 const relativePath = normalizedFile.startsWith('scripts/') ? normalizedFile : `scripts/${normalizedFile}`;
                 const absScriptPath = path.join(rootDir, relativePath);
 
-                // Inyectar capturas en tiempo de ejecución usando script temporal en runDir
+                // Inyectar capturas y normalizar script usando archivo temporal en runDir
                 let runScriptPath = relativePath;
                 try {
                     if (fs.existsSync(absScriptPath)) {
                         let scriptContent = fs.readFileSync(absScriptPath, 'utf8');
-                        scriptContent = injectScreenshots(scriptContent);
-                        const tempScript = path.join(runDir, '_autobot_run.js');
+                        // Aplicar normalización completa (CJS + OAuth + SAP Fixes + Screenshots)
+                        scriptContent = normalizeScript(scriptContent, config.url);
+                        const tempScript = path.join(runDir, '_autobot_run.spec.js');
                         fs.writeFileSync(tempScript, scriptContent, 'utf8');
                         runScriptPath = path.relative(rootDir, tempScript);
                     }
@@ -1013,11 +1018,9 @@ function normalizeScript(content, portalUrl) {
   // SAP BTP puede redirigir al auth home o a "Where To?" — en ambos casos volver al portal
   const _currentUrl = page.url();
   if (
-    _currentUrl.includes('where_to') ||
-    _currentUrl.includes('.authentication.') ||
-    await page.locator('text=/Where To/i').isVisible().catch(() => false)
+    ${portalUrl ? `_currentUrl.includes('where_to') || _currentUrl.includes('.authentication.') || await page.locator('text=/Where To/i').isVisible().catch(() => false)` : 'false'}
   ) {
-    await page.goto('${portalUrl}');
+    ${portalUrl ? `await page.goto('${portalUrl}');` : ''}
     await page.waitForLoadState('networkidle').catch(() => {});
   }`;
         content = content.replace(
@@ -1516,10 +1519,61 @@ app.get('/api/changelog', (req, res) => {
     }
 });
 
+// ─── Supabase Status & Sync Endpoints ────────────────────────────────────────────
+
+// GET /api/supabase/status — estado de conexión con Supabase
+app.get('/api/supabase/status', (req, res) => {
+    let supabase;
+    try { supabase = require('./supabase-client'); } catch (e) {
+        return res.json({ connected: false, lastSync: null, pending: 0, error: 'Driver no instalado' });
+    }
+    res.json({
+        connected: supabase.isConnected(),
+        lastSync: getLastSyncTimestamp(),
+        pending: supabase.getPendingCount()
+    });
+});
+
+// POST /api/supabase/sync — sincronización manual completa Supabase → SQLite
+app.post('/api/supabase/sync', async (req, res) => {
+    let supabase;
+    try { supabase = require('./supabase-client'); } catch (e) {
+        return res.status(500).json({ error: 'Driver no instalado' });
+    }
+    if (!supabase.isConnected()) {
+        return res.status(503).json({ error: 'Sin conexión a Supabase. Verifica las credenciales en .env' });
+    }
+    try {
+        await supabase.flushPending();
+        await syncFromHana(); // Se llama syncFromHana internamente en db.js (que ya lee Supabase)
+        res.json({ success: true, lastSync: getLastSyncTimestamp() });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 initDb().then(async () => {
-    // Sincronización inicial al arrancar el servidor
-    await syncScenariosWithFileSystem();
-    
+    // Inicializar conexión Supabase (no bloqueante — si falla, arranca en modo offline)
+    let supabase;
+    try {
+        supabase = require('./supabase-client');
+        await Promise.race([
+            supabase.init(),
+            new Promise(resolve => setTimeout(resolve, 10000)) // timeout 10s
+        ]);
+        if (supabase.isConnected()) {
+            await syncFromHana(); // (El nombre se mantuvo en db.js pero usa supabase)
+        } else {
+            console.warn('[Supabase] Arrancando en modo offline (sin credenciales o sin red).');
+            await syncScenariosWithFileSystem(); // fallback al sync de disco
+        }
+    } catch (e) {
+        console.warn('[Supabase] Error en init, usando sync de disco:', e.message);
+        await syncScenariosWithFileSystem();
+    }
+
     app.listen(PORT, () => {
         console.log(`✅ UI Backend API Server running at http://localhost:${PORT}`);
     });

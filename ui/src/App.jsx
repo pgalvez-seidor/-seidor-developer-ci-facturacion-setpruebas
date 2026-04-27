@@ -11,571 +11,26 @@ import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { indentWithTab } from '@codemirror/commands';
 import './index-a.css';
+import GitInitScreen, { TransparentLogo } from './components/GitInitScreen';
+import Sidebar, { ModernSelect } from './components/Sidebar';
+import PaymentTray from './components/PaymentTray';
+import CodeEditor from './components/CodeEditor';
+import { ModernSwitch, ModernCheckbox, IteracionesPicker, ThreadsPicker, NuclearSwitch } from './components/UIElements';
 
 const API_BASE = 'http://localhost:3001/api';
 
-const CodeEditor = ({ value, onChange }) => {
-  const containerRef = useRef(null);
-  const viewRef = useRef(null);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const extensions = [
-      basicSetup,
-      javascript({ jsx: false }),
-      oneDark,
-      keymap.of([indentWithTab]),
-      EditorView.updateListener.of(update => {
-        if (update.docChanged) onChange(update.state.doc.toString());
-      }),
-      EditorView.theme({
-        '&': { height: '60vh', borderRadius: '10px', overflow: 'hidden', fontSize: '13px' },
-        '.cm-scroller': { fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace', lineHeight: '1.65', overflowY: 'auto' },
-        '.cm-content': { padding: '12px 0' },
-        '.cm-gutters': { borderRight: '1px solid rgba(255,255,255,0.06)' },
-      }),
-    ];
-    const view = new EditorView({
-      state: EditorState.create({ doc: value || '', extensions }),
-      parent: containerRef.current,
-    });
-    viewRef.current = view;
-    return () => { view.destroy(); viewRef.current = null; };
-  }, []);
+// ─── CodeEditor modularizado ───
 
-  useEffect(() => {
-    const view = viewRef.current;
-    if (!view) return;
-    const current = view.state.doc.toString();
-    if (current !== value) {
-      view.dispatch({ changes: { from: 0, to: current.length, insert: value || '' } });
-    }
-  }, [value]);
 
-  return <div ref={containerRef} style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }} />;
-};
+// ─── TransparentLogo modularizado ───
 
-const TransparentLogo = ({ src, className, size = 64 }) => {
-  const [processedSrc, setProcessedSrc] = useState(null);
 
-  useEffect(() => {
-    const img = new Image();
-    img.src = src;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i], g = data[i+1], b = data[i+2];
-        // Si es casi blanco (threshold 245), hacemos alfa 0
-        if (r > 245 && g > 245 && b > 245) {
-          data[i+3] = 0;
-        }
-      }
-      
-      ctx.putImageData(imageData, 0, 0);
-      setProcessedSrc(canvas.toDataURL());
-    };
-  }, [src]);
-
-  return processedSrc ? (
-    <img src={processedSrc} className={className} style={{ width: size, height: size, objectFit: 'contain' }} />
-  ) : (
-    <div style={{ width: size, height: size, background: 'rgba(0,0,0,0.05)', borderRadius: '50%' }} />
-  );
-};
-
-const ModernSwitch = ({ checked, onChange, label, description, icon: Icon }) => (
-  <div className="modern-switch-wrapper" onClick={() => onChange(!checked)}>
-    <div className="modern-switch-info-group">
-      <div className="modern-switch-info">
-        {Icon && <Icon size={14} className="modern-switch-icon" />}
-        <span>{label}</span>
-      </div>
-      {description && <div className="modern-switch-description">{description}</div>}
-    </div>
-    <div className={`modern-switch-track ${checked ? 'active' : ''}`}>
-      <div className="modern-switch-thumb" />
-    </div>
-  </div>
-);
-
-const ModernCheckbox = ({ checked, onChange, label }) => (
-  <label className="modern-checkbox-container" onClick={() => onChange(!checked)}>
-    <div className={`modern-checkbox-box ${checked ? 'checked' : ''}`}>
-      {checked && <div className="modern-checkbox-tick" />}
-    </div>
-    {label && <span className="modern-checkbox-label">{label}</span>}
-  </label>
-);
-
-const IteracionesPicker = ({ value, onChange }) => {
-  const [rotation, setRotation] = useState(0);
-
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -1 : 1;
-    const newValue = Math.max(1, Math.min(50, value + delta));
-    if (newValue !== value) {
-      onChange(newValue);
-      setRotation(prev => prev + (delta * 45)); // Gira 45 grados por paso
-    }
-  };
-
-  return (
-    <div className="iter-picker-container" onWheel={handleWheel}>
-      <div className="iter-wheel-wrapper">
-        <Settings 
-          size={28} 
-          className="iter-wheel-icon" 
-          style={{ transform: `rotate(${rotation}deg)` }} 
-        />
-      </div>
-      <input 
-        type="number" 
-        className="iter-manual-input"
-        value={value} 
-        onChange={e => onChange(parseInt(e.target.value) || 1)}
-        min="1" max="50"
-      />
-    </div>
-  );
-};
-
-const ThreadsPicker = ({ value, onChange }) => {
-  const [rotation, setRotation] = useState(0);
-
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -1 : 1;
-    const newValue = Math.max(1, Math.min(100, value + delta));
-    if (newValue !== value) {
-      onChange(newValue);
-      setRotation(prev => prev + (delta * 30));
-    }
-  };
-
-  return (
-    <div className="iter-picker-container dark-mode-picker" onWheel={handleWheel} style={{ background: 'rgba(255,255,255,0.05)', color: 'white' }}>
-      <div className="iter-wheel-wrapper">
-        <Cpu 
-          size={24} 
-          className="iter-wheel-icon" 
-          style={{ transform: `rotate(${rotation}deg)`, color: '#007aff' }} 
-        />
-      </div>
-      <input 
-        type="number" 
-        className="iter-manual-input"
-        value={value} 
-        onChange={e => onChange(parseInt(e.target.value) || 1)}
-        min="1" max="100"
-        style={{ color: 'white' }}
-      />
-    </div>
-  );
-};
-
-const NuclearSwitch = ({ active, onClick }) => {
-  return (
-    <div className={`nuclear-container nuclear-headless ${active ? 'active' : ''}`} onClick={() => onClick(!active)}>
-      <div className="nuclear-base">
-        <div className="nuclear-toggle"></div>
-      </div>
-      <div className="nuclear-label-group">
-        <span className="nuclear-main-label">HEADLESS</span>
-      </div>
-    </div>
-  );
-};
-
-const ModernSelect = ({ value, onChange, options, placeholder = '-- seleccionar --', style = {} }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const selectedLabel = options.find(o => o.value === value)?.label || placeholder;
-
-  return (
-    <div className="modern-select-container" style={style}>
-      <div 
-        className={`modern-select-trigger ${!value ? 'is-placeholder' : ''}`} 
-        onClick={() => setIsOpen(!isOpen)}
-        style={{ color: !value ? '#98989d' : 'inherit' }}
-      >
-        <span>{selectedLabel}</span>
-        <ChevronRight size={16} style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: '0.3s', opacity: 0.5 }} />
-      </div>
-      {isOpen && (
-        <>
-          <div className="modern-select-backdrop" onClick={() => setIsOpen(false)} />
-          <div className="modern-select-dropdown animate-scale-in">
-            {/* Opción de "Reset" o "Nuevo" (el placeholder) */}
-            <div 
-              className={`modern-select-option ${!value ? 'active' : ''} ${value ? 'disabled-placeholder' : ''}`}
-              onClick={() => { if (!value) return; onChange(''); setIsOpen(false); }}
-              style={{ 
-                color: !value ? 'white' : '#98989d',
-                opacity: value ? 0.5 : 1,
-                cursor: value ? 'not-allowed' : 'pointer',
-                pointerEvents: value ? 'none' : 'auto' // No seleccionable si ya hay otro
-              }}
-            >
-              <span>{placeholder}</span>
-              {!value && <div className="modern-select-tick">✓</div>}
-            </div>
-
-            <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', margin: '4px 8px' }} />
-
-            {options.length === 0 ? (
-              <div className="modern-select-option empty">Sin opciones</div>
-            ) : (
-              options.map(o => (
-                <div 
-                  key={o.value} 
-                  className={`modern-select-option ${value === o.value ? 'active' : ''}`}
-                  onClick={() => { onChange(o.value); setIsOpen(false); }}
-                >
-                  <span>{o.label}</span>
-                  {value === o.value && <div className="modern-select-tick">✓</div>}
-                </div>
-              ))
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
+// ─── Componentes UI modularizados ───
 
 // ─────────────────────────────────────────────────────────────
 // GIT INIT SCREEN — Splash elegante y minimalista
 // ─────────────────────────────────────────────────────────────
-const GitInitScreen = ({ onContinue }) => {
-  const [gitInfo, setGitInfo] = useState(null);
-  const [selectedBranch, setSelectedBranch] = useState('');
-  const [isChanging, setIsChanging] = useState(false);
-  const [isSelectingFolder, setIsSelectingFolder] = useState(false);
-  const [phase, setPhase] = useState('loading'); // 'loading' | 'ready' | 'error'
-  const [checkTrigger, setCheckTrigger] = useState(0);
-  const [pullWhisper, setPullWhisper] = useState(null);
-  const [testerInput, setTesterInput] = useState('');
-  const [repoUrl, setRepoUrl] = useState('');
-  const [isCloning, setIsCloning] = useState(false);
-  const [nameError, setNameError] = useState(false);
-  const [toast, setToast] = useState({ show: false, msg: '' });
-  const carouselRef = useRef(null);
-
-  const showToast = (msg) => {
-    setToast({ show: true, msg });
-    setTimeout(() => setToast({ show: false, msg: '' }), 3000);
-  };
-
-  useEffect(() => {
-    if (selectedBranch && carouselRef.current) {
-      setTimeout(() => {
-        const selectedEl = carouselRef.current.querySelector('.selected');
-        if (selectedEl) {
-          selectedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        }
-      }, 100);
-    }
-  }, [selectedBranch, gitInfo]);
-
-  useEffect(() => {
-    let cancelled = false;
-    let attempts = 0;
-    const MAX = 16;
-    const delay = checkTrigger === 0 ? 800 : 400;
-    const check = async () => {
-      if (cancelled) return;
-      try {
-        const res = await fetch(`${API_BASE}/git/init-check`);
-        if (!res.ok) throw new Error('not ready');
-        const data = await res.json();
-        if (cancelled) return;
-        setGitInfo(data);
-        setSelectedBranch(data.current || data.branch || '');
-        setPhase('ready');
-        if (data.gitConnected) {
-          fetch(`${API_BASE}/git/pull`, { method: 'POST' })
-            .then(r => r.json())
-            .then(pull => {
-              if (pull.newScripts?.length > 0) {
-                const nombres = pull.newScripts.slice(0, 2).join(', ');
-                const resto = pull.newScripts.length > 2 ? ` y ${pull.newScripts.length - 2} más` : '';
-                setPullWhisper(`Escenarios nuevos: ${nombres}${resto}`);
-              }
-            })
-            .catch(() => {});
-        }
-      } catch (e) {
-        if (cancelled) return;
-        attempts++;
-        if (attempts < MAX) setTimeout(check, 500);
-        else setPhase('error');
-      }
-    };
-    setTimeout(check, delay);
-    return () => { cancelled = true; };
-  }, [checkTrigger]);
-
-  const handleSelectFolder = async () => {
-    let folder = null;
-
-    if (window.electron?.selectFolder) {
-      setIsSelectingFolder(true);
-      try {
-        folder = await window.electron.selectFolder();
-      } catch (e) {
-        console.error("Electron selectFolder error:", e);
-      }
-      setIsSelectingFolder(false);
-    } else {
-      // Fallback para cuando se usa en el navegador (Desarrollo)
-      folder = window.prompt("Introduce la ruta absoluta de la carpeta del proyecto:", gitInfo?.projectDir || "");
-    }
-
-    if (!folder) return;
-
-    try {
-      // Alerta solicitada por el usuario al cambiar la ruta
-      alert("⚠️ Has cambiado la ruta del proyecto.\n\nIMPORTANTE: Asegúrate de mover manualmente tus archivos de prueba a esta carpeta o realizar un 'Clone' para inicializarla correctamente.");
-
-      await fetch(`${API_BASE}/config/project-dir`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectDir: folder })
-      });
-      setPhase('loading');
-      setGitInfo(null);
-      setCheckTrigger(t => t + 1);
-    } catch (err) {
-      alert("Error al actualizar la ruta en el servidor");
-    }
-  };
-
-  const handleClone = async () => {
-    if (!repoUrl || !gitInfo?.projectDir && !isSelectingFolder) {
-      if (!gitInfo?.projectDir) await handleSelectFolder();
-      return;
-    }
-    setIsCloning(true);
-    try {
-      const res = await fetch(`${API_BASE}/git/clone`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoUrl, projectDir: gitInfo.projectDir })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setCheckTrigger(t => t + 1);
-      } else {
-        alert(data.error || "Error al clonar");
-      }
-    } catch (e) {
-      alert("Error de conexión al clonar");
-    }
-    setIsCloning(false);
-  };
-
-  const handleContinue = async () => {
-    if (!testerInput.trim()) {
-      setNameError(true);
-      showToast("Es obligatorio identificarte");
-      return;
-    }
-    
-    if (gitInfo?.gitConnected && selectedBranch !== (gitInfo.current || gitInfo.branch)) {
-      setIsChanging(true);
-      try {
-        await fetch(`${API_BASE}/git/checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ branch: selectedBranch })
-        });
-      } catch (_) {}
-      setIsChanging(false);
-    }
-    onContinue(selectedBranch, testerInput.trim());
-  };
-
-  const statusColor  = gitInfo?.gitConnected ? '#34c759' : gitInfo?.gitNotLinked ? '#ff9500' : '#8e8e93';
-  const statusLabel  = gitInfo?.gitConnected ? 'Conectado' : gitInfo?.gitNotLinked ? 'Sin repositorio' : 'Local';
-  const statusDot    = gitInfo?.gitConnected ? 'pulse-green' : 'pulse-orange';
-
-  return (
-    <div className="git-splash-overlay">
-      <div className="git-splash-card">
-
-        {/* ── LOGO ── */}
-        <div className="git-splash-logo-wrap">
-          <TransparentLogo src="./logo-pure.png" size={96} className="git-splash-logo" />
-          <div className="git-splash-brand">
-            Auto<span>Bot</span>
-            <span className="git-splash-version">v2.1.0</span>
-          </div>
-        </div>
-
-        {/* ── ESTADO GIT ── */}
-        {phase === 'loading' && (
-          <div className="git-splash-loading">
-            <div className="git-splash-spinner" />
-            <span>Conectando con repositorio...</span>
-          </div>
-        )}
-
-        {phase === 'error' && (
-          <div className="git-splash-status-row" style={{ color: '#ff3b30' }}>
-            <div className="git-splash-dot" style={{ background: '#ff3b30' }} />
-            <span>No se pudo conectar al backend. ¿Está iniciado el servidor?</span>
-          </div>
-        )}
-
-        {phase === 'ready' && (
-          <>
-            {/* Campo de nombre (AHORA ARRIBA) */}
-            <div style={{ width: '100%', marginBottom: '20px' }}>
-              <label className="git-splash-input-label">TU NOMBRE COMPLETO</label>
-              <input
-                className={`git-splash-name-input ${nameError ? 'error' : ''}`}
-                type="text"
-                placeholder=""
-                value={testerInput}
-                onChange={e => {
-                  setTesterInput(e.target.value);
-                  if (nameError) setNameError(false);
-                }}
-                onKeyDown={e => e.key === 'Enter' && handleContinue()}
-                autoFocus
-              />
-            </div>
-
-            {/* Status & Path Area */}
-            <div className="git-splash-status-area">
-              <div className="git-splash-status-row">
-                <div className={`git-splash-dot ${statusDot}`} style={{ background: statusColor }} />
-                <span style={{ color: statusColor, fontWeight: 600 }}>{statusLabel}</span>
-              </div>
-              
-              {/* Ruta del proyecto (Clickable para cambiar) */}
-              <div className="git-splash-path-card" onClick={handleSelectFolder}>
-                <span className="git-splash-path-label">UBICACIÓN DEL PROYECTO</span>
-                <div className="git-splash-path-value">
-                  <span className="git-splash-path-text">{gitInfo.projectDir}</span>
-                  <div className="git-splash-path-action">
-                    <Settings size={12} />
-                    Cambiar
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Clone Section if no repo */}
-            {gitInfo.gitNotLinked && (
-              <div className="git-splash-clone-box">
-                <label className="git-splash-input-label">URL del Repositorio Git</label>
-                <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                  <input
-                    className="modal-input"
-                    type="text"
-                    placeholder="https://github.com/usuario/repo.git"
-                    value={repoUrl}
-                    onChange={e => setRepoUrl(e.target.value)}
-                    style={{ flex: 1, textAlign: 'left', padding: '10px 15px' }}
-                  />
-                  <button 
-                    className="git-splash-clone-btn" 
-                    onClick={handleClone}
-                    disabled={isCloning || !repoUrl}
-                  >
-                    {isCloning ? <div className="git-splash-spinner small" /> : <GitBranch size={16} />}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Ramas - Pill Style */}
-            {gitInfo.branches?.length > 0 && (
-              <div className="git-splash-branches">
-                <div className="git-splash-branches-label">RAMA DE TRABAJO</div>
-                <div className="git-splash-branch-pills" ref={carouselRef}>
-                  {gitInfo.branches.map(b => {
-                    const isActive = b === (gitInfo.current || gitInfo.branch);
-                    const isSelected = b === selectedBranch;
-                    return (
-                      <button
-                        key={b}
-                        className={`git-splash-branch-pill ${isSelected ? 'selected' : ''}`}
-                        onClick={() => setSelectedBranch(b)}
-                      >
-                        <span className="git-splash-branch-name">{b}</span>
-                        {isActive && <div className="git-splash-active-dot" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Info adicional */}
-            {(gitInfo.behind > 0 || gitInfo.uncommitted) && (
-              <div className="git-splash-notices">
-                {gitInfo.behind > 0 && (
-                  <div className="git-splash-notice warning">
-                    <Zap size={12} />
-                    {gitInfo.behind} commit{gitInfo.behind > 1 ? 's' : ''} pendiente{gitInfo.behind > 1 ? 's' : ''} de pull
-                  </div>
-                )}
-                {gitInfo.uncommitted && (
-                  <div className="git-splash-notice info">
-                    <AlertCircle size={12} />
-                    Escenarios nuevos detectados localmente
-                  </div>
-                )}
-              </div>
-            )}
-
-
-
-
-
-            {/* CTA */}
-            <button
-              className="git-splash-cta"
-              onClick={handleContinue}
-              disabled={isChanging || !testerInput.trim() || (gitInfo.gitNotLinked && !gitInfo.branches?.length)}
-              style={{ opacity: (testerInput.trim() && (gitInfo.branches?.length > 0 || !gitInfo.gitNotLinked)) ? 1 : 0.45 }}
-            >
-              {isChanging
-                ? 'Cambiando rama...'
-                : 'Ingresar'
-              }
-              <ChevronRight size={16} />
-            </button>
-          </>
-        )}
-
-        {/* ── WHISPER ── */}
-        {pullWhisper && (
-          <div className="git-splash-whisper">
-            <Sparkles size={11} />
-            <span>Hey, {pullWhisper}</span>
-          </div>
-        )}
-
-        {/* ── FOOTER ── */}
-        <div className="git-splash-footer">
-          <Cpu size={12} color="#8e8e93" />
-          <span>Seidor Perú · AutoBot QA Engine</span>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const CLIENTS = [
   { id: 'CI', name: 'Clínica Internacional', icon: <div style={{ width: '24px', height: '24px', background: 'var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '10px', fontWeight: 'bold' }}>CI</div>, env: 'QAS' },
@@ -583,263 +38,16 @@ const CLIENTS = [
 
 const MEDIOS_VUELTO = ["Efectivo", "Depósito CTA", "Nota de Crédito"];
 
-const Sidebar = ({
-  registry, activeClient, setActiveClient,
-  activeProcess, setActiveProcess,
-  currentBranch, branches, handleBranchChange,
-  onGitSync,
-  setShowAbout,
-  setShowSettings,
-  gitNotLinked,
-  remoteChangesCount,
-  testerName, setTesterName,
-  projectName, setProjectName,
-  geminiKey, setGeminiKey,
-  setShowChangelog,
-  isGitLoading
-}) => {
-  const saveGeminiKey = async () => {
-    if (!geminiKey) return;
-    try {
-      const res = await fetch(`${API_BASE}/config/gemini`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: geminiKey })
-      });
-      if (res.ok) alert("✅ Llave de Gemini guardada correctamente.");
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
-  return (
-    <aside className="sidebar">
-
-      {/* HEADER FIJO */}
-      <div className="sidebar-header-fixed" style={{ flexDirection: 'row', alignItems: 'center', padding: '14px 16px', justifyContent: 'flex-start', gap: '10px' }}>
-        <TransparentLogo src="./logo-pure.png" className="brand-isotype" size={68} style={{ flexShrink: 0 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <div className="brand-name" style={{ fontSize: '1.2rem', lineHeight: 1 }}>
-            Auto<span style={{ fontWeight: '700' }}>Bot</span>
-          </div>
-          {currentBranch && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '2px 7px', background: remoteChangesCount > 0 ? 'rgba(245,158,11,0.15)' : 'rgba(99,102,241,0.12)', borderRadius: '100px', fontSize: '0.6rem', fontWeight: '800', color: remoteChangesCount > 0 ? '#d97706' : '#6366f1', border: `1px solid ${remoteChangesCount > 0 ? 'rgba(245,158,11,0.35)' : 'rgba(99,102,241,0.25)'}`, alignSelf: 'flex-start', whiteSpace: 'nowrap' }}>
-              <GitBranch size={9} />
-              {currentBranch}
-              {remoteChangesCount > 0 && <span style={{ background: '#f59e0b', color: 'white', borderRadius: '100px', padding: '0 4px', fontSize: '0.52rem', fontWeight: '900' }}>{remoteChangesCount}</span>}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* CONTENIDO SCROLLABLE */}
-      <div className="sidebar-scroll-body">
-
-        <div className="sidebar-section">
-          <div className="sidebar-label">Metadata del Reporte</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '4px', letterSpacing: '0.5px' }}>PROYECTO</div>
-            <input
-              type="text"
-              className="branch-select"
-              value={projectName}
-              onChange={e => setProjectName(e.target.value)}
-              placeholder="Ej: Medifarma - SAP Fiori"
-              style={{ fontSize: '0.85rem', borderRadius: '24px', padding: '12px 20px', background: 'var(--apple-bg)' }}
-            />
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '800', marginBottom: '4px', marginTop: '8px', letterSpacing: '0.5px' }}>USUARIO (TESTER)</div>
-            <input
-              type="text"
-              className="branch-select"
-              value={testerName}
-              onChange={e => setTesterName(e.target.value)}
-              placeholder="Tu nombre completo"
-              style={{ fontSize: '0.85rem', borderRadius: '24px', padding: '12px 20px', background: 'var(--apple-bg)' }}
-            />
-          </div>
-        </div>
-
-        <div className="sidebar-section">
-          <div className="sidebar-label">Entorno Git</div>
-          {gitNotLinked ? (
-            <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', marginTop: '10px' }}>
-              <div style={{ fontSize: '0.65rem', color: '#d97706', fontWeight: '800', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <AlertTriangle size={12} /> Git no vinculado
-              </div>
-              <p style={{ fontSize: '0.65rem', color: '#92400e', margin: 0 }}>
-                Abre <span style={{ textDecoration: 'underline', cursor: 'pointer', fontWeight: '700' }} onClick={() => setShowSettings(true)}>⚙️ Configuración</span> y pega la ruta de tu proyecto.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '0.7rem', fontWeight: '700', color: remoteChangesCount > 0 ? '#d97706' : '#10b981' }}>
-                <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: remoteChangesCount > 0 ? '#f59e0b' : '#10b981', boxShadow: remoteChangesCount > 0 ? '0 0 6px rgba(245,158,11,0.6)' : '0 0 6px rgba(16,185,129,0.6)' }} />
-                {remoteChangesCount > 0 ? `${remoteChangesCount} cambios pendientes` : 'Sincronizado'}
-              </div>
-              <ModernSelect
-                value={currentBranch}
-                onChange={val => handleBranchChange({ target: { value: val } })}
-                options={branches.map(b => ({ label: b, value: b }))}
-                placeholder="Seleccionar Rama "
-              />
-              <button
-                onClick={onGitSync}
-                className="btn-sync-git"
-                style={{
-                  marginTop: '10px', width: '100%', padding: '10px',
-                  background: remoteChangesCount > 0 ? 'var(--accent-primary)' : 'rgba(99, 102, 241, 0.1)',
-                  color: remoteChangesCount > 0 ? 'white' : '#6366f1',
-                  border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '100px',
-                  fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  boxShadow: remoteChangesCount > 0 ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <Zap size={14} fill={remoteChangesCount > 0 ? 'white' : '#6366f1'} />
-                {remoteChangesCount > 0 ? `Sincronizar con Git (${remoteChangesCount})` : 'Sincronizar con Git'}
-              </button>
-            </>
-          )}
-        </div>
-
-        <div className="sidebar-section">
-          <div className="sidebar-label">Mis Proyectos</div>
-          {registry.map(c => (
-            <div key={c.id} className={`client-item ${activeClient === c.id ? 'active' : ''}`} onClick={() => { setActiveClient(c.id); setActiveProcess(c.procesos[0]?.id || ''); }}>
-              <span style={{ display: 'flex', alignItems: 'center' }}>{c.icon || <Info size={18} />}</span>
-              <div className="client-name">{c.name}</div>
-            </div>
-          ))}
-          {activeClient && (
-            <div style={{ marginTop: '2rem' }}>
-              <div className="sidebar-label">Proceso Analítico</div>
-              <ModernSelect
-                value={activeProcess}
-                onChange={val => setActiveProcess(val)}
-                options={registry.find(c => c.id === activeClient)?.procesos?.map(p => ({ label: p.name, value: p.id })) || []}
-              />
-            </div>
-          )}
-        </div>
-
-      </div>
-
-      {/* FOOTER FIJO */}
-      <div className="sidebar-footer-fixed" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-        <div style={{ display: 'flex', width: '100%', justifyContent: 'space-around', paddingBottom: '4px' }}>
-          <button
-            onClick={() => setShowSettings(true)}
-            title="Configuración"
-            style={{ width: '44px', height: '44px', borderRadius: '50%', border: '2px solid rgba(37,99,235,0.35)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb', transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(37,99,235,0.7)'; e.currentTarget.style.background = 'rgba(37,99,235,0.06)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(37,99,235,0.35)'; e.currentTarget.style.background = 'transparent'; }}
-          >
-            <Settings size={18} strokeWidth={2.5} color="#2563eb" />
-          </button>
-          <button
-            onClick={() => window.handleShutdown()}
-            title="Apagar"
-            style={{ width: '44px', height: '44px', borderRadius: '50%', border: '2px solid rgba(239,68,68,0.3)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.7)'; e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.background = 'transparent'; }}
-          >
-            <Power size={18} strokeWidth={2.5} color="#ef4444" />
-          </button>
-        </div>
-        <div className="sap-branding-badge">
-          <Cpu size={13} color="var(--accent-primary)" />
-          <span className="sap-branding-text">Potencia por SAP AI Core</span>
-        </div>
-        <button
-          onClick={() => setShowChangelog(true)}
-          className="evolution-text"
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <Sparkles size={11} color="#f59e0b" />
-          <span>AutoBotAI v2.1.0</span>
-        </button>
-      </div>
-
-    </aside>
-  );
-};
-
-const PaymentTray = ({ pagos, medioVuelto, updatePagos, updateMedioVuelto }) => {
-  const addPago = (tipo) => updatePagos([...pagos, { id: Date.now(), tipo, monto: '', autoData: true }]);
-  const removePago = (id) => updatePagos(pagos.filter(p => p.id !== id));
-  const updMonto = (id, val) => updatePagos(pagos.map(p => p.id === id ? { ...p, monto: val } : p));
-  const updAuto = (id, auto) => updatePagos(pagos.map(p => p.id === id ? { ...p, autoData: auto } : p));
-
-  const total = pagos.reduce((sum, p) => sum + (parseFloat(p.monto) || 0), 0);
-  const showVuelto = total > 0 && pagos.some(p => p.tipo === 'Efectivo');
-
-  return (
-    <div className="payment-tray">
-      <div className="tray-header">Métodos de Pago</div>
-
-      <div className="tray-adders" style={{ marginBottom: pagos.length > 0 ? '1.5rem' : '0' }}>
-        <button className="btn-payment-method" onClick={() => addPago('Efectivo')}>
-          <Banknote size={18} color="var(--accent-primary)" strokeWidth={1.5} />
-          <span>Efectivo</span>
-        </button>
-        <button className="btn-payment-method" onClick={() => addPago('Tarjeta')}>
-          <CreditCard size={18} color="var(--accent-primary)" strokeWidth={1.5} />
-          <span>Tarjeta</span>
-        </button>
-      </div>
-
-      <div className="tray-items">
-        {pagos.map((p) => (
-          <div key={p.id} className={`tray-item type-${p.tipo.toLowerCase()}`}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-              <strong style={{ fontSize: '0.85rem' }}>{p.tipo.toUpperCase()}</strong>
-              <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} onClick={() => removePago(p.id)}>
-                <X size={14} />
-              </button>
-            </div>
-            <div className="tray-inputs">
-              <input type="number" placeholder="Monto (Opcional)" value={p.monto} onChange={e => updMonto(p.id, e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
-            </div>
-            {p.tipo === 'Tarjeta' && (
-              <div style={{ marginTop: '0.8rem' }}>
-                <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <ModernCheckbox 
-                    checked={p.autoData} 
-                    onChange={val => updAuto(p.id, val)}
-                    label="Autodatos"
-                  />
-                  Auto-generar datos (ID/Bin)
-                </label>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {showVuelto && (
-        <div style={{ background: 'rgba(241, 196, 15, 0.1)', border: '1px solid rgba(241, 196, 15, 0.3)', padding: '1rem', borderRadius: '12px', marginTop: '1rem' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f1c40f', marginBottom: '8px' }}>MEDIO DE VUELTO</div>
-          <ModernSelect 
-            value={medioVuelto || "Efectivo"} 
-            onChange={(val) => updateMedioVuelto(val)} 
-            options={MEDIOS_VUELTO.map(m => ({ label: m, value: m }))}
-          />
-        </div>
-      )}
-    </div>
-  );
-};
+// ─── Sidebar y PaymentTray modularizados ───
 
 export default function App() {
   const [gitInitDone, setGitInitDone] = useState(false);
+  const [hanaStatus, setHanaStatus] = useState(null); // { connected, lastSync, pending }
 
   const [registry, setRegistry] = useState([]);
   const [activeClient, setActiveClient] = useState('Medifarma');
   const [activeProcess, setActiveProcess] = useState('mf_flujos');
-
-  const [branches, setBranches] = useState([]);
-  const [currentBranch, setBranch] = useState('');
 
   const [activeScenarioId, setActiveScenarioId] = useState('');
   const [newScenarioName, setNewScenarioName] = useState('');
@@ -882,13 +90,8 @@ export default function App() {
   const [showChangelog, setShowChangelog] = useState(false);
   const [changelogContent, setChangelogContent] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
-  const [isGitLoading, setIsGitLoading] = useState(false);
-  const [remoteChangesCount, setRemoteChangesCount] = useState(0);
-  const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [backendError, setBackendError] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [gitNotLinked, setGitNotLinked] = useState(false);
-  const [gitToken, setGitToken] = useState('');
   const [projectDir, setProjectDir] = useState('');
 
 
@@ -965,7 +168,6 @@ export default function App() {
       if (sRes.ok) {
         const d = await sRes.json();
         if (d.testerName) setTesterName(d.testerName);
-        if (d.gitToken) setGitToken(d.gitToken);
         if (d.projectName) setProjectName(d.projectName);
         if (d.projectDir) setProjectDir(d.projectDir);
         if (d.geminiKey) setGeminiKey(d.geminiKey);
@@ -982,13 +184,6 @@ export default function App() {
       if (!res.ok) throw new Error("Server error");
       const data = await res.json();
       setRegistry(data);
-
-      const statRes = await fetch(`${API_BASE}/git/status`);
-      if (statRes.ok) {
-        const statData = await statRes.json();
-        setHasPendingChanges(statData.hasChanges);
-        setRemoteChangesCount(statData.behind || 0);
-      }
       setBackendError(null);
     } catch (err) {
       console.error("Fetch Registry Error:", err);
@@ -1003,23 +198,30 @@ export default function App() {
     return () => clearInterval(timer);
   }, [fetchInitialData, fetchRegistry]);
 
-  // 2.3. Notificaciones Nativas de Git
+  // Poll Supabase status each 60s
   useEffect(() => {
-    if (remoteChangesCount > 0) {
-      const lastCount = parseInt(localStorage.getItem('lastGitCount') || '0');
-      if (remoteChangesCount > lastCount) {
-        try {
-          new Notification('🤖 AutoBotIA: Cambios Detectados', { 
-            body: `Hay ${remoteChangesCount} nuevos escenarios o cambios en la rama ${currentBranch}.`, 
-            icon: '/favicon.png'
-          });
-        } catch (err) {}
-      }
-      localStorage.setItem('lastGitCount', remoteChangesCount.toString());
-    } else {
-      localStorage.setItem('lastGitCount', '0');
+    const pollSupabase = () => {
+      fetch(`${API_BASE}/supabase/status`)
+        .then(r => r.json())
+        .then(data => setHanaStatus(data))
+        .catch(() => setHanaStatus({ connected: false, lastSync: null, pending: 0 }));
+    };
+    pollSupabase();
+    const timer = setInterval(pollSupabase, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Notificaciones Nativas de Sincronización
+  useEffect(() => {
+    if (hanaStatus?.pending > 0) {
+      try {
+        new Notification('🤖 AutoBotIA: Cambios en Nube', { 
+          body: `Tienes ${hanaStatus.pending} cambios pendientes por sincronizar con Supabase.`, 
+          icon: '/favicon.png'
+        });
+      } catch (err) {}
     }
-  }, [remoteChangesCount, currentBranch]);
+  }, [hanaStatus?.pending]);
 
   // Al cambiar de cliente, resetear escenario y proceso al primero disponible
   useEffect(() => {
@@ -1032,31 +234,6 @@ export default function App() {
     }
   }, [activeClient]);
 
-  const handleBranchChange = async e => {
-    const branch = e.target.value;
-    if (!branch || branch === currentBranch) return;
-    setIsGitLoading(true);
-    try {
-      const r = await fetch(`${API_BASE}/checkout`, { 
-        method: 'POST', 
-        body: JSON.stringify({ branch }), 
-        headers: { 'Content-Type': 'application/json' } 
-      });
-      const data = await r.json();
-      if (data.success) {
-        setBranch(branch);          // FIX: era setCurrentBranch (no definido)
-        await fetchRegistry();     // FIX: era loadRegistry (no definido)
-        console.log(`[GIT] ${data.message}`);
-      } else {
-        alert(`❌ Error Git: ${data.error}`);
-      }
-    } catch (err) {
-      console.error("Branch Change Error:", err);
-      alert("Error de conexión al cambiar de rama.");
-    } finally {
-      setIsGitLoading(false);
-    }
-  };
 
   const handleScenarioSelect = (scenarioId) => {
     setActiveScenarioId(scenarioId);
@@ -1090,7 +267,7 @@ export default function App() {
       if (response.ok) {
         await loadRegistry();
         setSaveStatus('success');
-        addToast("Escenario guardado correctamente.", "success");
+        addToast("✨ Escenario blindado con éxito.", "success");
         setTimeout(() => setSaveStatus('idle'), 3000);
       } else {
         setSaveStatus('error');
@@ -1127,7 +304,7 @@ export default function App() {
         setActiveScenarioId('');
         setNewScenarioName('');
         setInstruccionesIa('');
-        addToast("Escenario eliminado y sincronizado.", "success");
+        addToast("🧹 Limpieza completada. Registro eliminado.", "success");
       }
     } catch {
       addToast("Error al eliminar.", "error");
@@ -1164,7 +341,7 @@ export default function App() {
       if ((await res.json()).success) {
         await fetchRegistry();
         setShowScriptPicker(false);
-        addToast("Script asignado correctamente.", "success");
+        addToast("🔗 Vinculación precisa establecida.", "success");
       }
     } catch { addToast("Error al asignar script", "error"); }
   };
@@ -1200,7 +377,7 @@ export default function App() {
       });
       const data = await res.json();
       if (data.ok) {
-        addToast("Script guardado correctamente.", "success");
+        addToast("💾 Código preservado con éxito.", "success");
         setShowScriptEditor(false);
       } else {
         addToast(data.error || "Error al guardar", "error");
@@ -1237,7 +414,7 @@ export default function App() {
       });
       if ((await res.json()).success) {
         setAiApplied(true);
-        addToast("Cambio aplicado y guardado correctamente.", "success");
+        addToast("🧬 Evolución del código completada.", "success");
       }
     } catch { addToast("Error al aplicar el cambio", "error"); }
   };
@@ -1288,7 +465,7 @@ export default function App() {
       });
       const data = await res.json();
       if (data.success) {
-        addToast(`Flujo "${recordingName}" guardado correctamente.`, "success");
+        addToast(`🏆 Flujo "${recordingName}" capturado y asegurado.`, "success");
         await fetchRegistry();
         setIsRecording(false);
         setShowRecordModal(false);
@@ -1449,7 +626,7 @@ export default function App() {
                   newPdfUrl = docData || msg;
                 } else if (type === 'pdf_global') {
                   setGlobalPdf(docData);
-                  addToast("¡Reporte Global Listo!", "success");
+                  addToast("📊 Análisis consolidado. Todo bajo control.", "success");
                 }
 
                 return { ...t, progress: newProg, status: newSt, result: newRes, currentLog: newLog, pdfUrl: newPdfUrl };
@@ -1554,8 +731,7 @@ export default function App() {
   };
 
   if (!gitInitDone) {
-    return <GitInitScreen onContinue={(branch, name) => {
-      if (branch) setBranch(branch);
+    return <GitInitScreen onContinue={(name) => {
       if (name) setTesterName(name);
       setGitInitDone(true);
     }} />;
@@ -1567,23 +743,23 @@ export default function App() {
         <Sidebar
           registry={registry} activeClient={activeClient} setActiveClient={setActiveClient}
           activeProcess={activeProcess} setActiveProcess={setActiveProcess}
-          currentBranch={currentBranch} branches={branches} handleBranchChange={handleBranchChange}
-          onGitSync={handleGitSync}
-          setShowAbout={setShowAbout}
+          hanaStatus={hanaStatus}
+          onHanaSync={() => {
+            fetch(`${API_BASE}/supabase/status`)
+              .then(r => r.json())
+              .then(data => setHanaStatus(data))
+              .catch(() => {});
+            fetchRegistry();
+          }}
           setShowSettings={setShowSettings}
-          gitNotLinked={gitNotLinked}
-          remoteChangesCount={remoteChangesCount}
           testerName={testerName}
           setTesterName={setTesterName}
           projectName={projectName}
           setProjectName={setProjectName}
-          geminiKey={geminiKey}
-          setGeminiKey={setGeminiKey}
           setShowChangelog={setShowChangelog}
-          isGitLoading={isGitLoading}
         />
         <main className="main split-layout">
-          <div className="config-panel">
+          <div className="config-panel stagger-item">
             <div className="config-flow">
               
               {/* BLOQUE 1: CONTROL DE FLUJO */}
@@ -1805,7 +981,7 @@ export default function App() {
 
           </div>
 
-          <div className="batch-panel">
+          <div className="batch-panel stagger-item">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ margin: 0 }}>Lote de pruebas ({queue.length})</h2>
               {queue.length > 0 && <button onClick={clearBatch} disabled={isBatchRunning} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem' }}>🗑 Limpiar Lote</button>}
@@ -2386,7 +1562,7 @@ export default function App() {
       {/* Estilos dinámicos para el cargador IA */}
       {showSettings && (
         <div className="modal-overlay" style={{ zIndex: 10000 }} onClick={() => setShowSettings(false)}>
-          <div className="modal-content about-modal" style={{ maxWidth: '480px' }} onClick={e => e.stopPropagation()}>
+          <div className="modal-content about-modal animate-modal-enter" style={{ maxWidth: '480px' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ margin: 0, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Settings size={18} /> Configuración
@@ -2426,27 +1602,14 @@ export default function App() {
                 <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '5px' }}>Carpeta raíz del repo git con los scripts de prueba.</p>
               </div>
 
-              <div>
-                <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>AUTENTICACIÓN</div>
-                <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>Git Token</label>
-                <input
-                  type="password" value={gitToken} onChange={e => setGitToken(e.target.value)}
-                  placeholder="ghp_..."
-                  style={{ width: '100%', boxSizing: 'border-box', fontSize: '0.85rem', padding: '8px 12px', border: '1px solid var(--card-border)', borderRadius: '8px', background: 'white', color: 'var(--text-main)', fontFamily: 'inherit' }}
-                />
-                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '5px' }}>Requerido para el pull automático de ramas remotas.</p>
-              </div>
 
               <button
                 className="btn-run"
                 style={{ width: '100%', background: 'var(--accent-primary)', color: 'white', marginTop: '6px' }}
                 onClick={async () => {
-                  const res = await fetch(`${API_BASE}/config/git-token`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gitToken })
-                  });
-                  if (res.ok) { addToast('✅ Configuración guardada.', 'success'); setShowSettings(false); fetchInitialData(); }
+                  addToast('🛡️ Configuración blindada. Todo listo para operar.', 'success'); 
+                  setShowSettings(false); 
+                  fetchInitialData(); 
                 }}
               >
                 Guardar Configuración
@@ -2456,18 +1619,7 @@ export default function App() {
         </div>
       )}
 
-      {isGitLoading && (
-        <div className="modal-overlay" style={{ zIndex: 20000, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)' }}>
-          <div style={{ textAlign: 'center', color: 'white' }}>
-            <div className="sparkle-spin" style={{ marginBottom: '20px' }}>
-              <Zap size={48} color="#fbbf24" fill="#fbbf24" />
-            </div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '8px' }}>Sincronizando con el Futuro</h2>
-            <p style={{ opacity: 0.8, fontSize: '0.9rem' }}>Git está realizando un Checkout + Pull blindado...</p>
-            <div style={{ marginTop: '20px', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.5 }}>No cierres la aplicación</div>
-          </div>
-        </div>
-      )}
+      {/* Modal de Sincronización eliminado por migración a Supabase */}
 
       {showChangelog && (
         <div className="modal-overlay" onClick={() => setShowChangelog(false)}>
@@ -2572,7 +1724,7 @@ export default function App() {
       {deleteModal.open && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setDeleteModal({ open: false, step: 1, scenarioId: null, scenarioName: '' })}>
-          <div style={{ background: '#fff', borderRadius: '20px', padding: '28px 28px 24px', maxWidth: '380px', width: '90%', boxShadow: '0 24px 60px rgba(0,0,0,0.18)', animation: 'modalPop 0.2s cubic-bezier(0.16,1,0.3,1)' }}
+          <div className="animate-modal-enter" style={{ background: '#fff', borderRadius: '20px', padding: '28px 28px 24px', maxWidth: '380px', width: '90%', boxShadow: '0 24px 60px rgba(0,0,0,0.18)' }}
             onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

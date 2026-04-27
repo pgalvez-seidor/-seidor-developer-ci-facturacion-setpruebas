@@ -102,4 +102,111 @@ const seedData = () => {
     });
 };
 
-module.exports = { db, initDb };
+// ─── HANA Sync Functions ──────────────────────────────────────────────────────
+
+let lastSyncTimestamp = null;
+
+/**
+ * syncFromSupabase — descarga toda la data de Supabase y hace UPSERT en SQLite local.
+ * Es el reemplazo de syncScenariosWithFileSystem().
+ */
+const syncFromHana = async () => {
+    let supabase;
+    try { supabase = require('./supabase-client'); } catch (e) { return; }
+    if (!supabase.isConnected()) return;
+
+    try {
+        console.log('[Supabase→SQLite] Iniciando sincronización descendente...');
+        const { clientes, proyectos, escenarios } = await supabase.fetchAll();
+
+        await new Promise((resolve) => {
+            db.serialize(() => {
+                // Upsert clientes
+                for (const c of clientes) {
+                    db.run(`INSERT OR REPLACE INTO clientes (id, name) VALUES (?, ?)`,
+                        [c.ID, c.NOMBRE]);
+                }
+                // Upsert procesos
+                for (const p of proyectos) {
+                    db.run(`INSERT OR IGNORE INTO procesos (id, client_id, name) VALUES (?, ?, ?)`,
+                        [p.ID, p.CLIENTE_ID, p.NOMBRE]);
+                }
+                // Upsert escenarios (la config_json viene de HANA como CONFIG_JSON)
+                for (const e of escenarios) {
+                    // Si el script está en Supabase, escribirlo al disco también para compatibilidad
+                    if (e.SCRIPT_CONTENT) {
+                        const fs = require('fs');
+                        const path = require('path');
+                        const scriptName = JSON.parse(e.CONFIG_JSON || '{}').file || JSON.parse(e.CONFIG_JSON || '{}').recordedScript;
+                        if (scriptName) {
+                            const scriptPath = path.join(__dirname, '..', scriptName.startsWith('scripts/') ? scriptName : `scripts/${scriptName}`);
+                            try {
+                                if (!fs.existsSync(scriptPath)) {
+                                    fs.writeFileSync(scriptPath, e.SCRIPT_CONTENT, 'utf8');
+                                    console.log(`[Supabase→SQLite] Script restaurado: ${scriptName}`);
+                                }
+                            } catch (_) {}
+                        }
+                    }
+                    db.run(
+                        `INSERT OR REPLACE INTO escenarios (id, process_id, name, config_json, instrucciones_ia, created_at, created_by)
+                         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                        [e.ID, e.PROYECTO_ID, e.NOMBRE,
+                         e.CONFIG_JSON || '{}',
+                         e.INSTRUCCIONES || '',
+                         e.CREATED_AT || new Date().toISOString(),
+                         e.CREATED_BY || '']
+                    );
+                }
+                resolve();
+            });
+        });
+
+        lastSyncTimestamp = new Date().toISOString();
+        console.log(`[Supabase→SQLite] ✅ Sync completo. Clientes: ${clientes.length}, Proyectos: ${proyectos.length}, Escenarios: ${escenarios.length}`);
+    } catch (e) {
+        console.error('[Supabase→SQLite] Error en sync:', e.message);
+    }
+};
+
+/**
+ * pushToHana — escribe un escenario a Supabase de forma asíncrona (fire-and-forget seguro).
+ * Si Supabase no está disponible, encola para sync posterior.
+ */
+const pushToHana = async (escenario) => {
+    let supabase;
+    try { supabase = require('./supabase-client'); } catch (e) { return; }
+
+    const fn = () => supabase.upsertEscenario(escenario);
+
+    if (!supabase.isConnected()) {
+        supabase.enqueue(fn);
+        return;
+    }
+    try {
+        await fn();
+        console.log(`[SQLite→Supabase] ✅ Escenario sincronizado: ${escenario.id}`);
+    } catch (e) {
+        console.error('[SQLite→Supabase] Error, encolando:', e.message);
+        supabase.enqueue(fn);
+    }
+};
+
+/**
+ * pushClienteToHana — sincroniza un cliente y su proyecto a Supabase.
+ */
+const pushClienteToHana = async (cliente, proyecto) => {
+    let supabase;
+    try { supabase = require('./supabase-client'); } catch (e) { return; }
+    if (!supabase.isConnected()) return;
+    try {
+        await supabase.upsertCliente(cliente);
+        if (proyecto) await supabase.upsertProyecto(proyecto);
+    } catch (e) {
+        console.error('[SQLite→Supabase] Error sync cliente/proyecto:', e.message);
+    }
+};
+
+const getLastSyncTimestamp = () => lastSyncTimestamp;
+
+module.exports = { db, initDb, syncFromHana, pushToHana, pushClienteToHana, getLastSyncTimestamp };

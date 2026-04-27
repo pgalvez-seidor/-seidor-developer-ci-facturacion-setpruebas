@@ -9,8 +9,6 @@ test('test', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Contraseña' }).fill('Pavilion2371126.@');
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.goto('https://medifarma-portal-qa-63shgxes.cpp.cfapps.us10.hana.ondemand.com/site/portalqas#Shell-home');
-  await page.goto('https://medifarma-portal-qa-63shgxes.cpp.cfapps.us10.hana.ondemand.com/site/portalqas#Shell-home');
-  await page.goto('https://medifarma-portal-qa-63shgxes.cpp.cfapps.us10.hana.ondemand.com/site/portalqas#Shell-home');
   await page.getByRole('link', { name: 'Auditoría Ingresar' }).click();
   await page.locator('iframe[title="Aplicación"]').contentFrame().locator('[id="__status1-__clone0-statusIcon"]').click();
   await page.locator('iframe[title="Aplicación"]').contentFrame().getByRole('button', { name: 'Cerrar' }).click();
