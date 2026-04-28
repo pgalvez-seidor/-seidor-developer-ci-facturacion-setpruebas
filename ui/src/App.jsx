@@ -128,7 +128,7 @@ export default function App() {
 
   // --- Render Principal ---
   if (!projectDir && !showSettings) {
-    return <GitInitScreen onDirSelect={async () => {
+    return <GitInitScreen onContinue={async () => {
       const path = await window.electron.selectFolder();
       if (path) {
         const res = await fetch(`${API_BASE}/config/project-dir`, {
