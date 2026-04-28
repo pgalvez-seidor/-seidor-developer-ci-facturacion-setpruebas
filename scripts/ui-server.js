@@ -407,6 +407,14 @@ app.get('/api/settings', (req, res) => {
     });
 });
 
+app.get('/api/config', (req, res) => {
+    res.json({
+        projectDir,
+        gitToken,
+        geminiKey: process.env.GEMINI_API_KEY || ''
+    });
+});
+
 app.post('/api/config/project-dir', (req, res) => {
     const { projectDir: newDir } = req.body;
     if (newDir) {
