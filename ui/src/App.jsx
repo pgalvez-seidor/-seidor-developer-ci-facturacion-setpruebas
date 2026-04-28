@@ -129,6 +129,10 @@ export default function App() {
   // --- Render Principal ---
   if (!projectDir && !showSettings) {
     return <GitInitScreen onContinue={async () => {
+      if (!window.electron) {
+        alert("⚠️ Esta función solo está disponible en la versión de escritorio de AutoBot.");
+        return;
+      }
       const path = await window.electron.selectFolder();
       if (path) {
         const res = await fetch(`${API_BASE}/config/project-dir`, {
@@ -267,6 +271,10 @@ export default function App() {
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input className="form-input" value={projectDir} readOnly style={{ flex: 1 }} />
                   <button onClick={async () => {
+                    if (!window.electron) {
+                      addToast("⚠️ Requiere AutoBot Desktop", "error");
+                      return;
+                    }
                     const path = await window.electron.selectFolder();
                     if (path) {
                        setProjectDir(path);
