@@ -6,7 +6,9 @@ dist/
 ui/dist/
 
 # credenciales — nunca al repo
-.env.*
+.env
+.env.local
+SECRETS.md
 config/.clickup_token
 
 # Lockfiles — se regeneran con npm install
