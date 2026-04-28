@@ -8,25 +8,70 @@ const { createPrefactura } = require('./api-helper.js');
 const { db, initDb, syncFromCloud, pushToCloud, getLastSyncTimestamp } = require('./db.js');
 
 const app = express();
-app.use(cors()); // CORS al principio
+app.use(express.json({ limit: '50mb' })); // Primero el JSON con límite alto
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(cors()); 
+
 const PORT = 3001;
 
-// Lista de clientes SSE (Navegadores abiertos)
-let sseClients = [];
+// Función para limpiar el puerto si está ocupado (Especial para Mac/Linux)
+const killPort = (port) => {
+    try {
+        console.log(`[Port] 🔍 Verificando puerto ${port}...`);
+        const pid = execSync(`lsof -t -i:${port}`).toString().trim();
+        if (pid) {
+            console.log(`[Port] ⚠️ Puerto ${port} ocupado por PID ${pid}. Limpiando...`);
+            execSync(`kill -9 ${pid}`);
+            console.log(`[Port] ✅ Puerto ${port} liberado.`);
+        }
+    } catch (e) {
+        // Si falla es porque el puerto está libre
+        console.log(`[Port] 🟢 Puerto ${port} disponible.`);
+    }
+};
 
-// RUTA DE EVENTOS (Canal exclusivo para evitar colisiones con /api)
+killPort(PORT);
+
+// Utilidad global para emitir eventos a todos los clientes SSE
+global.emitToSSE = (event, data) => {
+    const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    sseClients.forEach(c => {
+        try {
+            c.res.write(message);
+        } catch (e) {
+            console.error(`[SSE] ❌ Error enviando a cliente ${c.id}:`, e.message);
+        }
+    });
+};
+
 app.get('/events-push', (req, res) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no' // Importante para evitar buffering en proxies
+    });
+    // Fix: desactivar timeouts y activar keep-alive en el socket
+    req.socket.setTimeout(0);
+    req.socket.setNoDelay(true);
+    req.socket.setKeepAlive(true);
+    res.setTimeout(0);
+    res.write('\n'); // Enviar algo inicial
 
     const clientId = Date.now();
-    console.log(`[SSE] 🔌 Nuevo cliente conectado: ${clientId}`);
-    sseClients.push({ id: clientId, res });
+    const client = { id: clientId, res };
+    sseClients.push(client);
+
+    console.log(`[SSE] 🔌 Nuevo cliente: ${clientId} (Total: ${sseClients.length})`);
+
+    // Latido (Heartbeat) para mantener la conexión viva
+    const heartbeat = setInterval(() => {
+        res.write(': keep-alive\n\n');
+    }, 15000);
 
     req.on('close', () => {
-        console.log(`[SSE] 🔌 Cliente desconectado: ${clientId}`);
+        console.log(`[SSE] 🔌 Cliente cerrado: ${clientId}`);
+        clearInterval(heartbeat);
         sseClients = sseClients.filter(c => c.id !== clientId);
     });
 });
@@ -36,14 +81,6 @@ supabaseClient.connect()
     .then(async () => {
         console.log('✅ Supabase Client Connected');
         
-        // Sincronización inicial
-        try {
-            const { syncFromCloud } = require('./db.js');
-            await syncFromCloud();
-        } catch (e) {
-            console.error('[Sync] Error inicial:', e.message);
-        }
-
         // Activar escucha Realtime
         supabaseClient.subscribeToChanges(async (payload) => {
             console.log(`[Realtime] ⚡ Cambio en ${payload.type}`);
@@ -521,9 +558,21 @@ app.get('/api/registry', (req, res) => {
                                 created_at: e.created_at || null,
                                 created_by: e.created_by || null
                             }));
-                            return { id: p.id, name: p.name, escenarios: escens };
+                            return { 
+                                id: p.id, 
+                                name: p.name, 
+                                descripcion: p.descripcion || "",
+                                escenarios: escens 
+                            };
                         });
-                        return { id: c.id, name: c.name, procesos: procs };
+                        return { 
+                            id: c.id, 
+                            name: c.name, 
+                            descripcion: c.descripcion || "",
+                            logo_base64: c.logo_base64 || null,
+                            color_primario: c.color_primario || null,
+                            procesos: procs 
+                        };
                     });
 
                     console.log(`[REGISTRY] Clientes: ${clientesRows.length}, Procesos: ${procesosRows.length}, Escenarios: ${escenariosRows.length}`);
@@ -625,7 +674,7 @@ app.post('/api/management/client', (req, res) => {
             
             // Sync asíncrono a la nube
             const { pushClienteToCloud } = require('./db.js');
-            pushClienteToCloud({ id, name, descripcion, logo_base_64: logo_base_64, color_primario }).catch(console.error);
+            pushClienteToCloud({ id, name, descripcion, logo_base64, color_primario }).catch(console.error);
 
             res.json({ success: true });
         }
@@ -1616,6 +1665,11 @@ app.get('/api/reports/generate-ai', async (req, res) => {
         }
 
         const relativeUrl = pdfPath.replace(rootDir, '').replace(/\\/g, '/');
+        // Guardar para uso global (reintentos de sync)
+        global.emitToSSE = (event, data) => {
+            const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+            res.write(message);
+        };
         res.write(`data: ${JSON.stringify({ type: 'done', url: relativeUrl })}\n\n`);
         res.end();
     } catch (e) {
@@ -1715,9 +1769,17 @@ initDb().then(async () => {
         await syncScenariosWithFileSystem();
     }
 
-    app.listen(PORT, () => {
-        console.log(`✅ UI Backend API Server running at http://localhost:${PORT}`);
-    });
+process.on('uncaughtException', (err) => {
+    console.error('[Critical Error] ❌ Error no capturado:', err.message);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[Critical Error] ❌ Promesa no capturada:', reason);
+});
+
+app.listen(PORT, '127.0.0.1', () => {
+    console.log(`✅ UI Backend API Server running at http://127.0.0.1:${PORT}`);
+});
 }).catch(err => {
     console.error("❌ Error inicializando base de datos SQLite:", err);
 });

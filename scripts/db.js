@@ -127,26 +127,42 @@ const syncFromCloud = async () => {
         let hasChanges = false;
         const { clientes, proyectos, escenarios } = await supabase.fetchAll();
 
-        // 1. Sincronización de Clientes (Surgical)
+        // 1. Sincronización de Clientes (Surgical - solo actualizar campos con valor)
         for (const c of clientes) {
             await new Promise((resolve) => {
                 db.get("SELECT name, descripcion, logo_base64, color_primario FROM clientes WHERE id = ?", [c.ID], (err, row) => {
                     if (!row) {
                         console.log(`[Sync] 🌱 Nuevo cliente: ${c.NOMBRE}`);
-                        db.run("INSERT INTO clientes (id, name, descripcion, logo_base64, color_primario) VALUES (?, ?, ?, ?, ?)", 
-                               [c.ID, c.NOMBRE, c.DESCRIPCION, c.LOGO_BASE64, c.COLOR_PRIMARIO], () => { 
-                            hasChanges = true; 
-                            resolve(); 
-                        });
-                    } else if (row.name !== c.NOMBRE || row.descripcion !== c.DESCRIPCION || row.logo_base64 !== c.LOGO_BASE64 || row.color_primario !== c.COLOR_PRIMARIO) {
-                        console.log(`[Sync] 🔄 Actualizando cliente: ${c.ID}`);
-                        db.run("UPDATE clientes SET name = ?, descripcion = ?, logo_base64 = ?, color_primario = ? WHERE id = ?", 
-                               [c.NOMBRE, c.DESCRIPCION, c.LOGO_BASE64, c.COLOR_PRIMARIO, c.ID], () => { 
-                            hasChanges = true; 
-                            resolve(); 
+                        db.run("INSERT INTO clientes (id, name, descripcion, logo_base64, color_primario) VALUES (?, ?, ?, ?, ?)",
+                               [c.ID, c.NOMBRE, c.DESCRIPCION, c.LOGO_BASE64, c.COLOR_PRIMARIO], () => {
+                            hasChanges = true;
+                            resolve();
                         });
                     } else {
-                        resolve();
+                        // Construir UPDATE solo con campos no-null de Supabase
+                        const updates = {};
+                        if (c.NOMBRE !== null && c.NOMBRE !== undefined) updates.name = c.NOMBRE;
+                        if (c.DESCRIPCION !== null && c.DESCRIPCION !== undefined) updates.descripcion = c.DESCRIPCION;
+                        if (c.LOGO_BASE64 !== null && c.LOGO_BASE64 !== undefined) updates.logo_base64 = c.LOGO_BASE64;
+                        if (c.COLOR_PRIMARIO !== null && c.COLOR_PRIMARIO !== undefined) updates.color_primario = c.COLOR_PRIMARIO;
+
+                        // Comparar solo los campos que llegaron con valor
+                        let needsUpdate = false;
+                        for (const [key, val] of Object.entries(updates)) {
+                            if (row[key] !== val) { needsUpdate = true; break; }
+                        }
+
+                        if (needsUpdate && Object.keys(updates).length > 0) {
+                            console.log(`[Sync] 🔄 Actualizando cliente: ${c.ID}`);
+                            const sets = Object.keys(updates).map(k => `${k} = ?`).join(', ');
+                            const vals = [...Object.values(updates), c.ID];
+                            db.run(`UPDATE clientes SET ${sets} WHERE id = ?`, vals, () => {
+                                hasChanges = true;
+                                resolve();
+                            });
+                        } else {
+                            resolve();
+                        }
                     }
                 });
             });
@@ -231,13 +247,15 @@ const pushToCloud = async (escenario) => {
 };
 
 /**
- * pushClienteToCloud — sincroniza un cliente y su proyecto a Supabase.
+ * pushClienteToCloud — sincroniza un cliente y su proyecto a Supabase con reintentos (max 10).
  */
-const pushClienteToCloud = async (cliente, proyecto) => {
+const pushClienteToCloud = async (cliente, proyecto, attempt = 1) => {
     let supabase;
     try { supabase = require('./supabase-client'); } catch (e) { return; }
     if (!supabase.isConnected()) return;
+
     try {
+        console.log(`[Sync] 📤 Intento ${attempt}/10 - Subiendo a Supabase: ${cliente.id}...`);
         await supabase.upsertCliente({
             id: cliente.id,
             nombre: cliente.name,
@@ -245,6 +263,7 @@ const pushClienteToCloud = async (cliente, proyecto) => {
             logoBase64: cliente.logo_base64,
             colorPrimario: cliente.color_primario
         });
+        
         if (proyecto) {
             await supabase.upsertProyecto({
                 id: proyecto.id,
@@ -253,8 +272,25 @@ const pushClienteToCloud = async (cliente, proyecto) => {
                 descripcion: proyecto.descripcion
             });
         }
+        console.log(`[Sync] ✅ Cliente ${cliente.id} sincronizado exitosamente.`);
     } catch (e) {
-        console.error('[SQLite→Supabase] Error sync cliente/proyecto:', e.message);
+        console.error(`[Sync] ❌ Intento ${attempt} falló:`, e.message);
+        
+        if (attempt < 10) {
+            const delay = Math.pow(2, attempt) * 1000; // Delay exponencial
+            console.log(`[Sync] ⏳ Reintentando en ${delay/1000}s...`);
+            setTimeout(() => pushClienteToCloud(cliente, proyecto, attempt + 1), delay);
+        } else {
+            console.error(`[Sync] 🚨 FALLO DEFINITIVO tras 10 intentos.`);
+            // Aquí podríamos emitir un evento SSE de error global
+            if (global.emitToSSE) {
+                global.emitToSSE('sync-error', { 
+                    item: cliente.name, 
+                    error: e.message,
+                    detail: e.stack || e.toString()
+                });
+            }
+        }
     }
 };
 
