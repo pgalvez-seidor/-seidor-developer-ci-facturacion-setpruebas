@@ -604,6 +604,71 @@ app.delete('/api/registry/scenario/:id', (req, res) => {
     });
 });
 
+// ─── ENDPOINTS DE GESTIÓN (Mantenimiento) ───────────────────────────────────
+
+// A. Guardar/Actualizar Cliente
+app.post('/api/management/client', (req, res) => {
+    const { id, name, descripcion, logo_base64, color_primario } = req.body;
+    if (!id || !name) return res.status(400).json({ error: 'ID y Nombre son obligatorios' });
+
+    db.run(
+        `INSERT INTO clientes (id, name, descripcion, logo_base64, color_primario) 
+         VALUES (?, ?, ?, ?, ?) 
+         ON CONFLICT(id) DO UPDATE SET 
+            name = EXCLUDED.name, 
+            descripcion = EXCLUDED.descripcion, 
+            logo_base64 = EXCLUDED.logo_base64, 
+            color_primario = EXCLUDED.color_primario`,
+        [id, name, descripcion, logo_base64, color_primario],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            // Sync asíncrono a la nube
+            const { pushClienteToCloud } = require('./db.js');
+            pushClienteToCloud({ id, name, descripcion, logo_base_64: logo_base_64, color_primario }).catch(console.error);
+
+            res.json({ success: true });
+        }
+    );
+});
+
+// B. Guardar/Actualizar Proyecto
+app.post('/api/management/project', (req, res) => {
+    const { id, client_id, name, descripcion } = req.body;
+    if (!id || !client_id || !name) return res.status(400).json({ error: 'ID, Cliente y Nombre son obligatorios' });
+
+    db.run(
+        `INSERT INTO procesos (id, client_id, name, descripcion) 
+         VALUES (?, ?, ?, ?) 
+         ON CONFLICT(id) DO UPDATE SET 
+            client_id = EXCLUDED.client_id, 
+            name = EXCLUDED.name, 
+            descripcion = EXCLUDED.descripcion`,
+        [id, client_id, name, descripcion],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+
+            // Sync asíncrono a la nube (necesitamos el objeto cliente mínimo)
+            const { pushClienteToCloud } = require('./db.js');
+            pushClienteToCloud({ id: client_id }, { id, client_id, name, descripcion }).catch(console.error);
+
+            res.json({ success: true });
+        }
+    );
+});
+
+// C. Borrado Lógico
+app.delete('/api/management/:type/:id', (req, res) => {
+    const { type, id } = req.params;
+    const table = type === 'client' ? 'clientes' : 'procesos';
+    
+    // Por ahora borrado físico en SQLite, pero Supabase lo maneja como activo=false si se implementa el soft-delete allá
+    db.run(`DELETE FROM ${table} WHERE id = ?`, [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 // 4. Ejecutar prueba con SSE (POST paramétrico multi-hilos)
 app.post('/api/run-test', async (req, res) => {
     const { file, config } = req.body;
