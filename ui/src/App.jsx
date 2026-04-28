@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Eye, Zap, CreditCard, Banknote, Trash2, Plus, Tag, Brain, GitBranch,
   CheckCircle2, AlertCircle, Clock, Info, ChevronRight, X, Circle, Square, Power,
-  Sparkles, FileText, Settings, Cpu, Bot, AlertTriangle, Play
+  Sparkles, FileText, Settings, Cpu, Bot, AlertTriangle, Play, Save, Code, History
 } from 'lucide-react';
 import './index-a.css';
 
@@ -101,10 +101,8 @@ export default function App() {
     fetchRegistry();
     fetchConfig();
     
-    // Escuchar errores de sincronización (mi listener de App.jsx anterior)
     const handleSyncError = (e) => {
-      const { detail } = e;
-      addToast(`❌ Error de Sincronización: ${detail.error}`, "error");
+      addToast(`❌ Error de Sincronización: ${e.detail.error}`, "error");
     };
     window.addEventListener('sync-error', handleSyncError);
     return () => window.removeEventListener('sync-error', handleSyncError);
@@ -124,6 +122,9 @@ export default function App() {
       }
     } catch (e) { addToast("❌ Error en sincronización", "error"); }
   };
+
+  const activeProcessScenarios = registry.find(c => c.id === activeClient)?.procesos?.find(p => p.id === activeProcess)?.escenarios || [];
+  const activeScenario = activeProcessScenarios.find(s => s.id === activeScenarioId);
 
   // --- Render Principal ---
   if (!projectDir && !showSettings) {
@@ -169,16 +170,74 @@ export default function App() {
 
         <main className="main split-layout">
           <div className="config-panel">
-            <header className="main-header">
-              <h2 style={{ margin: 0 }}>Dashboard de Escenarios</h2>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>{activeClient} / {activeProcess}</p>
+            <header className="main-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                 <div style={{ width: '40px', height: '40px', background: 'var(--accent-primary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                    <Bot size={20} />
+                 </div>
+                 <div>
+                    <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800' }}>Dashboard de Operaciones</h2>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{activeClient} / {activeProcess}</p>
+                 </div>
+              </div>
+              <button className="btn-run" style={{ background: '#000', color: '#fff', borderRadius: '100px', padding: '10px 24px', fontWeight: '700' }}>
+                <Play size={14} style={{ marginRight: '8px' }} /> Ejecutar Proceso
+              </button>
             </header>
             
-            {/* Aquí iría el resto del dashboard de Claude... */}
-            <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
-              <Bot size={48} style={{ marginBottom: '16px', opacity: 0.3 }} />
-              <p>Interfaz de Escenarios restaurada. Listo para operar.</p>
+            <div className="scenarios-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+              {activeProcessScenarios.map(s => (
+                <div 
+                  key={s.id} 
+                  className={`scenario-card ${activeScenarioId === s.id ? 'active' : ''}`}
+                  onClick={() => setActiveScenarioId(s.id)}
+                  style={{ 
+                    padding: '20px', borderRadius: '24px', background: activeScenarioId === s.id ? 'white' : 'transparent',
+                    border: '1px solid', borderColor: activeScenarioId === s.id ? 'var(--accent-primary)' : 'rgba(0,0,0,0.05)',
+                    boxShadow: activeScenarioId === s.id ? '0 10px 30px rgba(0,0,0,0.05)' : 'none',
+                    cursor: 'pointer', transition: '0.3s'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ padding: '8px', background: activeScenarioId === s.id ? 'var(--accent-primary)' : '#f2f2f7', borderRadius: '10px', color: activeScenarioId === s.id ? 'white' : '#8e8e93' }}>
+                      <FileText size={16} />
+                    </div>
+                    {activeScenarioId === s.id && <Zap size={14} color="var(--accent-primary)" fill="var(--accent-primary)" />}
+                  </div>
+                  <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: '800' }}>{s.name}</h4>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#8e8e93' }}>{s.created_by || 'AutoBot v2'}</p>
+                </div>
+              ))}
+              
+              <div style={{ padding: '20px', borderRadius: '24px', border: '2px dashed #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', cursor: 'pointer' }}>
+                <Plus size={24} style={{ marginBottom: '8px' }} />
+                <span style={{ fontSize: '0.75rem', fontWeight: '700' }}>Nuevo Escenario</span>
+              </div>
             </div>
+
+            {activeScenario && (
+              <div className="scenario-details animate-slide-up" style={{ marginTop: '40px', padding: '40px', background: 'white', borderRadius: '32px', boxShadow: '0 40px 100px rgba(0,0,0,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                  <h3 style={{ margin: 0, fontWeight: '800' }}>Configuración: {activeScenario.name}</h3>
+                  <button className="btn-secondary" style={{ borderRadius: '100px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Save size={14} /> Guardar Cambios
+                  </button>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+                   <div>
+                     <IteracionesPicker value={builderConfig.iteraciones} onChange={v => setBuilderConfig({...builderConfig, iteraciones: v})} />
+                     <NuclearSwitch checked={builderConfig.headless} onChange={v => setBuilderConfig({...builderConfig, headless: v})} label="Modo Invisible (Headless)" icon={Eye} />
+                   </div>
+                   <PaymentTray 
+                      pagos={builderConfig.pagos} 
+                      medioVuelto={builderConfig.medioVuelto}
+                      updatePagos={p => setBuilderConfig({...builderConfig, pagos: p})}
+                      updateMedioVuelto={v => setBuilderConfig({...builderConfig, medioVuelto: v})}
+                   />
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -193,7 +252,7 @@ export default function App() {
       )}
 
       {showSettings && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
           <div className="modal-content animate-slide-up" style={{ width: '500px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -209,7 +268,10 @@ export default function App() {
                   <input className="form-input" value={projectDir} readOnly style={{ flex: 1 }} />
                   <button onClick={async () => {
                     const path = await window.electron.selectFolder();
-                    if (path) setProjectDir(path);
+                    if (path) {
+                       setProjectDir(path);
+                       await fetch(`${API_BASE}/config/project-dir`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectDir: path }) });
+                    }
                   }} className="btn-secondary">Cambiar</button>
                 </div>
               </div>
@@ -237,8 +299,9 @@ export default function App() {
           <div key={t.id} className={`toast ${t.type} ${t.exiting ? 'exiting' : ''}`} style={{
             background: 'white', padding: '12px 24px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
             borderLeft: `4px solid ${t.type === 'success' ? '#10b981' : t.type === 'error' ? '#ef4444' : '#6366f1'}`,
-            animation: 'toastIn 0.3s ease-out'
+            animation: 'toastIn 0.3s ease-out', display: 'flex', alignItems: 'center', gap: '12px'
           }}>
+            <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: t.type === 'success' ? '#10b981' : t.type === 'error' ? '#ef4444' : '#6366f1' }} />
             <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>{t.msg}</div>
           </div>
         ))}
@@ -248,6 +311,7 @@ export default function App() {
         @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .toast.exiting { animation: toastOut 0.3s ease-in forwards; }
         @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        .scenario-card:hover { transform: scale(1.02); border-color: var(--accent-primary); }
       `}</style>
     </div>
   );
