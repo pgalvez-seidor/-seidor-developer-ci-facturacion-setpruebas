@@ -74,8 +74,8 @@ const fetchAll = async () => {
     if (!supabase) throw new Error('Sin conexión');
 
     const [{ data: clientes, error: e1 }, { data: proyectos, error: e2 }, { data: escenarios, error: e3 }] = await Promise.all([
-        supabase.from('autobot_clientes').select('*').or('activo.is.null,activo.eq.true'),
-        supabase.from('autobot_proyectos').select('*').or('activo.is.null,activo.eq.true'),
+        supabase.from('autobot_clientes').select('id, nombre, descripcion, logo_base64, color_primario, activo').or('activo.is.null,activo.eq.true'),
+        supabase.from('autobot_proyectos').select('id, cliente_id, nombre, descripcion, activo').or('activo.is.null,activo.eq.true'),
         supabase.from('autobot_escenarios').select('id, proyecto_id, nombre, config_json, script_content, instrucciones, created_by, created_at, activo').or('activo.is.null,activo.eq.true'),
     ]);
 
@@ -87,6 +87,9 @@ const fetchAll = async () => {
     const normalize = (row) => ({
         ID:             row.id,
         NOMBRE:         row.nombre,
+        DESCRIPCION:    row.descripcion || '',
+        LOGO_BASE64:    row.logo_base64 || null,
+        COLOR_PRIMARIO: row.color_primario || null,
         CLIENTE_ID:     row.cliente_id,
         PROYECTO_ID:    row.proyecto_id,
         CONFIG_JSON:    row.config_json,
@@ -128,18 +131,33 @@ const upsertEscenario = async ({ id, proyectoId, nombre, configJson, scriptConte
 /**
  * Upsert de un cliente
  */
-const upsertCliente = async ({ id, nombre }) => {
+const upsertCliente = async ({ id, nombre, descripcion, logoBase64, colorPrimario }) => {
     if (!supabase) throw new Error('Sin conexión');
-    const { error } = await supabase.from('autobot_clientes').upsert({ id, nombre }, { onConflict: 'id' });
+    const { error } = await supabase.from('autobot_clientes').upsert({ 
+        id, 
+        nombre, 
+        descripcion, 
+        logo_base64: logoBase64, 
+        color_primario: colorPrimario,
+        activo: true,
+        updated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
     if (error) throw new Error(error.message);
 };
 
 /**
  * Upsert de un proyecto
  */
-const upsertProyecto = async ({ id, clienteId, nombre }) => {
+const upsertProyecto = async ({ id, clienteId, nombre, descripcion }) => {
     if (!supabase) throw new Error('Sin conexión');
-    const { error } = await supabase.from('autobot_proyectos').upsert({ id, cliente_id: clienteId, nombre, activo: true }, { onConflict: 'id' });
+    const { error } = await supabase.from('autobot_proyectos').upsert({ 
+        id, 
+        cliente_id: clienteId, 
+        nombre, 
+        descripcion,
+        activo: true, 
+        updated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
     if (error) throw new Error(error.message);
 };
 

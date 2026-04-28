@@ -19,13 +19,17 @@ const initDb = () => {
             // 1. Create Tables
             db.run(`CREATE TABLE IF NOT EXISTS clientes (
                 id TEXT PRIMARY KEY,
-                name TEXT NOT NULL
+                name TEXT NOT NULL,
+                descripcion TEXT,
+                logo_base64 TEXT,
+                color_primario TEXT
             )`);
 
             db.run(`CREATE TABLE IF NOT EXISTS procesos (
                 id TEXT PRIMARY KEY,
                 client_id TEXT NOT NULL,
                 name TEXT NOT NULL,
+                descripcion TEXT,
                 FOREIGN KEY(client_id) REFERENCES clientes(id) ON DELETE CASCADE
             )`);
 
@@ -40,6 +44,11 @@ const initDb = () => {
                 FOREIGN KEY(process_id) REFERENCES procesos(id) ON DELETE CASCADE
             )`);
 
+            // Migraciones seguras para bases de datos existentes
+            db.run(`ALTER TABLE clientes ADD COLUMN descripcion TEXT`, () => {});
+            db.run(`ALTER TABLE clientes ADD COLUMN logo_base64 TEXT`, () => {});
+            db.run(`ALTER TABLE clientes ADD COLUMN color_primario TEXT`, () => {});
+            db.run(`ALTER TABLE procesos ADD COLUMN descripcion TEXT`, () => {});
             db.run(`ALTER TABLE escenarios ADD COLUMN created_at TEXT`, () => {});
             db.run(`ALTER TABLE escenarios ADD COLUMN created_by TEXT`, () => {});
 
@@ -121,19 +130,18 @@ const syncFromCloud = async () => {
         // 1. Sincronización de Clientes (Surgical)
         for (const c of clientes) {
             await new Promise((resolve) => {
-                db.get("SELECT name FROM clientes WHERE id = ?", [c.ID], (err, row) => {
-                    const localName = row ? row.name : 'null';
-                    console.log(`[Sync-Debug] ${c.ID}: Local='${localName}' Cloud='${c.NOMBRE}'`);
-                    
+                db.get("SELECT name, descripcion, logo_base64, color_primario FROM clientes WHERE id = ?", [c.ID], (err, row) => {
                     if (!row) {
                         console.log(`[Sync] 🌱 Nuevo cliente: ${c.NOMBRE}`);
-                        db.run("INSERT INTO clientes (id, name) VALUES (?, ?)", [c.ID, c.NOMBRE], () => { 
+                        db.run("INSERT INTO clientes (id, name, descripcion, logo_base64, color_primario) VALUES (?, ?, ?, ?, ?)", 
+                               [c.ID, c.NOMBRE, c.DESCRIPCION, c.LOGO_BASE64, c.COLOR_PRIMARIO], () => { 
                             hasChanges = true; 
                             resolve(); 
                         });
-                    } else if (localName !== c.NOMBRE) {
-                        console.log(`[Sync] 🔄 Diferencia en ${c.ID}: "${localName}" -> "${c.NOMBRE}"`);
-                        db.run("UPDATE clientes SET name = ? WHERE id = ?", [c.NOMBRE, c.ID], () => { 
+                    } else if (row.name !== c.NOMBRE || row.descripcion !== c.DESCRIPCION || row.logo_base64 !== c.LOGO_BASE64 || row.color_primario !== c.COLOR_PRIMARIO) {
+                        console.log(`[Sync] 🔄 Actualizando cliente: ${c.ID}`);
+                        db.run("UPDATE clientes SET name = ?, descripcion = ?, logo_base64 = ?, color_primario = ? WHERE id = ?", 
+                               [c.NOMBRE, c.DESCRIPCION, c.LOGO_BASE64, c.COLOR_PRIMARIO, c.ID], () => { 
                             hasChanges = true; 
                             resolve(); 
                         });
@@ -144,17 +152,19 @@ const syncFromCloud = async () => {
             });
         }
 
-        // 2. Sincronización de Procesos (Surgical)
+        // 2. Sincronización de Procesos/Proyectos (Surgical)
         for (const p of proyectos) {
             await new Promise((resolve) => {
-                db.get("SELECT name FROM procesos WHERE id = ?", [p.ID], (err, row) => {
+                db.get("SELECT name, descripcion FROM procesos WHERE id = ?", [p.ID], (err, row) => {
                     if (!row) {
-                        db.run("INSERT INTO procesos (id, client_id, name) VALUES (?, ?, ?)", [p.ID, p.CLIENTE_ID, p.NOMBRE], () => { 
+                        db.run("INSERT INTO procesos (id, client_id, name, descripcion) VALUES (?, ?, ?, ?)", 
+                               [p.ID, p.CLIENTE_ID, p.NOMBRE, p.DESCRIPCION], () => { 
                             hasChanges = true; 
                             resolve(); 
                         });
-                    } else if (row.name !== p.NOMBRE) {
-                        db.run("UPDATE procesos SET name = ? WHERE id = ?", [p.NOMBRE, p.ID], () => { 
+                    } else if (row.name !== p.NOMBRE || row.descripcion !== p.DESCRIPCION) {
+                        db.run("UPDATE procesos SET name = ?, descripcion = ? WHERE id = ?", 
+                               [p.NOMBRE, p.DESCRIPCION, p.ID], () => { 
                             hasChanges = true; 
                             resolve(); 
                         });
@@ -228,8 +238,21 @@ const pushClienteToCloud = async (cliente, proyecto) => {
     try { supabase = require('./supabase-client'); } catch (e) { return; }
     if (!supabase.isConnected()) return;
     try {
-        await supabase.upsertCliente(cliente);
-        if (proyecto) await supabase.upsertProyecto(proyecto);
+        await supabase.upsertCliente({
+            id: cliente.id,
+            nombre: cliente.name,
+            descripcion: cliente.descripcion,
+            logoBase64: cliente.logo_base64,
+            colorPrimario: cliente.color_primario
+        });
+        if (proyecto) {
+            await supabase.upsertProyecto({
+                id: proyecto.id,
+                clienteId: proyecto.client_id,
+                nombre: proyecto.name,
+                descripcion: proyecto.descripcion
+            });
+        }
     } catch (e) {
         console.error('[SQLite→Supabase] Error sync cliente/proyecto:', e.message);
     }
