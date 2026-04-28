@@ -128,9 +128,17 @@ export default function App() {
 
   // --- Render Principal ---
   if (!projectDir && !showSettings) {
-    return <GitInitScreen onContinue={async () => {
+    return <GitInitScreen onContinue={async (manualPath) => {
+      // manualPath ahora es null según el nuevo diseño de GitInitScreen.jsx
+      // El dashboard se encargará de setear projectDir si falta.
       if (!window.electron) {
-        alert("⚠️ Esta función solo está disponible en la versión de escritorio de AutoBot.");
+        const path = manualPath || projectDir || './'; 
+        const res = await fetch(`${API_BASE}/config/project-dir`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectDir: path })
+        });
+        if (res.ok) fetchConfig();
         return;
       }
       const path = await window.electron.selectFolder();

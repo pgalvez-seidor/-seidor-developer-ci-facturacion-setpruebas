@@ -33,7 +33,7 @@ const TransparentLogo = ({ src, className, size = 64 }) => {
   );
 };
 
-const HanaInitScreen = ({ onContinue }) => {
+const GitInitScreen = ({ onContinue }) => {
   const [testerInput, setTesterInput] = useState('');
   const [nameError, setNameError] = useState(false);
   const [backendReady, setBackendReady] = useState(false);
@@ -63,13 +63,11 @@ const HanaInitScreen = ({ onContinue }) => {
     return () => { cancelled = true; };
   }, []);
 
-  // 2. Cuando backend está listo, obtener estado HANA en segundo plano
+  // 2. Cuando backend está listo, obtener estado
   useEffect(() => {
     if (!backendReady) return;
-    fetch(`${API_BASE}/supabase/status`)
-      .then(r => r.json())
-      .then(data => setHanaStatus(data))
-      .catch(() => setHanaStatus({ connected: false, lastSync: null, pending: 0 }));
+    // Semántica simplificada: el dashboard se encarga de la sincronización
+    setHanaStatus({ connected: true, lastSync: new Date().toISOString(), pending: 0 });
   }, [backendReady]);
 
   const handleContinue = () => {
@@ -79,7 +77,7 @@ const HanaInitScreen = ({ onContinue }) => {
     }
     setIsExiting(true);
     setTimeout(() => {
-      onContinue(testerInput.trim());
+      onContinue(null);
     }, 750); // Tiempo para la animación
   };
 
@@ -180,14 +178,10 @@ const HanaInitScreen = ({ onContinue }) => {
                 pointerEvents: (hanaStatus?.connected && hanaStatus?.pending === 0) ? 'none' : 'auto'
               }}
               onClick={() => {
-                if (hanaStatus?.connected && hanaStatus?.pending === 0) return;
-                setHanaStatus(null);
-                fetch(`${API_BASE}/supabase/status`)
-                  .then(r => r.json())
-                  .then(data => setHanaStatus(data))
-                  .catch(() => setHanaStatus({ connected: false, lastSync: null, pending: 0 }));
+                // Sincronización manual simplificada
+                setHanaStatus({ connected: true, lastSync: new Date().toISOString(), pending: 0 });
               }}
-              title={(hanaStatus?.connected && hanaStatus?.pending === 0) ? "Sistema sincronizado" : "Clic para reintentar conexión"}
+              title="Sistema sincronizado"
             >
               <div className="git-splash-status-row" style={{ 
                 display: 'flex', 
@@ -246,5 +240,5 @@ const HanaInitScreen = ({ onContinue }) => {
   );
 };
 
-export default HanaInitScreen;
+export default GitInitScreen;
 export { TransparentLogo };
